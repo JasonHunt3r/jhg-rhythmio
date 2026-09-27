@@ -125,6 +125,17 @@ chosen yet. In the order they came up:
    it opens to its saved size and a continuing drag resizes from there;
    engage at about half its size (48–110 pt). The dials want Jason's
    hand. Measured at hand speed on a test copy (numbers in the spec).
+   **Jason's first look, 2026-09-26 ("a good start"; animation tuning
+   later), and what's done about it:** (a) the Slide viewer's picture
+   squashed as the drawer resized — a still with Pan and Zoom off was
+   never redrawn at the new size (the motionless-frame skip in
+   `PlaybackEngine.render` ignored a resize); **fixed** (`3afa4f6`),
+   reproduced and re-checked on a test copy. (b) Pushed shut mid-drag,
+   the pointer stayed grabbed and moving back did nothing; **fixed**: the
+   same drag now pulls it open again. (c) **The timeline pane shouldn't
+   be dragged taller than its contents** — only as tall as its rows, or
+   smaller, except for one case Jason named (the Timeline window behind
+   another window) — **not built, being clarified.**
 5. **Item 34: light mode is "awful"** (Jason tried it). Light mode needs
    more translucency than dark, and the window background has no
    transparency at all today — Jason wants a setting (a slider) for it.

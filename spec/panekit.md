@@ -243,6 +243,13 @@ the instant jump it had. Every closable split has it, whatever its handle
   loop's common modes, so it keeps going inside a drag.
 - **Reduce Motion** (System Settings ▸ Accessibility) turns the slides
   off.
+- **One drag can go both ways** (Jason, 2026-09-26, after the first
+  build: once shut, the pointer stayed grabbed and moving back did
+  nothing). Pushed shut and still held, the drag becomes a pull from
+  closed, measured from where it went shut: moving back bites, slips and
+  re-opens it to the size it had when the drag began. Measured: 212 →
+  resisted to 105 → shut → back: bit to 15, slipped to 46, engaged,
+  slid to 212, resized on to 249.
 
 Tests: `PaneClutchTests` (5: the bite and slip, where it engages, the
 resistance and where it shuts, a peek drawn below the minimum, a peek

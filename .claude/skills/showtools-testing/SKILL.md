@@ -39,6 +39,10 @@ domain** (`com.jhg.showtools`). That is the trap, and it has two halves:
    the new key stayed set). Diff the export against a fresh one after
    import, or explicitly `defaults delete` anything the session newly
    wrote, when the feature under test adds its own preference key.
+   **Only if the backup doesn't have it**: a key that's new to the
+   *code* can already be Jason's, written by his own copy since the last
+   install (2026-09-26: `PaneKit.Viewer.slides` was deleted after a
+   restore, then put back from the backup). `plutil -p` the backup first.
 
 `defaults write com.jhg.showtools editMode show` and the `snapping` switch
 are his **real** preferences too (a scratch library doesn't change the
