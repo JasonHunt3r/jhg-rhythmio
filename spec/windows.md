@@ -461,6 +461,31 @@ an ordinary window.
   is hardcoded `false` instead — Jason's own exception — where before it
   silently relied on `NSPanel`'s own default of `true`, the bug this whole
   item exists to fix.
+
+  **A second, deeper half of the same bug, found from real feedback the
+  same day** ("bringing the focus back to the settings should have also
+  brought the other app windows back as a package"): `hidesOnDeactivate`
+  only ever controlled *visibility*. All four hand-built panels
+  (`InfoPanel`, `RhythmPanel`, `SlideEditorWindow`, the library panel)
+  set `window.level = .floating` once, permanently — unlike PaneKit's own
+  pop-outs (the Inspector, the Timeline window), which already drop to
+  `.normal` when ShowTools isn't active. A window level ranks *across
+  every app on screen*, so with hiding turned off, a panel just sat
+  floating above every other app's windows forever, not just ShowTools'
+  own — it never "left" when you switched away, so there was nothing to
+  "bring back." Built `floatOnlyWhileActive` (mirroring
+  `PaneWindowController`'s own pattern exactly): Info, Rhythm and the
+  Slide Editor now drop to `.normal` whenever ShowTools isn't active, back
+  to `.floating` when it is. **The library panel is deliberately left
+  out**: it's a drop target for files dragged from Finder, which makes
+  *Finder* the active app for the length of the drag — dropping its level
+  while inactive would sink it behind Finder's own window exactly when
+  it's needed. Checked with a real Finder window dragged to overlap where
+  the Info panel sat, `panelsHideWhenInactive` off (to isolate the level
+  fix from hiding): before the fix, the Info panel stayed on top of
+  Finder even after switching to it; after, it dropped behind, and
+  reactivating ShowTools brought it back in front together with the main
+  window, "as a package."
 - **Settings, opened from the menu or its key, comes up frontmost, and
   panels stop covering it.** Built as `SettingsWindowCoordinator`: every
   hand-built panel registers itself; whenever the Settings window becomes
@@ -534,19 +559,22 @@ Info-panel-overlap check after the redesign. `WindowAccessor` (above) is
 what replaced it, and is unaffected by the title changing per tab, since
 it identifies the window itself, not what it's currently called.
 
-**Still open, needs its own discussion before any code:**
-- **A settings-and-preferences pass:** define which is which, and
-  whether they share one window with a tab switcher or get two. Apple has
-  had one "Settings" window since macOS 13; pro apps split app-wide
-  choices (⌘,) from a document's own (a show's settings in its inspector,
-  a library's in its Info). To settle with Jason.
+**Settled 2026-09-27, moot: the settings-and-preferences split.** Jason:
+now that everything fits logically into the tabbed window, splitting them
+apart solves nothing — the tab list already *is* the settings-vs-
+preferences distinction, if one turns out to matter later, and today
+nothing in it is document-specific (a show's own settings stay in its
+inspector, a library's in its Info, same as always).
 
-**Goes in the same pass:** the drawers' sensitivity setting with its
-practice drawer (`spec/panekit.md`, "The clutch"); light mode's
-translucency and a window-background transparency setting (item 34,
-Jason: light mode "is awful"); the "Smart View" preference (panes open
-and close by context — on by default — or keep your own choices;
-`spec/plan.md`, "Slides as mini movies").
+**Goes in the same pass:**
+- ~~The drawers' sensitivity setting with its practice drawer~~ — **built
+  2026-09-27**, in the Windows tab (`spec/panekit.md`, "The clutch," has
+  the story and what's left: Jason's own tuning).
+- Light mode's translucency and a window-background transparency setting
+  (item 34, Jason: light mode "is awful").
+- The "Smart View" preference (panes open and close by context — on by
+  default — or keep your own choices; `spec/plan.md`, "Slides as mini
+  movies").
 
 ## Filling a new collection: the problem the library panel solves
 

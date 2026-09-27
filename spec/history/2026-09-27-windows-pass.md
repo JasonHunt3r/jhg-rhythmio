@@ -170,10 +170,90 @@ so was topmost there — fixed by reopening Settings from the menu before
 each click rather than trusting `axtool front`, which raises the app,
 not any particular one of its windows).
 
+## The drawers' sensitivity setting (later still, same day)
+
+Jason: the settings-vs-preferences split is moot now — everything fits
+one tabbed window logically — so start the remaining windows-pass items
+with drawer sensitivity, since `spec/panekit.md` already described it
+"to an extent."
+
+It had, in real detail: Jason's idea for the control ("something visual
+to drag — a line inside a box marking the trigger distance"), a working
+practice drawer proposed alongside it, a Quick ↔ Smooth slider for the
+slide's own speed if that turned out to need tuning separately, and one
+open question — which felt slow, the pull's distance, the slide's speed,
+or both. Rather than guess at the open question, built the control for
+both: Jason can find out which (or both) by feel once he has it.
+
+`PaneClutch`'s dials (`bite`, `slip`, `engage`, `slideDuration`,
+`settleDuration`…) were already `public static var`s, not `let`s —
+built that way from the start, evidently already anticipating this
+exact setting. `DrawerSensitivitySetting.apply()` sets them from two
+`@AppStorage` values (`drawerEngageDistance`, `drawerSlideSpeed`),
+called at launch and live whenever either control moves.
+`EngageDistanceControl` is the line-in-a-box: a `GeometryReader` and a
+plain `DragGesture`, no library needed. `PracticeDrawer` is an
+`NSViewRepresentable` wrapping a real `PaneContainerView` — the actual
+mechanism every drawer in the app uses, not a mockup — so pulling its
+handle exercises whatever the sliders just set, immediately.
+
+Checked with axtool: the practice drawer's own edge handle opened it on
+a drag, same as any real drawer; dragging the engage line updated
+`drawerEngageDistance` in `UserDefaults` mid-drag, confirmed by reading
+it back while the drag tool held partway through. Not yet tuned by
+Jason's own hand — the whole reason the control exists rather than a
+single silently-picked number.
+
+**A screenshot mistake, corrected:** captured one full-screen
+screenshot (`screencapture -x`, no window id) to check the practice
+drawer's state, which surfaced an unrelated window on the desktop
+(clipped and not otherwise used). Every capture after that used
+`-l <window id>` or `-R <region>` targeted to exactly the ShowTools
+content being checked, never the whole screen again.
+
+## The floating panels never actually left (later still, same day)
+
+Jason, watching the Settings-covering fix work: "bringing the focus back
+to the settings should have also brought the other app windows back as
+a package." Investigated rather than guessed at the meaning: with
+`panelsHideWhenInactive` off, a real Finder window dragged to overlap
+the Info panel's own position, then switched to Finder — the Info panel
+stayed on top of Finder's window regardless, not just of ShowTools' own.
+
+The cause: `InfoPanel`, `RhythmPanel` and `SlideEditorWindow` each set
+`window.level = .floating` once, at creation, permanently — never
+adjusted afterward. A window level ranks across *every app on screen*,
+not just its own — PaneKit's own pop-outs (the Inspector, the Timeline
+window) already account for this (`PaneWindowController.init`, dropping
+to `.normal` on `NSApplication.didResignActiveNotification` and back on
+`didBecomeActiveNotification`), but these four hand-built panels
+predate that pattern and never got it. So with hiding turned off (a
+real, supported choice now that `PanelHidingSetting` exists), a panel
+floated above every other app's windows forever — it never "left" when
+ShowTools went inactive, so there was nothing to "bring back."
+
+Fixed with `floatOnlyWhileActive`, a small free function mirroring
+`PaneWindowController`'s own observer pair exactly, applied to Info,
+Rhythm and the Slide Editor. **The library panel is deliberately
+excluded** — reasoned through before touching it, not assumed: it's the
+drop target for files dragged in from Finder, which makes *Finder*
+the active app for the whole drag, so dropping its level while
+ShowTools is inactive would sink it behind Finder's own window at
+exactly the moment it needs to receive the drop. Its permanent
+`.floating` is correct, not an oversight — documented in place so the
+next reader doesn't "fix" it into the same bug this session just fixed
+everywhere else.
+
+Retested the identical Finder-overlap scenario after the fix: the Info
+panel dropped behind Finder once inactive, and reactivating ShowTools
+(`axtool front`) brought it back in front together with the main
+window — the "as a package" behavior asked for. `swift build` clean,
+`swift test`: 336 core tests unchanged throughout both fixes.
+
 ## What's left of the windows pass
 
-Four pieces, each flagged in `spec/windows.md` as needing its own
-discussion before any code: the settings-vs-preferences split, the
-drawers' sensitivity setting and practice drawer, light mode's
-translucency and a background-transparency setting, and the "Smart View"
-preference.
+Two pieces, each flagged in `spec/windows.md` as needing its own
+discussion before any code: light mode's translucency and a
+background-transparency setting, and the "Smart View" preference. The
+sensitivity dials themselves are built but unturned — Jason's own hands,
+not a discussion.

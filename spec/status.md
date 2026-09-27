@@ -36,21 +36,30 @@ collection's/group's files). Before an upgrade the database is copied
 to `Library.sqlite.v<N>.bak`.
 
 **Built most recently (2026-09-27)** — details in `spec/windows.md`, "The
-windows pass," the story in `spec/history/2026-09-27-windows-pass.md`:
-three of its six pieces: **panel-hiding as a setting** (`PanelHidingSetting`,
-a new "Windows" tab; the library panel's own exception now explicit, not
-an accident of `NSPanel`'s default), **Settings no longer covered by a
+windows pass," and `spec/panekit.md`, "The clutch"; the story in
+`spec/history/2026-09-27-windows-pass.md`: **panel-hiding as a setting**
+(`PanelHidingSetting`, a new "Windows" tab; the library panel's own
+exception now explicit, not an accident of `NSPanel`'s default) — **plus
+a second, deeper half of the same bug**, found from real feedback: all
+four hand-built panels sat permanently `.floating`, ranking above *every*
+app's windows forever, not just ShowTools' own, so a panel never actually
+"left" when you switched away (`floatOnlyWhileActive`, mirroring PaneKit's
+own pop-out pattern; the library panel deliberately excluded — it needs
+to stay above Finder mid-drag). **Settings no longer covered by a
 floating panel** (`SettingsWindowCoordinator`, scoped to this app's own
 panels, not PaneKit's pop-outs — its window found by `WindowAccessor`
-after two wrong tries), and **About ShowTools** (already there for free,
+after two wrong tries) and **About ShowTools** (already there for free,
 nothing to build). **Settings is also a pro-style tabbed window now**
 (Jason: tabs across the top, wider, not user-resizable): six tabs
 (Library, Editing, Playback, Export, Windows, BGTools), 640 pt wide,
-`.windowResizability(.contentSize)` — SwiftUI's own `Settings` +
-`TabView` gives the native toolbar-pane look for free. Left of the
-windows pass: the settings-vs-preferences split, the drawers' sensitivity
-setting, light mode's translucency, and Smart View — each wants its own
-discussion.
+`.windowResizability(.contentSize)`. **The drawers' sensitivity setting**
+is built too, in the Windows tab: a draggable-line control for the engage
+distance, a Quick ↔ Smooth slider, and a real practice drawer embedded
+live so both are felt at once, not just read as numbers. The
+settings-vs-preferences split turned out moot once everything fit one
+tabbed window. Left of the windows pass: light mode's translucency and
+Smart View — each still wants its own discussion — and Jason's own tuning
+of the sensitivity dials.
 
 **Built 2026-09-26** — details in the specs, the story in
 `spec/history/2026-09-26-slides-and-the-clutch.md` and
@@ -107,15 +116,18 @@ No next task is chosen. Open, roughly in the order Jason raised them:
    `StorylineView` (which didn't exist before) and scrolling a moved row
    into view. Not yet confirmed by a real drag or scroll — see "Still
    needs Jason's hands."
-2. **The windows pass, the rest** — three of the six pieces are **built,
-   2026-09-27** (`spec/windows.md`, "The windows pass"): panel-hiding as a
-   setting, Settings no longer covered by a floating panel, and About
-   ShowTools (already there for free — nothing was needed). Left: the
-   **settings-vs-preferences split** (needs its own discussion), the
-   drawers' **sensitivity setting and practice drawer**
-   (`spec/panekit.md`, "The clutch"), **light mode's translucency and a
-   background-transparency setting** (item 34), and the **"Smart View"**
-   preference.
+2. **The windows pass, the rest** — four of the six pieces, plus a tabbed
+   redesign and a second panel-leveling bug, all **built 2026-09-27**
+   (`spec/windows.md`, "The windows pass"; `spec/panekit.md`, "The
+   clutch"): panel-hiding as a setting (and a deeper fix, panels no
+   longer floating over other apps forever), Settings no longer covered
+   by a floating panel, About ShowTools (already there for free), a
+   pro-style tabbed Settings window, and the drawers' sensitivity setting
+   with its practice drawer. The settings-vs-preferences split turned out
+   moot. Left: **light mode's translucency and a background-transparency
+   setting** (item 34), the **"Smart View"** preference — each still
+   wants its own discussion — and Jason's own tuning of the sensitivity
+   dials by feel.
 3. **Slides as mini movies, the rest** (`spec/plan.md`): the Slide Editor
    as the Slide viewer's pop-out, maybe reordering in the viewer, and the
    framework for slides with more inside (portrait shots filling a
@@ -202,6 +214,22 @@ Not pressing; each wants a discussion or a plan before any code.
   toggle's wording is clear — wants a real look. Also worth trying:
   opening Settings while the Rhythm tool or the Slide Editor (not just
   Info) is open and overlapping it.
+- **The drawers' sensitivity setting** (built 2026-09-27,
+  `spec/panekit.md`, "The clutch"): the engage-distance line, the
+  Quick ↔ Smooth slider and the practice drawer all checked mechanically
+  (dragging the line updates its saved value live, the practice drawer's
+  own edge handle opens exactly like a real one, sharing `PaneClutch`'s
+  dials) — but nobody has actually tuned it by feel yet, which is the
+  entire point of the control. Try: dragging the line to somewhere near
+  "almost instant" and pulling the practice drawer, then near today's
+  default and comparing; the Quick ↔ Smooth slider's two ends.
+- **Panels no longer float over other apps forever** (built 2026-09-27,
+  `spec/windows.md`, "The windows pass"): confirmed with axtool — a real
+  Finder window dragged to overlap the Info panel, `panelsHideWhenInactive`
+  off — the panel sat behind Finder once inactive and came back in front
+  together with the main window on reactivating. Worth trying by hand
+  with the Rhythm tool and the Slide Editor too, and across a few
+  app-switches in a row rather than just one.
 - **The browser header's wider switch** (built 2026-09-26,
   `spec/plan.md`, "the browser filter"): opens "Other Collections,"
   switches, filters and switches back correctly with axtool against a

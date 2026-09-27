@@ -1,6 +1,7 @@
 import SwiftUI
 import ShowToolsCore
 import ShowToolsPlayback
+import PaneKit
 
 @main
 struct ShowToolsApp: App {
@@ -9,7 +10,10 @@ struct ShowToolsApp: App {
 
     // Catches the reason string of the crash the app has been having
     // (ExceptionProbe). Remove with the probe.
-    init() { ExceptionProbe.install(); LayoutLoopProbe.install(); ListEmptySpace.install() }
+    init() {
+        ExceptionProbe.install(); LayoutLoopProbe.install(); ListEmptySpace.install()
+        DrawerSensitivitySetting.apply()
+    }
 
     var body: some Scene {
         Window("ShowTools", id: "main") {
@@ -643,12 +647,38 @@ private struct ExportSettingsTab: View {
 /// rather than a section sharing a page with something unrelated.
 private struct WindowsSettingsTab: View {
     @AppStorage(PanelHidingSetting.key) private var panelsHideWhenInactive = true
+    @AppStorage(DrawerSensitivitySetting.engageKey) private var engageDistance = DrawerSensitivitySetting.defaultEngage
+    @AppStorage(DrawerSensitivitySetting.slideKey) private var slideSpeed = DrawerSensitivitySetting.defaultSlide
+    @State private var practiceController = PaneController.settingsPracticeDrawer()
 
     var body: some View {
         SettingsPage {
             Section("Windows") {
                 Toggle("Panels hide when ShowTools isn't frontmost", isOn: $panelsHideWhenInactive)
                 Text("The Info panel, the Rhythm tool and the Slide Editor step out of the way when you switch to another app, like an ordinary panel. The library panel never hides, even with this off — it's where files dragged from Finder land.")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+            }
+            // spec/panekit.md, "The clutch," "A sensitivity setting."
+            Section("Drawer Sensitivity") {
+                Text("How far a closed drawer must be pulled before it engages and springs open on its own. Drag the line.")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                EngageDistanceControl(engage: $engageDistance)
+                    .onChange(of: engageDistance) { DrawerSensitivitySetting.apply() }
+                HStack(spacing: 10) {
+                    Text("Quick").font(.callout).foregroundStyle(.secondary)
+                    Slider(value: $slideSpeed, in: 0.06...0.4)
+                    Text("Smooth").font(.callout).foregroundStyle(.secondary)
+                }
+                .onChange(of: slideSpeed) { DrawerSensitivitySetting.apply() }
+                Text("How quickly a drawer slides once it engages.")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                PracticeDrawer(controller: practiceController)
+                    .frame(height: 140)
+                    .clipShape(RoundedRectangle(cornerRadius: 6))
+                Text("Pull the handle on the right edge to feel it.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
             }

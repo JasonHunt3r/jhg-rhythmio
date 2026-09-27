@@ -44,6 +44,7 @@ final class SlideEditorWindow: NSObject, NSWindowDelegate {
     private let state = SlideEditorState()
     private var engine: PlaybackEngine?
     private let window: SlideEditorPanel
+    nonisolated(unsafe) private var activationObservers: [NSObjectProtocol] = []
 
     private init(model: AppModel, mutate: @escaping ShowMutator, undoManager: UndoManager?) {
         self.model = model
@@ -62,9 +63,12 @@ final class SlideEditorWindow: NSObject, NSWindowDelegate {
         window.delegate = self
         window.sharedUndoManager = undoManager
         SettingsWindowCoordinator.register(window)
+        activationObservers = floatOnlyWhileActive(window)
         window.onEscape = { [weak self] in self?.window.close() }
         window.setFrameAutosaveName("slideEditor")
     }
+
+    deinit { activationObservers.forEach(NotificationCenter.default.removeObserver) }
 
     /// Switches the engine to `show` (a fresh one if it's a different show
     /// than before) and pauses it on `slideID`.

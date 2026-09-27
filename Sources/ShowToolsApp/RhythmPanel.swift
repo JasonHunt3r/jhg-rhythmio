@@ -76,6 +76,7 @@ final class RhythmTool {
 private final class RhythmPanel: NSObject, NSWindowDelegate {
     private let window: InfoPanelWindow
     private let tool: RhythmTool
+    nonisolated(unsafe) private var activationObservers: [NSObjectProtocol] = []
 
     init(model: AppModel, tool: RhythmTool) {
         self.tool = tool
@@ -92,6 +93,7 @@ private final class RhythmPanel: NSObject, NSWindowDelegate {
         window.delegate = self
         window.sharedUndoManager = tool.undoManager
         SettingsWindowCoordinator.register(window)
+        activationObservers = floatOnlyWhileActive(window)
         window.contentView = NSHostingView(rootView: RhythmPanelContent().environment(model).environment(tool))
         // The first time, bottom right of the screen; after that, where it was left.
         if !window.setFrameUsingName("rhythmPanel"), let screen = NSScreen.main {
@@ -100,6 +102,8 @@ private final class RhythmPanel: NSObject, NSWindowDelegate {
         }
         window.setFrameAutosaveName("rhythmPanel")
     }
+
+    deinit { activationObservers.forEach(NotificationCenter.default.removeObserver) }
 
     func front() {
         window.sharedUndoManager = tool.undoManager

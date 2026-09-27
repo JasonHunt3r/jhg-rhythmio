@@ -113,6 +113,14 @@ final class LibraryPanel: NSObject, NSWindowDelegate {
         // second view needed, just the grid in a window of its own.
         window.minSize = NSSize(width: 240, height: 300)
         window.isFloatingPanel = true
+        // Stays `.floating` over every app, not just ShowTools' own,
+        // unlike `InfoPanel`/`RhythmPanel`/`SlideEditorWindow`
+        // (`floatOnlyWhileActive`, `spec/windows.md`, "The windows pass,"
+        // 2026-09-27): dragging a file in from Finder makes *Finder* the
+        // active app for the length of the drag, so a level that dropped
+        // to `.normal` while ShowTools is inactive would sink this panel
+        // behind Finder's own window mid-drag — exactly when it's the
+        // drop target. Deliberate, not an oversight.
         window.level = .floating
         // Never hides, on or off (`PanelHidingSetting`, `spec/windows.md`,
         // "The windows pass," Jason's own exception, 2026-09-26): it's a

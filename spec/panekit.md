@@ -320,16 +320,35 @@ Slides' inspector (an edge handle, the other axis): a 60-pt pull peeked
 31 pt and went back; a 200-pt pull opened it. The cursor: screenshots
 with the pointer, every divider and the grip.
 
+**A sensitivity setting — built 2026-09-27**, in Settings' Windows tab
+(`spec/windows.md`), exactly as proposed: `EngageDistanceControl`, a box
+with a draggable line marking the trigger distance (Jason's own idea for
+the control, "something visual to drag"), a Quick ↔ Smooth slider for the
+slide's own speed, and a working practice drawer right below both — a
+real `PaneContainerView`/`PaneController` embedded live (`PracticeDrawer`,
+an `NSViewRepresentable`), not a mockup, so pulling its handle exercises
+whatever the sliders just set. Both open questions from the proposal
+resolved by building the control for both rather than picking one:
+`DrawerSensitivitySetting.apply()` sets `PaneClutch.engage` (and
+`closePast`, kept tied to it — "the same literal distance as the pull
+that opens it") from the line's own position, and `slideDuration` (with
+`settleDuration` kept at its original 0.14⁄0.18 ratio) from the slider —
+applied at launch and live as either control moves, so the practice
+drawer (and every real drawer in the app) feels a change at once.
+Checked with axtool: dragging the practice drawer's own edge handle opens
+it exactly like the app's real drawers do (`PaneClutch`'s dials are
+shared, not copied); dragging the engage line updates its saved value
+live (`drawerEngageDistance`), confirmed in `UserDefaults` mid-drag.
+**Not yet tuned by Jason's own hand** — that's the whole reason this
+control exists rather than a single silently-chosen number, per "the
+dials want Jason's hand" below.
+
 **Left:**
 - **The dials want Jason's hand.** He called the first snap "a little on
-  the slow side"; tuning waits for the sensitivity setting.
-- **A sensitivity setting**, from almost instant to today's as the
-  slowest. Jason's idea for the control: something visual to drag — a
-  line inside a box marking the trigger distance. Proposed: a working
-  practice drawer in Settings, the line dragged to set the pull, its
-  handle pulled right there to feel it; a Quick ↔ Smooth slider if the
-  slide's speed wants its own. In the windows pass (`spec/windows.md`).
-  Open: which felt slow — the pull's distance, the slide's speed, or both.
+  the slow side"; the sensitivity setting (above) is built so he can tune
+  it directly by feel, rather than being asked which number felt slow.
+- **A swipe's direction with "natural" scrolling** wants Jason's own
+  swipe: synthetic events don't carry the natural-scrolling flag.
 - **A swipe's direction with "natural" scrolling** wants Jason's own
   swipe: synthetic events don't carry the natural-scrolling flag.
 

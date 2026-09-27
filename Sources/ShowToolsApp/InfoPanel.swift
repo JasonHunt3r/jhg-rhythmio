@@ -39,6 +39,7 @@ final class InfoPanel: NSObject, NSWindowDelegate {
     }
 
     private let window: InfoPanelWindow
+    nonisolated(unsafe) private var activationObservers: [NSObjectProtocol] = []
 
     private init(model: AppModel, undoManager: UndoManager?) {
         window = InfoPanelWindow(
@@ -54,10 +55,13 @@ final class InfoPanel: NSObject, NSWindowDelegate {
         window.delegate = self
         window.sharedUndoManager = undoManager
         SettingsWindowCoordinator.register(window)
+        activationObservers = floatOnlyWhileActive(window)
         window.contentView = NSHostingView(
             rootView: InfoPanelContent(undoManager: undoManager).environment(model))
         window.setFrameAutosaveName("infoPanel")
     }
+
+    deinit { activationObservers.forEach(NotificationCenter.default.removeObserver) }
 
     private func present() {
         if window.frame.origin == .zero, let screen = NSScreen.main {
