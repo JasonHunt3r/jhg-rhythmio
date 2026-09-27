@@ -52,18 +52,29 @@ final class ScrollBarTranslucency: ObservableObject {
 
 /// A bar's own tunable background: the native `.headerView` material at
 /// amount 0, crossfading to a flat, fully opaque backing at 1.
-/// `.withinWindow` blending — not `.behindWindow`, the header bar
-/// experiment's choice — because this bar's whole point is to sample the
-/// *grid's own scrolled content* directly behind it in the same window,
-/// not the desktop.
+///
+/// `blending` isn't one fixed choice: `.withinWindow` (the filter bar's own
+/// default) samples real content drawn directly behind it in the *same*
+/// window — right for the grid, a plain SwiftUI `ScrollView`. Measured
+/// 2026-09-27: it renders completely flat, with no vibrancy at all, over
+/// the Catalog's own `List` — a real `NSTableView`, not a `ScrollView` —
+/// whose own row content apparently doesn't composite into whatever
+/// `.withinWindow` samples. `.behindWindow` (the Catalog bars' own default,
+/// `ScrollBarBackground.sidebar`) *does* show real, if faint, vibrancy
+/// there — confirmed side by side — sampling the desktop instead, same as
+/// any ordinary Mac sidebar.
 struct ScrollBarBackground: View {
     @Environment(\.colorScheme) private var colorScheme
     @ObservedObject private var setting = ScrollBarTranslucency.shared
+    var blending: NSVisualEffectView.BlendingMode = .withinWindow
+
+    /// For a bar over the Catalog's own `List`, not a plain `ScrollView`.
+    static var sidebar: ScrollBarBackground { ScrollBarBackground(blending: .behindWindow) }
 
     var body: some View {
         let amount = setting.value(for: colorScheme)
         ZStack {
-            NativeBarMaterial()
+            NativeBarMaterial(blending: blending)
             Color(nsColor: .windowBackgroundColor).opacity(amount)
         }
         .allowsHitTesting(false)
@@ -84,7 +95,7 @@ struct ScrollBarPreview: View {
     var body: some View {
         ZStack {
             LinearGradient(colors: [.purple, .orange, .green], startPoint: .topLeading, endPoint: .bottomTrailing)
-            NativeBarMaterial()
+            NativeBarMaterial(blending: .withinWindow)
             Color(nsColor: .windowBackgroundColor).opacity(amount)
         }
         .frame(width: 84, height: 32)
@@ -94,10 +105,12 @@ struct ScrollBarPreview: View {
 }
 
 private struct NativeBarMaterial: NSViewRepresentable {
+    var blending: NSVisualEffectView.BlendingMode
+
     func makeNSView(context: Context) -> NSVisualEffectView {
         let v = NSVisualEffectView()
         v.material = .headerView
-        v.blendingMode = .withinWindow
+        v.blendingMode = blending
         v.state = .active
         return v
     }

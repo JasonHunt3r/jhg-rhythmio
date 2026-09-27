@@ -215,55 +215,36 @@ struct MainView: View {
         // Library row itself is selectable), so a nil write from that
         // background click is simply ignored rather than accepted.
         List(selection: Binding(get: { model.sidebar }, set: { if let s = $0 { model.sidebar = s } })) {
-            // An alternate library shows its own name here.
-            Label(model.isOnMaster ? "Library" : model.libraryName,
-                  systemImage: model.libraryIsPrivate || model.locked != nil
-                      ? "lock.rectangle.stack" : "photo.on.rectangle.angled")
-                .badge(model.items.count)
-                .tag(SidebarItem.library)
-                // Jason, 2026-09-27, looking at the seeded scroll test: the
-                // catalog's own bars want the filter bar's treatment too,
-                // now that a long collection list actually scrolls under
-                // them. `.listRowBackground` is the row-level equivalent of
-                // `.background` a plain List row needs.
-                .listRowBackground(ScrollBarBackground())
-                .contextMenu {
-                    Button("Import…") { runImportPanel(model) }
-                    Button("New Collection…") { startCreatingCollection() }
-                    Button("Open Library Panel") { LibraryPanel.show(model: model, undoManager: undoManager) }
-                    Divider()
-                    Button("Show in Finder") {
-                        if let root = model.library?.root {
-                            NSWorkspace.shared.activateFileViewerSelecting([root])
-                        }
-                    }
-                    Divider()
-                    // Item 28, `ShowTools Feedback — Worklist for Next CC
-                    // Session.md`: the library header's own right-click had
-                    // no way to switch libraries. Same action as File ▸
-                    // Open Library….
-                    Button("Change Library…") { runOpenLibraryPanel(model) }
-                }
-
             // Library → Collection → Show, as Final Cut's Library → Event → Project.
             // A collection's groups and its shows sit side by side, as
             // siblings (Jason, 2026-09-24, "Groups inside collections").
-            Section {
-                ForEach(model.collections) { c in
-                    DisclosureGroup(isExpanded: foldBinding(c.id, in: $folded)) {
-                        collectionChildren(c)
-                    } label: {
-                        collectionRow(c)
-                    }
+            // No Section/header here any more — both it and the Library row
+            // above moved into the pinned `.safeAreaInset(edge: .top)`
+            // below (Jason, 2026-09-27: "the library and collections header
+            // should stay pinned to the top and the list should scroll
+            // behind them").
+            ForEach(model.collections) { c in
+                DisclosureGroup(isExpanded: foldBinding(c.id, in: $folded)) {
+                    collectionChildren(c)
+                } label: {
+                    collectionRow(c)
                 }
-                // Shows in no collection shouldn't exist after the
-                // upgrade, but if one does, it still has a place.
-                ForEach(orphanShows) { show in showRow(show) }
-            } header: {
-                Text("Collections")
-                    .noMenuYet("Library pane › Collections heading")
-                    .background(ScrollBarBackground())
             }
+            // Shows in no collection shouldn't exist after the
+            // upgrade, but if one does, it still has a place.
+            ForEach(orphanShows) { show in showRow(show) }
+        }
+        .safeAreaInset(edge: .top) {
+            VStack(alignment: .leading, spacing: 0) {
+                libraryRow
+                Text("Collections")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(.secondary)
+                    .padding(.horizontal, 16)
+                    .padding(.top, 8).padding(.bottom, 4)
+                    .noMenuYet("Library pane › Collections heading")
+            }
+            .background(ScrollBarBackground.sidebar)
         }
         // Delete asks first (D1); ⌘Delete skips the question, as the
         // grid's does (spec/conventions.md §Delete/⌘Delete). This
@@ -298,7 +279,52 @@ struct MainView: View {
                 Spacer()
             }
             .padding(8)
-            .background(ScrollBarBackground())
+            .background(ScrollBarBackground.sidebar)
+        }
+    }
+
+    /// The Library row, pinned above the Collections list
+    /// (`libraryList`'s `.safeAreaInset(edge: .top)`) rather than a normal
+    /// selectable `List` row any more, so it no longer scrolls away. Its
+    /// own tap sets the selection directly; `List`'s own selection styling
+    /// doesn't reach it, so it draws its own highlight instead. Losing:
+    /// `List`'s automatic keyboard selection reaching it by arrowing up
+    /// past the first collection — nothing asked for that specifically,
+    /// but worth knowing if it's missed.
+    private var libraryRow: some View {
+        let selected = model.sidebar == .library
+        return HStack(spacing: 6) {
+            Label(model.isOnMaster ? "Library" : model.libraryName,
+                  systemImage: model.libraryIsPrivate || model.locked != nil
+                      ? "lock.rectangle.stack" : "photo.on.rectangle.angled")
+            Spacer()
+            Text("\(model.items.count)")
+                .font(.caption)
+                .foregroundStyle(selected ? .white.opacity(0.8) : .secondary)
+        }
+        .padding(.horizontal, 8).padding(.vertical, 5)
+        .background(selected ? AnyShapeStyle(Color.accentColor) : AnyShapeStyle(.clear),
+                    in: RoundedRectangle(cornerRadius: 6))
+        .foregroundStyle(selected ? .white : .primary)
+        .padding(.horizontal, 8).padding(.top, 6)
+        .contentShape(Rectangle())
+        .onTapGesture { model.sidebar = .library }
+        .contextMenu {
+            Button("Import…") { runImportPanel(model) }
+            Button("New Collection…") { startCreatingCollection() }
+            Button("Open Library Panel") { LibraryPanel.show(model: model, undoManager: undoManager) }
+            Divider()
+            Button("Show in Finder") {
+                if let root = model.library?.root {
+                    NSWorkspace.shared.activateFileViewerSelecting([root])
+                }
+            }
+            Divider()
+            // Item 28, `ShowTools Feedback — Worklist for Next CC
+            // Session.md`: the library header's own right-click had
+            // no way to switch libraries. Same action as File ▸
+            // Open Library….
+            Button("Change Library…") { runOpenLibraryPanel(model) }
         }
     }
 

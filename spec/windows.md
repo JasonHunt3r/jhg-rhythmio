@@ -921,6 +921,35 @@ header bar reads "Drawer Sensitivity: Set Up Triggers." "It's good."
    with many rows rather than a logic bug in `foldBinding` itself, but
    that's a guess, not a finding. Worth a real look before touching
    `foldBinding` or the Collections `ForEach`.
+
+   **Pinned to the top, and a real bug found doing it**: Jason, watching
+   the seeded scroll test — "the library and collections header should
+   stay pinned to the top and the list should scroll behind them." The
+   Library row moved out of the `List` entirely into `libraryList`'s own
+   `.safeAreaInset(edge: .top)`, alongside the "Collections" text, since a
+   plain `List` row can't be pinned the way a `Section` header sometimes
+   is — it's now a plain tappable view (`libraryRow`) with its own manual
+   selection highlight, since `List`'s own selection styling doesn't reach
+   outside its rows. Traded away: `List`'s free keyboard nav reaching
+   Library by arrowing up past the first collection — nothing asked for
+   that specifically, worth knowing if it's missed. Confirmed with a
+   scratch library: both stay fixed while the collection list scrolls
+   underneath.
+
+   **Then**: "it does scroll behind, it just isn't transparent" — right,
+   and a real finding: `.withinWindow` blending (the filter bar's own
+   choice, correct for a plain `ScrollView`) renders **completely flat**
+   over the Catalog's `List`, a real `NSTableView` — no vibrancy at all,
+   confirmed side by side against `.behindWindow`, which showed faint but
+   real texture in the exact same spot. `ScrollBarBackground` now takes a
+   `blending` parameter (`.withinWindow` by default, for the filter bar and
+   the title bar spacer that shares it; `.sidebar`, a `.behindWindow`
+   convenience, for the three Catalog bars) — the right semantic split
+   anyway: a sidebar's vibrancy has always meant "see-through to the
+   desktop," not "scrolled content passing under," which is what the grid
+   actually does. The New+ footer already had content scrolling behind it
+   unstyled before this — `.safeAreaInset` does that for free — it just
+   read as a bug because nothing there was translucent yet.
 3. The "Smart View" preference (panes open and close by context — on by
    default — or keep your own choices; `spec/plan.md`, "Slides as mini
    movies") — **wants fleshing out**: today it's a one-paragraph sketch,
