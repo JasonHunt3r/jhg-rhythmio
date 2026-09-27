@@ -1074,11 +1074,19 @@ this reason — its own closures type-check separately from the rest of
 `LibraryGridView`'s body. Worth remembering before adding much more to
 either view's body: extract early rather than inline.
 
-**Built 2026-09-24 (the browser filter and Find Similar Images):** the
-Edit Show browser's title gets a group filter drop-down ("All Files" or
-one of the collection's groups; hidden when the collection has none),
-restricting both the "In this show" and "Not in this show" sections to
-the group's members. The choice lives in `ShowEditorState.
+**Built 2026-09-24 (the browser filter and Find Similar Images), promoted
+into the title itself 2026-09-26 (item 38):** the Edit Show browser's
+title gets a group filter drop-down (the collection's own name or one of
+its groups; hidden when the collection has none), restricting both the
+"In this show" and "Not in this show" sections to the group's members.
+First built as a separate folder-icon control beside the plain title;
+2026-09-26 (`spec/status.md`'s "What's next," "the browser's header as a
+switcher," item 38) folded it into the title itself — a click shows which
+list the browser is showing (the collection or a group) and switches
+among them, rather than a name and a filter control side by side
+(`CollectionBrowser.collectionSwitcher`). Scoped with Jason to the show's
+own collection and its groups, not a wider collection-to-collection
+switch, which is a bigger design question left for later. The choice lives in `ShowEditorState.
 browserGroupID` — new field, additive decode like every other field in
 that struct — ignored if it names a group from a different collection
 than the show now has (its own collection changed since it was set,

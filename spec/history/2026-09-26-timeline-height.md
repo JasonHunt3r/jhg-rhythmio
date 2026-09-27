@@ -1,7 +1,8 @@
-# 2026-09-26 (later) — the timeline's ceiling, a general PaneKit mechanism
+# 2026-09-26 (later) — the timeline's ceiling, the browser's header
 
 A dated record. Current rules and state are elsewhere: `spec/windows.md`
-("Its height"), `spec/panekit.md` ("What every pane can do").
+("Its height"), `spec/panekit.md` ("What every pane can do"),
+`spec/plan.md` ("the browser filter").
 
 Jason asked to work through the open list in order: timeline height,
 the browser's header as a switcher, then the windows pass.
@@ -72,3 +73,34 @@ Vertical row-scrolling in `StorylineView`, as its own piece — then the
 floor can come down off full content, and "a new row lands at or near
 the bottom, scrolled into view" becomes meaningful. Tracked in
 `spec/status.md`'s "What's next," item 1.
+
+## Item 38: the browser's header as a switcher
+
+The worklist's own wording ("Collections list column dropdown") pointed
+at the Library pane's sidebar; Jason's own later answer (the 2026-09-25
+worklist replies, same day) had already narrowed it to "the browser's
+header as a dropdown to switch lists" — the Edit Show browser (its
+middle column), not the sidebar. Still underspecified on its own (what's
+*in* the dropdown), and the browser already had a related, half-built
+piece: `groupFilterMenu`, a separate folder-icon control beside the
+title that filters to one of the collection's groups (built 2026-09-24,
+`spec/plan.md`). Asked Jason directly rather than guess between "every
+collection in the library" (a real rebind of what the browser shows) and
+"just the show's own collection's groups" (promoting what's already
+there into the title). He chose the smaller scope.
+
+`CollectionBrowser.swift`: `groupFilterMenu` (a `Menu` beside a plain
+`Text`) became `collectionSwitcher` (the `Menu` itself is the title now,
+label showing whichever's current — the collection's name or a group's,
+with a folder or stack icon and a chevron); plain text with no menu when
+the collection has no groups, same as before. No new state: still
+`ShowEditorState.browserGroupID`, unchanged.
+
+Checked with axtool against a scratch library (`sqlite3`-seeded a
+"Beach Trip" group with 3 of the test show's files, app quit first, per
+`showtools-testing`): the header reads "Untitled Collection ⌄", opening
+it lists the collection and the group, clicking "Beach Trip" relabels
+the header to "Beach Trip ⌄" with a folder icon and filters both list
+sections to its 3 files. `swift build` clean, `swift test`: 336 core
+tests unchanged. Test copy quit cleanly (`kill`, not `-9`),
+`runningTestLaunches` empty afterward.

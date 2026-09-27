@@ -44,6 +44,14 @@ to `Library.sqlite.v<N>.bak`.
   below its content, with the rows scrolling — waits on vertical
   row-scrolling in `StorylineView`, which doesn't exist yet; scoped with
   Jason to ship the ceiling half now.
+- **The browser's header is a switcher** (item 38, `spec/plan.md`, "the
+  browser filter"): a click now shows and switches which of the show's
+  own collection's lists the browser shows — the collection itself, or
+  one of its groups — folding the old, separate folder-icon filter
+  control into the title itself. Checked with axtool against a scratch
+  library with a seeded group: opens, lists both, switches, filters.
+  Scoped with Jason to the show's own collection and its groups, not a
+  wider collection-to-collection switch.
 - **Edit Slides plays** (`spec/plan.md`, "Slides as mini movies", steps
   1–3): its timeline is live, Play loops the selected slides cut to cut,
   and the **Slide viewer** drawer (Y) shows the picture. A click in the
@@ -93,8 +101,8 @@ No next task is chosen. Open, roughly in the order Jason raised them:
    wants it to surface a good next slide. Needs research and a talk.
 5. **Large libraries** (item 36): scroll-scrubbing gets ahead of image
    loading. Measure once Jason sets up a big test library.
-6. **The browser's header as a switcher** (item 38): clicked, a dropdown
-   of which list to show.
+6. ~~**The browser's header as a switcher**~~ (item 38) — **built
+   2026-09-26**, scoped to the show's own collection and its groups.
 7. **BGTools, items 23–25** (`spec/bgtools.md`, "Next up"): the one-click
    Control Center tile and its icon; per-screen stop — **both** the green
    switch and "Plays Nothing" (decided); Pan and Zoom, length and

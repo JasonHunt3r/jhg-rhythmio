@@ -199,12 +199,8 @@ struct CollectionBrowser: View {
     private var bar: some View {
         VStack(spacing: 6) {
             HStack(spacing: 6) {
-                Image(systemName: "rectangle.stack").foregroundStyle(.secondary)
-                Text(collection?.name ?? "No collection")
-                    .fontWeight(.semibold)
-                    .lineLimit(1).truncationMode(.middle)
+                collectionSwitcher
                 Text("\(files.count)").foregroundStyle(.secondary).monospacedDigit()
-                groupFilterMenu
                 Spacer(minLength: 4)
                 Button { inspectorShown.toggle() } label: {
                     Image(systemName: inspectorShown ? "chevron.backward.2" : "chevron.forward.2")
@@ -235,28 +231,48 @@ struct CollectionBrowser: View {
         .padding(.horizontal, 10).padding(.vertical, 8)
     }
 
-    /// "A show can draw from a group: the browser gets a drop-down in its
-    /// title to filter by group" (plan, decided). Hidden when the
-    /// collection has no groups.
-    @ViewBuilder private var groupFilterMenu: some View {
+    /// The header, which of this collection's lists the browser is
+    /// showing (item 38, `spec/status.md`, "What's next": "the browser's
+    /// header as a switcher... clicked, a dropdown of which list to
+    /// show" — the worklist's own "Collections list column dropdown,"
+    /// narrowed by Jason, 2026-09-26, to the show's own collection and
+    /// its groups; a wider collection-to-collection switch is a bigger
+    /// design question, left for later). Promotes the old, separate
+    /// `groupFilterMenu` folder-icon control into the title itself
+    /// ("A show can draw from a group: the browser gets a drop-down in
+    /// its title to filter by group," plan, decided) rather than keeping
+    /// both a name and a filter control side by side. Plain text, no
+    /// menu, when the collection has no groups: there's nothing to
+    /// switch to.
+    @ViewBuilder private var collectionSwitcher: some View {
         if let c = collection {
             let groups = model.groups(inCollection: c.id)
-            if !groups.isEmpty {
+            if groups.isEmpty {
+                Image(systemName: "rectangle.stack").foregroundStyle(.secondary)
+                Text(c.name).fontWeight(.semibold).lineLimit(1).truncationMode(.middle)
+            } else {
                 Menu {
-                    Button("All Files") { engine.updateEditor { $0.browserGroupID = nil } }
+                    Button(c.name) { engine.updateEditor { $0.browserGroupID = nil } }
                     Divider()
                     ForEach(groups) { g in
                         Button(g.name) { engine.updateEditor { $0.browserGroupID = g.id } }
                     }
                 } label: {
-                    Label(groupFilter?.name ?? "All Files", systemImage: "folder")
-                        .lineLimit(1).truncationMode(.middle).frame(maxWidth: 110)
+                    HStack(spacing: 4) {
+                        Image(systemName: groupFilter != nil ? "folder" : "rectangle.stack")
+                        Text(groupFilter?.name ?? c.name)
+                            .fontWeight(.semibold).lineLimit(1).truncationMode(.middle)
+                        Image(systemName: "chevron.down").font(.caption2).foregroundStyle(.secondary)
+                    }
                 }
                 .menuStyle(.borderlessButton)
                 .fixedSize()
-                .foregroundStyle(groupFilter != nil ? Color.accentColor : .secondary)
-                .help("Filter the browser to one group's files")
+                .foregroundStyle(.primary)
+                .help("Switch which of this collection's groups the browser shows")
             }
+        } else {
+            Image(systemName: "rectangle.stack").foregroundStyle(.secondary)
+            Text("No collection").fontWeight(.semibold)
         }
     }
 
