@@ -1,5 +1,4 @@
 import AppKit
-import ApplicationServices
 
 /// The view that lays out a `PaneController`'s tree: one host per pane,
 /// one divider per split, and one edge handle per closable split. Frames
@@ -402,18 +401,14 @@ func trackResize(_ split: Split, in container: PaneContainerView, from event: NS
     func release() {
         phase = .released
         NSCursor.arrow.set()
-        // Tap-to-drag with drag lock holds the button down in the system
-        // itself until the next tap. An app allowed to post events (the
-        // Accessibility permission) ends that hold with a button-up —
-        // measured 2026-09-26 in a test app with Jason's own tap-drags: the
-        // system reported no button held from then on, and no more drags
-        // came. Without the permission this does nothing, and the loop
-        // below still swallows the rest of the press.
-        if AXIsProcessTrusted() {
-            let at = CGEvent(source: nil)?.location ?? .zero
-            CGEvent(mouseEventSource: nil, mouseType: .leftMouseUp, mouseCursorPosition: at,
-                    mouseButton: .left)?.post(tap: .cghidEventTap)
-        }
+        // Tap-to-drag with drag lock: the trackpad driver itself keeps the
+        // button down until the next tap, and nothing an app does ends it —
+        // measured 2026-09-26 in ShowTools with Accessibility granted: a
+        // posted system mouse-up cleared the button state, but 15–90 drags
+        // still arrived in the next 3 s. Posting it only ended this loop
+        // early and let those drags reach the views underneath, so it isn't
+        // done; the loop below swallows the rest of the press until the
+        // real mouse-up (the tap).
     }
 
     /// Recent (time, distance) readings, for a flick's speed.

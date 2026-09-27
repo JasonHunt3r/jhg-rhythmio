@@ -297,16 +297,20 @@ the instant jump it had. Every closable split has it, whatever its handle
   now. **Direction with "natural" scrolling wants Jason's own swipe** —
   synthetic events don't carry the natural-scrolling flag.
 - **Tap-to-drag with drag lock** (Jason's trackpad: Dragging and
-  DragLock on). The system itself keeps the button held after the finger
-  lifts, until the next tap, so when a drawer looses the hold is still
-  on. **Measured 2026-09-26 in a test app with Jason's own tap-drags:**
-  posting a system mouse-up at the threshold ended it — a mouse-up came
-  back 12 ms later, the system reported no button held from then on, and
-  no more drags arrived. PaneKit now does that on release **if the app
-  has the Accessibility permission** (`AXIsProcessTrusted`); without it,
-  nothing changes. ShowTools is ad-hoc signed, so a permission granted to
-  it is lost at every reinstall — a stable signature (a free Apple
-  Development certificate) would keep it. Jason's call.
+  DragLock on) — **an app can't end its hold; settled 2026-09-26.** The
+  trackpad driver keeps the button down after the finger lifts, until the
+  next tap. A test app first seemed to show that posting a system
+  mouse-up ends it (the button read as up, the drag ended) — but it
+  stopped watching there, and nobody confirmed the feel. Measured in
+  ShowTools itself, with Accessibility granted (which took a stable
+  signature, a `tccutil reset` of three stale entries, and the app
+  prompting for itself): the post cleared the button state, yet **15–90
+  drags kept arriving in the next 3 s** — the driver was still dragging.
+  Posting only ended PaneKit's loop early and let those drags reach the
+  views underneath, so it was taken out; the loop swallows the rest of
+  the press until the real tap, as before. For a drag-lock user, the
+  answer is the flick and the swipe, or a different dragging style in
+  Trackpad settings (without drag lock, or three-finger drag).
 - **The resize cursor, everywhere** (Jason, 2026-09-26: some dividers
   didn't show it though dragging worked). Measured with the cursor in
   screenshots: the main window's own dividers were fine; Edit Slides'

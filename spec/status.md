@@ -150,11 +150,13 @@ chosen yet. In the order they came up:
    to the minimum, never shut — the flick, swipe and double-click shut),
    and **every divider and handle shows the resize cursor** (it didn't
    inside SwiftUI-hosted areas). **ShowTools is now signed Apple
-   Development** (team `P82S39V2KJ`, `spec/xcode-port.md`), so granting
-   it Accessibility lasts — and with it, drawers end tap-to-drag's hold.
-   Installed at the signing change; the extension re-registered. **For
-   Jason's hands:** grant Accessibility, check the Control Center tile
-   and BGTools' login item still work under the new signature.
+   Development** (team `P82S39V2KJ`, `spec/xcode-port.md`); the
+   extension re-registered on install. **Drag lock's hold can't be ended
+   by an app** — measured with Accessibility granted: drags kept arriving
+   after a posted mouse-up (`spec/panekit.md`); the post was taken out,
+   and ShowTools needs no Accessibility permission. **For Jason's hands:**
+   the Control Center tile and BGTools' login item under the new
+   signature.
 5. **Item 34: light mode is "awful"** (Jason tried it). Light mode needs
    more translucency than dark, and the window background has no
    transparency at all today — Jason wants a setting (a slider) for it.
