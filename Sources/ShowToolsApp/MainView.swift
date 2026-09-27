@@ -37,6 +37,9 @@ struct MainView: View {
         // Split from the alerts/dialogs below: one expression this size is
         // over the type checker's budget (measured, 2026-09-24).
         layout
+        // spec/windows.md, item 34: the Header Bar's own tunable Opacity
+        // Channel — installed once the main window exists, not touched again.
+        .background(WindowAccessor { HeaderBarBackground.install(on: $0) })
         .alert(renamingTitle, isPresented: Binding(get: { renaming != nil }, set: { if !$0 { renaming = nil } })) {
             TextField("Name", text: $draftName)
             Button("Rename") {
@@ -289,7 +292,7 @@ struct MainView: View {
         // window's own Opacity Channel) show through the List's own
         // otherwise-opaque background.
         .scrollContentBackground(.hidden)
-        .background(TranslucentBackground(region: .mainWindow))
+        .background(TranslucentBackground(region: .catalog))
     }
 
     /// The detail pane's content: PaneKit's "detail" pane. A fresh detail

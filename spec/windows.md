@@ -797,13 +797,37 @@ header bar reads "Drawer Sensitivity: Set Up Triggers." "It's good."
    tab's **"Adjust Transparency…"** button, the same `SettingsBox` case
    built for Drawer Sensitivity's "Set Up Triggers…". Defaults reproduce
    today's plain opaque look exactly (opacity 100%, system blur, no tint)
-   so nothing changes on screen until a slider actually moves. Checked
-   with axtool against a scratch library: the box opens with all three
-   channels' controls and the region pickers, Done closes it, and the
-   Library window's own look is unchanged with defaults left alone. Left
-   for Jason: tuning any of it by feel — nothing here has been dialed in
-   yet, and the Custom blur slider's real effect (if any, on this Mac's
-   OS version) hasn't been looked at.
+   so nothing changes on screen until a slider actually moves.
+
+   **Four assignable regions**, not three (Jason, same session, after
+   seeing the first cut): **Catalog** — "the library bar, the file
+   navigator on the left hand side... you make new collections or shows
+   from the new + button in it," renamed from an initial guess,
+   "Main window," to match his own name for the same view exactly — and
+   **Header bar**, "the main window's title bar" (the traffic lights and
+   window title), added the same way Panels and Inspector already were.
+   The header bar is the one surface that isn't a plain SwiftUI
+   `.background()`: AppKit draws the title bar's own chrome in a
+   dedicated `NSTitlebarContainerView`, a sibling of the content view, not
+   part of the SwiftUI tree at all, so `HeaderBarBackground.swift` sets
+   `titlebarAppearsTransparent` and inserts a hosted `TranslucentBackground`
+   directly behind that container — found from a standard window button so
+   the traffic lights and title text always stay on top, regardless of
+   subview order. Confirmed with axtool: the traffic lights and title
+   text still render and the window layout is unchanged with defaults
+   left alone.
+
+   **Confirmed live, not just wired**: with a scratch library, both
+   Catalog and Header bar (which share Channel 1 by default) turned
+   solidly black together the instant Channel 1's Tint Amount was set to
+   100% — proving the settings store, the region-to-channel assignment
+   and all four regions' own `TranslucentBackground` all actually update
+   live in the same running app, not just that the box's own sliders move.
+   Values were reset and the stray `com.jhg.showtools` preference keys the
+   test wrote were deleted afterward. Left for Jason: tuning any of it by
+   feel — nothing here has been dialed in on purpose yet — and the Custom
+   blur slider's real effect (if any, on this Mac's OS version) hasn't
+   been looked at.
 3. The "Smart View" preference (panes open and close by context — on by
    default — or keep your own choices; `spec/plan.md`, "Slides as mini
    movies") — **wants fleshing out**: today it's a one-paragraph sketch,

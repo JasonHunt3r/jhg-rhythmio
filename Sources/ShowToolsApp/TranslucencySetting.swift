@@ -19,15 +19,25 @@ enum OpacityChannel: Int, CaseIterable, Identifiable, Codable {
 /// .regionChannel`), defaulting every region to Channel 1 — Jason's own
 /// starting point ("Main window is class 1").
 enum TranslucentRegion: String, CaseIterable, Identifiable {
-    case mainWindow, inspector, panels
+    /// The file navigator on the left — Library, Collections, Shows, and
+    /// the "+ New" button (Jason, 2026-09-27: "the catalog is the library
+    /// bar, the file navigator on the left hand side"). Was `mainWindow`;
+    /// renamed to match his own name for it exactly, still the same view.
+    case catalog
+    case inspector
+    case panels
+    /// The main window's native title bar — the strip with the traffic
+    /// lights and the window title (Jason, 2026-09-27, "header bar too").
+    case headerBar
 
     var id: String { rawValue }
 
     var label: String {
         switch self {
-        case .mainWindow: return "Main window"
+        case .catalog: return "Catalog (the file navigator)"
         case .inspector: return "Inspector"
         case .panels: return "Panels (Info, Rhythm)"
+        case .headerBar: return "Header bar (the window title)"
         }
     }
 }
