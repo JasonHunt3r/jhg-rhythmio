@@ -88,6 +88,31 @@ struct ShowView: View {
         .onAppear {
             if let id = model.devSelection { session.selection = [id]; model.devSelection = nil }
         }
+        // The show's engine lives as long as the show is open, in either
+        // mode (item 33, Jason 2026-09-26): Edit Slides' timeline pane
+        // draws the real rows from it, dimmed. These sit on the Group
+        // outside the mode `switch`, which SwiftUI treats as one child, so
+        // a mode switch doesn't fire them (measured in a harness
+        // 2026-09-26). Leaving the show shuts it down (`closeShowSession`).
+        .task(id: showID) {
+            if session.engine?.showID != showID {
+                let e = PlaybackEngine(showID: showID, model: model)
+                if let first = firstSelectedIndex { e.go(to: first) }
+                session.engine = e
+            }
+        }
+        // Leaving Edit Show pauses it and closes its player windows, as
+        // shutting it down used to; coming back puts the playhead on the
+        // first selected slide, as a fresh engine did.
+        .onChange(of: mode) { _, m in
+            guard let engine = session.engine else { return }
+            if m == .show {
+                if let first = firstSelectedIndex { engine.go(to: first) }
+            } else {
+                Player.closeWindows(for: engine)
+                engine.pause()
+            }
+        }
         .onDisappear { model.closeShowSession() }
     }
 

@@ -26,12 +26,10 @@ struct EditShowTimelinePane: View {
     let timeline: ShowTimeline
     let session: ShowSession
     /// Whether Edit Show is the current mode. False while Edit Slides has
-    /// the show open: the bar still occupies its place (item 19, feedback
-    /// worklist), greyed out rather than gone, since the engine that drives
-    /// it only exists while Edit Show is on screen (`EditShowView`'s own
-    /// `.task`/`.onDisappear`). The drag-and-drop question a greyed bar
-    /// raises (item 33) is still open — Jason wants a working copy to play
-    /// with before deciding, so this stays a plain visual state for now.
+    /// the show open: the show's real rows still show, dimmed, with the
+    /// tools greyed and only scrolling and zooming live (item 33, Jason
+    /// 2026-09-26). The engine lives in both modes (`ShowView`). What a
+    /// drop onto the greyed timeline does is item 33's next step.
     let active: Bool
     let mutate: ShowMutator
     @Environment(AppModel.self) private var model
@@ -43,11 +41,16 @@ struct EditShowTimelinePane: View {
     var body: some View {
         @Bindable var session = session
         Group {
-            if active, let engine = session.engine, engine.showID == show.id {
+            if let engine = session.engine, engine.showID == show.id {
+                // Both modes draw the show's real rows (item 33, Jason
+                // 2026-09-26). In Edit Slides (`active` false) the tools
+                // grey out and the rows dim; only scrolling and zooming
+                // still respond, and the keys and menu commands are off.
                 VStack(spacing: 0) {
                     TransportRow(engine: engine, show: show, pps: $pps, fit: fitStoryline,
                                  setRangeToView: setRangeToView, setRangeToWholeShow: setRangeToWholeShow,
-                                 clearRange: clearRange, toggleRangeLock: { toggleRangeLock(engine) })
+                                 clearRange: clearRange, toggleRangeLock: { toggleRangeLock(engine) },
+                                 inert: !active)
                     Divider()
                     StorylineView(show: show, timeline: timeline, engine: engine, session: session,
                                   selection: $session.selection, selectedTransition: $session.selectedTransition,
@@ -57,9 +60,10 @@ struct EditShowTimelinePane: View {
                                   openSlideEditor: { id in
                                       SlideEditorWindow.show(slideID: id, show: show, model: model,
                                                              mutate: mutate, undoManager: undoManager)
-                                  })
+                                  },
+                                  inert: !active)
                 }
-                .background(shortcuts(engine))
+                .background { if active { shortcuts(engine) } }
             } else {
                 TimelinePanePlaceholder()
             }
@@ -404,15 +408,18 @@ struct EditShowTimelinePane: View {
                 canGoBack: t.canGoBack,
                 canGoForward: t.canGoForward)
         }
+        // Switching to Edit Slides removes this view but not the pane, so
+        // the pane's own onDisappear doesn't run: the Show/View menu's
+        // Edit Show items go off here too.
+        .onDisappear { model.editShowCommands = nil }
     }
 }
 
-/// Item 19, feedback worklist: the timeline pane's stand-in while Edit
-/// Slides has the show open. Same chrome as the real transport bar
-/// (`TransportRow`) so switching modes doesn't reflow the window, but
-/// dimmed and inert — there's no live `PlaybackEngine` to show real state,
-/// since one only exists while Edit Show is on screen. What a drop onto
-/// this bar should do (item 33) is still an open question for Jason.
+/// The timeline pane's stand-in for the moment before the show's engine
+/// exists (`ShowView` makes it as the show opens). Same chrome as the real
+/// transport bar (`TransportRow`), dimmed and inert, so nothing reflows.
+/// It was Edit Slides' whole timeline until item 33 (2026-09-26), which
+/// draws the real rows there instead — hence no message any more.
 private struct TimelinePanePlaceholder: View {
     var body: some View {
         VStack(spacing: 0) {
@@ -430,11 +437,7 @@ private struct TimelinePanePlaceholder: View {
             .padding(.vertical, 7)
             .background(.bar)
             Divider()
-            Text("Switch to Edit Show to use the timeline")
-                .font(.callout)
-                .foregroundStyle(.tertiary)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background(.background.secondary)
+            Color(nsColor: .underPageBackgroundColor)
         }
         .allowsHitTesting(false)
     }

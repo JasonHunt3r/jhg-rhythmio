@@ -49,6 +49,10 @@ struct StorylineView: View {
     /// Double-clicking a slide block: conventions.md's "go into it" —
     /// the Slide Editor, settled 2026-09-24 (it used to open the inspector).
     let openSlideEditor: (Int64) -> Void
+    /// Edit Slides (item 33, Jason 2026-09-26): the rows show, dimmed, and
+    /// only scroll and zoom — no clicks, drags, drops, keyboard or Listen.
+    /// The scroll view and the pinch sit outside the content that's shut off.
+    var inert = false
     @Environment(AppModel.self) private var model
     @Environment(\.undoManager) private var undoManager
     /// N: edges land on markers (plan, Phase 3). App-wide, like Final Cut's.
@@ -360,6 +364,10 @@ struct StorylineView: View {
                 .overlay(alignment: .topLeading) { linesThroughRows }
                 .overlay(alignment: .topLeading) { Playhead(engine: engine, timeline: timeline, pps: pps, inset: Self.inset) }
                 .coordinateSpace(name: "storyline")
+                // Inert: nothing inside takes the mouse or a drop, so the
+                // scroll view underneath gets the wheel.
+                .allowsHitTesting(!inert)
+                .opacity(inert ? 0.45 : 1)
                 .padding(.vertical, 6)
                 .background(GeometryReader { g in
                     Color.clear.preference(key: StorylineScrollKey.self,
@@ -367,7 +375,9 @@ struct StorylineView: View {
                 })
             }
             .coordinateSpace(name: "storylineScroll")
-            .overlay(alignment: .topLeading) { rowHandles }
+            .overlay(alignment: .topLeading) {
+                rowHandles.allowsHitTesting(!inert).opacity(inert ? 0.45 : 1)
+            }
             .onPreferenceChange(StorylineScrollKey.self) { scrollOffset = $0 }
             .onChange(of: engine.currentIndex) { _, i in
                 // Keep the playing slide in view.
@@ -392,7 +402,7 @@ struct StorylineView: View {
             }
             .onEnded { _ in magnifyBase = nil })
         .background(Color(nsColor: .underPageBackgroundColor))
-        .focusable()
+        .focusable(!inert)
         .focusEffectDisabled()
         .focused($focused)
         // An open Rhythm tool follows the show on screen.
@@ -401,7 +411,7 @@ struct StorylineView: View {
         // The Rhythm tool's Listen plays here, on this show's engine.
         .onChange(of: RhythmTool.shared.listening) { _, on in
             let tool = RhythmTool.shared
-            if on, tool.showID == show.id {
+            if on, !inert, tool.showID == show.id {
                 engine.onListenEnded = { tool.listening = false }
                 engine.listen(listenRange, clicks: tool.preview)
             } else {

@@ -102,25 +102,10 @@ struct EditShowView: View {
                 Color.black
             }
         }
-        .task(id: show.id) {
-            // One engine per show on screen; the old one is let go properly.
-            if let old = session.engine, old.showID != show.id {
-                Player.closeWindows(for: old)
-                old.shutdown()
-            }
-            if session.engine?.showID != show.id {
-                let e = PlaybackEngine(showID: show.id, model: model)
-                if let first = show.slides.firstIndex(where: { session.selection.contains($0.id) }) { e.go(to: first) }
-                session.engine = e
-            }
-        }
-        .onDisappear {
-            if let engine = session.engine {
-                Player.closeWindows(for: engine)
-                engine.shutdown()
-            }
-            session.engine = nil
-        }
+        // The engine isn't made or let go here any more: `ShowView` owns it
+        // for as long as the show is open, in either mode, so the timeline
+        // pane can draw the show's real rows in Edit Slides too, dimmed
+        // (item 33, Jason 2026-09-26).
     }
 }
 
@@ -530,6 +515,9 @@ struct TransportRow: View {
     let setRangeToWholeShow: () -> Void
     let clearRange: () -> Void
     let toggleRangeLock: () -> Void
+    /// Edit Slides (item 33): every tool greys out except the zoom buttons,
+    /// which still work on the dimmed rows.
+    var inert = false
     @AppStorage("snapping") private var snapping = true
 
     /// A switch in the show's editing state, saved with no undo step.
@@ -540,6 +528,10 @@ struct TransportRow: View {
 
     var body: some View {
         HStack(spacing: 10) {
+            // Everything up to the zoom buttons greys out in Edit Slides.
+            // (A Group: `disabled` reaches each child; the HStack's layout
+            // is unchanged.)
+            Group {
             Button { engine.step(-1) } label: { Image(systemName: "backward.end.fill") }
                 .help("Previous slide")
             Button { engine.togglePlay() } label: {
@@ -586,6 +578,8 @@ Group {
             }
             // Icons that light up when on, not checkboxes.
             .toggleStyle(.button)
+            }
+            .disabled(inert)
             Divider().frame(height: 16)
             Button { pps = max(pps / 1.5, 2) } label: { Image(systemName: "minus.magnifyingglass") }
                 .help("Zoom out (⌘−)")
@@ -618,7 +612,9 @@ Group {
         } label: {
             Image(systemName: "timeline.selection")
                 .symbolVariant(on ? .fill : .none)
-                .foregroundStyle(on ? Color.accentColor : Color.primary)
+                // Its own colour overrides `disabled`'s greying, so the
+                // inert state (item 33) has to grey it by hand.
+                .foregroundStyle(inert ? AnyShapeStyle(.tertiary) : AnyShapeStyle(on ? Color.accentColor : Color.primary))
         }
         .contextMenu {
             Button("Set Range to View") { setRangeToView() }
