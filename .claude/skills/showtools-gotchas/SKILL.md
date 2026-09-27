@@ -100,6 +100,14 @@ never have guessed it. `VideoSlideTiming` now holds it for both — asked by
   Use one `.onTapGesture` and branch on
   `NSApp.currentEvent?.clickCount`: the first click acts at once, the
   second "goes into it", as Finder does.
+- **A click on a SwiftUI `List` row never gives the list the keyboard**
+  (macOS 27, measured 2026-09-26): the row selects, grey, and ↑/↓ go to
+  whatever had the keyboard. A plain List does it too; a plain
+  `NSTableView` clicked the same way takes it. `.background(ClickTakesKeyboard())`
+  (`EditShowView.swift`) fixes a list: it hands the table the keyboard
+  after a click inside it, and only then — so a selection made
+  elsewhere doesn't steal it. (Tying the List to a `@FocusState` set on
+  selection change also works, but fires for selections from anywhere.)
 - **Harnesses first for AppKit questions.**
 - **A right-click on a SwiftUI `List`'s empty space throws** on macOS 27
   ("Row index -1 out of row range", from `OutlineListCoordinator`'s

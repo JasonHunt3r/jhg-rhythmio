@@ -639,6 +639,51 @@ func formatClock(_ s: Double) -> String {
 }
 
 
+// MARK: - A click gives a list the keyboard
+
+/// Behind a SwiftUI `List`: a click inside it gives the list's table the
+/// keyboard. On macOS 27 a click on a SwiftUI List's row selects it but
+/// never makes the list first responder (the row goes grey, and ↑/↓ go to
+/// whatever had the keyboard) — measured 2026-09-26 in a harness: plain
+/// List, with `.onMove`, with row drops, all the same; a plain
+/// `NSTableView` clicked the same way does take it. Acts only on clicks
+/// inside the list, so a selection made elsewhere (the timeline) leaves
+/// the keyboard where it is.
+struct ClickTakesKeyboard: NSViewRepresentable {
+    func makeNSView(context: Context) -> WatchView { WatchView() }
+    func updateNSView(_ view: WatchView, context: Context) {}
+
+    final class WatchView: NSView {
+        private var monitor: Any?
+        override func hitTest(_ point: NSPoint) -> NSView? { nil }
+        override func viewDidMoveToWindow() {
+            super.viewDidMoveToWindow()
+            if let monitor { NSEvent.removeMonitor(monitor) }
+            monitor = nil
+            guard window != nil else { return }
+            monitor = NSEvent.addLocalMonitorForEvents(matching: .leftMouseDown) { [weak self] event in
+                MainActor.assumeIsolated { self?.clicked(event) }
+                return event
+            }
+        }
+        private func clicked(_ event: NSEvent) {
+            guard let window, event.window === window,
+                  bounds.contains(convert(event.locationInWindow, from: nil)),
+                  let content = window.contentView else { return }
+            var view = content.hitTest(content.convert(event.locationInWindow, from: nil))
+            while let v = view, !(v is NSTableView) { view = v.superview }
+            guard let table = view as? NSTableView else { return }
+            // After the click itself, so the row's own selection happens first.
+            DispatchQueue.main.async {
+                if window.firstResponder !== table { window.makeFirstResponder(table) }
+            }
+        }
+        isolated deinit {
+            if let monitor { NSEvent.removeMonitor(monitor) }
+        }
+    }
+}
+
 // MARK: - Single-key commands
 
 /// Keys with no modifier (or only Shift) for the window this sits in,

@@ -261,6 +261,9 @@ struct EditSlidesView: View {
                 mutate("Move Slides") { $0.slides.move(fromOffsets: from, toOffset: to) }
             }
         }
+        // A click on a row gives the list the keyboard, so ↑/↓ move
+        // through the slides (SwiftUI's List doesn't take it on a click).
+        .background(ClickTakesKeyboard())
         .onDeleteCommand { SlideActions.remove(selection, selection: $selection, mutate: mutate) }
         .contextMenu(forSelectionType: Int64.self) { ids in
             if let id = ids.first {

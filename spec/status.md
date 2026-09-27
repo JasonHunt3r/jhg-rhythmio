@@ -94,12 +94,15 @@ chosen yet. In the order they came up:
    on screen (the wait for the first slide's media only ended in
    `render`; `tick` ends it too now). **Next: step 3, the Slide viewer
    drawer.**
-   **Found, not caused by this (same on `dc7f620`):** clicking a row in
-   Edit Slides' slide list never gives the list the keyboard — the row
-   selects in grey and ↑/↓ go to whatever had it (the sidebar; or, since
-   step 1, the timeline if it was clicked last, where ↓ moves to a row
-   and clears the slide selection). The same family as the grid's
-   tile-click focus (`showtools-gotchas`). Not fixed yet.
+   **Fixed the same day:** a click on a row in Edit Slides' slide list
+   never gave the list the keyboard (true before this work too, on
+   `dc7f620`) — the row went grey and ↑/↓ went to the sidebar or the
+   timeline. `ClickTakesKeyboard` (`EditShowView.swift`) behind the list
+   now hands it the keyboard on a click inside it. Checked on a test
+   copy: timeline click, then a list click, then ↓ selects the next slide
+   (blue); Space loops it; a timeline click takes the keyboard back.
+   Other SwiftUI Lists (the browser, the sidebar) are untouched — the
+   same helper would suit them if they show the same thing.
 3. **Item 2, grown into a windows pass:** make every panel's behaviour
    consistent and define each window by its purpose; the written layer
    hierarchy in `spec/windows.md`; a **settings vs preferences** pass
