@@ -454,9 +454,23 @@ struct AppCommands: Commands {
     }
 }
 
+/// Whether the Info panel, the Rhythm tool and the Slide Editor step out of
+/// the way when ShowTools isn't frontmost (`spec/windows.md`, "The windows
+/// pass," settled 2026-09-26: "polite for some kinds of window"). Read
+/// fresh each time one of those panels comes to front, so toggling this
+/// while one's already open takes effect the next time it's raised, not
+/// just on a fresh launch. **The library panel never reads this** — it's
+/// always a drop target for files dragged from Finder, so it never hides,
+/// on or off (Jason's own exception, same discussion).
+enum PanelHidingSetting {
+    static let key = "panelsHideWhenInactive"
+    static var isOn: Bool { (UserDefaults.standard.object(forKey: key) as? Bool) ?? true }
+}
+
 struct SettingsView: View {
     @Environment(AppModel.self) private var model
     @AppStorage(SlideRemovalNotice.suppressKey) private var suppressRemovalNotice = false
+    @AppStorage(PanelHidingSetting.key) private var panelsHideWhenInactive = true
     @AppStorage(CollectionAddNotice.autoAddKey) private var autoAddToCollection = false
     @AppStorage(FinderTagsSetting.key) private var writeFinderTags = false
     @AppStorage(ExportSettings.stripKey) private var stripOnExport = true
@@ -554,6 +568,13 @@ struct SettingsView: View {
             Section("BGTools") {
                 Toggle("Launch BGTools when ShowTools launches", isOn: $launchBGToolsWithShowTools)
                 Text("Starts the desktop background player in the background, without opening its window.")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+            }
+            // spec/windows.md, "The windows pass," settled 2026-09-26.
+            Section("Windows") {
+                Toggle("Panels hide when ShowTools isn't frontmost", isOn: $panelsHideWhenInactive)
+                Text("The Info panel, the Rhythm tool and the Slide Editor step out of the way when you switch to another app, like an ordinary panel. The library panel never hides, even with this off — it's where files dragged from Finder land.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
             }

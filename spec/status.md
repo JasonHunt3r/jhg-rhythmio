@@ -35,7 +35,18 @@ patterns, 12 their note length, 13 groups, 14 a drag order for a
 collection's/group's files). Before an upgrade the database is copied
 to `Library.sqlite.v<N>.bak`.
 
-**Built most recently (2026-09-26)** — details in the specs, the story in
+**Built most recently (2026-09-27)** — details in `spec/windows.md`, "The
+windows pass," the story in `spec/history/2026-09-27-windows-pass.md`:
+three of its six pieces: **panel-hiding as a setting** (`PanelHidingSetting`,
+a new "Windows" section in Settings; the library panel's own exception
+now explicit, not an accident of `NSPanel`'s default), **Settings no
+longer covered by a floating panel** (`SettingsWindowCoordinator`, scoped
+to this app's own panels, not PaneKit's pop-outs), and **About ShowTools**
+(already there for free, nothing to build). Left: the
+settings-vs-preferences split, the drawers' sensitivity setting, light
+mode's translucency, and Smart View — each wants its own discussion.
+
+**Built 2026-09-26** — details in the specs, the story in
 `spec/history/2026-09-26-slides-and-the-clutch.md` and
 `spec/history/2026-09-26-timeline-height.md`:
 - **The timeline pane's height, both halves** (`spec/windows.md`, "Its
@@ -90,12 +101,15 @@ No next task is chosen. Open, roughly in the order Jason raised them:
    `StorylineView` (which didn't exist before) and scrolling a moved row
    into view. Not yet confirmed by a real drag or scroll — see "Still
    needs Jason's hands."
-2. **The windows pass** — planned (`spec/windows.md`, "The windows pass"):
-   consistent panels, the layer hierarchy (panels cover Settings today),
-   the settings-vs-preferences split, About ShowTools; with it the drawers'
-   **sensitivity setting and practice drawer** (`spec/panekit.md`, "The
-   clutch"), **light mode's translucency and a background-transparency
-   setting** (item 34), and the **"Smart View"** preference.
+2. **The windows pass, the rest** — three of the six pieces are **built,
+   2026-09-27** (`spec/windows.md`, "The windows pass"): panel-hiding as a
+   setting, Settings no longer covered by a floating panel, and About
+   ShowTools (already there for free — nothing was needed). Left: the
+   **settings-vs-preferences split** (needs its own discussion), the
+   drawers' **sensitivity setting and practice drawer**
+   (`spec/panekit.md`, "The clutch"), **light mode's translucency and a
+   background-transparency setting** (item 34), and the **"Smart View"**
+   preference.
 3. **Slides as mini movies, the rest** (`spec/plan.md`): the Slide Editor
    as the Slide viewer's pop-out, maybe reordering in the viewer, and the
    framework for slides with more inside (portrait shots filling a
@@ -168,6 +182,16 @@ Not pressing; each wants a discussion or a plan before any code.
 
 ## Still needs Jason's hands
 
+- **The windows pass's three settled pieces** (built 2026-09-27,
+  `spec/windows.md`, "The windows pass"): the panel-hiding setting and the
+  Settings-covering fix were both confirmed with axtool (a real Info
+  panel dragged to overlap a reopened Settings window, checked before and
+  after the fix — it stayed on top, then didn't), but the *feel* of it —
+  whether panels stepping aside from Settings and back reads as natural
+  rather than jumpy, and whether the new Settings toggle's wording is
+  clear — wants a real look. Also worth trying: opening Settings while
+  the Rhythm tool or the Slide Editor (not just Info) is open and
+  overlapping it.
 - **The browser header's wider switch** (built 2026-09-26,
   `spec/plan.md`, "the browser filter"): opens "Other Collections,"
   switches, filters and switches back correctly with axtool against a

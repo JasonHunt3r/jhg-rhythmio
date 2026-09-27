@@ -28,7 +28,11 @@ final class InfoPanel: NSObject, NSWindowDelegate {
     /// content, which is a separate window with its own (see the rename
     /// sheet's note; hit again here in testing before this fix).
     static func show(model: AppModel, undoManager: UndoManager?) {
-        if let shared { shared.window.makeKeyAndOrderFront(nil); return }
+        if let shared {
+            shared.window.hidesOnDeactivate = PanelHidingSetting.isOn
+            shared.window.makeKeyAndOrderFront(nil)
+            return
+        }
         let panel = InfoPanel(model: model, undoManager: undoManager)
         shared = panel
         panel.present()
@@ -45,10 +49,11 @@ final class InfoPanel: NSObject, NSWindowDelegate {
         window.title = "Info"
         window.isFloatingPanel = true
         window.level = .floating
-        window.hidesOnDeactivate = true
+        window.hidesOnDeactivate = PanelHidingSetting.isOn
         window.isReleasedWhenClosed = false
         window.delegate = self
         window.sharedUndoManager = undoManager
+        SettingsWindowCoordinator.register(window)
         window.contentView = NSHostingView(
             rootView: InfoPanelContent(undoManager: undoManager).environment(model))
         window.setFrameAutosaveName("infoPanel")

@@ -434,42 +434,68 @@ second:**
    - Worth knowing when this is tried: ⌥-click on a row handle already
      opens or closes every drawer at once.
 
-## The windows pass (planned 2026-09-26)
+## The windows pass (planned 2026-09-26, the settled pieces built 2026-09-27)
 
 Item 2's other half from the 2026-09-25 feedback worklist, grown by
-Jason's answers into one pass over every window. Not started.
+Jason's answers into one pass over every window.
 
 **Make the windows consistent, each defined by its purpose.** What the
-code does today (audited 2026-09-26): the Info panel, the Rhythm panel,
-the library panel and the Slide Editor are `NSPanel`s that **hide** when
-ShowTools isn't frontmost (`hidesOnDeactivate`); the PaneKit pop-outs (the
-Inspector, the Timeline window) **stay visible** and drop to `.normal`
-(`PaneWindows.swift`). Every one of them sits at `.floating` while
-ShowTools is active — **above the Settings window**, an ordinary window.
+code did before this pass (audited 2026-09-26): the Info panel, the Rhythm
+panel, the library panel and the Slide Editor are `NSPanel`s that **hid**
+when ShowTools wasn't frontmost (`hidesOnDeactivate`); the PaneKit
+pop-outs (the Inspector, the Timeline window) **stayed visible** and
+dropped to `.normal` (`PaneWindows.swift`). Every one of them sat at
+`.floating` while ShowTools was active — **above the Settings window**,
+an ordinary window.
 
-**Jason's answers:**
+**Jason's answers, the three settled ones — built 2026-09-27:**
 - **Whether panels hide when ShowTools isn't frontmost is a setting** —
   polite for some kinds of window — but **panels that take drops from
   other apps never hide** (the browser list, popped out, is a
-  destination for files dragged from Finder).
-- **Settings, opened from the menu or its key, comes up frontmost.**
-  Whether it then stays on top or acts as a normal window is to discuss.
-  For that discussion: Apple's guidance makes Settings an ordinary,
-  non-modal window — opened from the app menu or ⌘, in front, its
-  minimise and zoom buttons dimmed, a fixed toolbar of panes, the title
-  naming the pane, reopening on the last pane used (HIG, "Settings");
-  Adobe's Preferences (Photoshop ⌘K, Premiere) are modal dialogs with OK
-  and Cancel. Claude's recommendation: Apple's way — you can watch a
-  setting's effect while changing it (the light-mode translucency
-  slider wants exactly that) — with the layer fix being that Settings
-  comes up in front and panels stop covering it.
+  destination for files dragged from Finder). Built: `PanelHidingSetting`
+  (`ShowToolsApp.swift`), an `@AppStorage` toggle in Settings' new
+  "Windows" section, default on (matching the old hardcoded behavior).
+  The Info panel, the Rhythm tool and the Slide Editor read it fresh each
+  time they come to front, so toggling it while one's already open takes
+  effect the next time it's raised. The library panel's `hidesOnDeactivate`
+  is hardcoded `false` instead — Jason's own exception — where before it
+  silently relied on `NSPanel`'s own default of `true`, the bug this whole
+  item exists to fix.
+- **Settings, opened from the menu or its key, comes up frontmost, and
+  panels stop covering it.** Built as `SettingsWindowCoordinator`: every
+  hand-built panel registers itself; whenever a window whose title matches
+  `"<app name> Settings"` becomes key, every registered panel drops to
+  `.normal` (stepping aside without losing `hidesOnDeactivate`'s own
+  state), and returns to `.floating` (if the app's still active) once
+  Settings resigns key. Settings itself stays an ordinary window, per
+  Apple's own guidance (Claude's recommendation, accepted): it can still
+  go behind another window on request, unlike a permanently-floating one.
+  **A first version matched the window by capturing `NSApp.keyWindow`
+  from `SettingsView.onAppear`** — wrong, the same class of timing gotcha
+  `UndoMenuState` already documents in this file for `NSApp.keyWindow`:
+  `.onAppear` isn't guaranteed to fire after the window's actually become
+  key, so it silently captured the *previous* key window instead, and
+  panels never moved. Found with a real Info panel dragged to overlap a
+  reopened Settings window — it stayed on top regardless; matching by
+  title, checked fresh at each key-window change instead of captured
+  once, fixed it, confirmed the same way. **Scoped to this app's own
+  panels** — PaneKit's own pop-outs (the Inspector, the Timeline window)
+  aren't covered, since giving PaneKit a dependency on ShowToolsApp's
+  Settings window wants a cleaner cross-package hook than this pass
+  builds; worth a follow-up if it turns out to matter.
+- **About ShowTools** in the app menu — already there. SwiftUI's own
+  default app menu provides it for free (confirmed with axtool: "About
+  ShowTools" sits right above "Settings…," exactly where you'd expect);
+  nothing to build. "Install BGTools" (this doc's own guess at where it
+  might live) doesn't exist as a menu item either — the BGTools menu's
+  only item today is "Desktop Show…".
+
+**Still open, needs its own discussion before any code:**
 - **A settings-and-preferences pass:** define which is which, and
   whether they share one window with a tab switcher or get two. Apple has
   had one "Settings" window since macOS 13; pro apps split app-wide
   choices (⌘,) from a document's own (a show's settings in its inspector,
   a library's in its Info). To settle with Jason.
-- **About ShowTools** in the app menu — perhaps where "Install BGTools"
-  lives.
 
 **Goes in the same pass:** the drawers' sensitivity setting with its
 practice drawer (`spec/panekit.md`, "The clutch"); light mode's

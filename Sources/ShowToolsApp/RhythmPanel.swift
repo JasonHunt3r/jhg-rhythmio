@@ -87,10 +87,11 @@ private final class RhythmPanel: NSObject, NSWindowDelegate {
         window.title = "Rhythm"
         window.isFloatingPanel = true
         window.level = .floating
-        window.hidesOnDeactivate = true
+        window.hidesOnDeactivate = PanelHidingSetting.isOn
         window.isReleasedWhenClosed = false
         window.delegate = self
         window.sharedUndoManager = tool.undoManager
+        SettingsWindowCoordinator.register(window)
         window.contentView = NSHostingView(rootView: RhythmPanelContent().environment(model).environment(tool))
         // The first time, bottom right of the screen; after that, where it was left.
         if !window.setFrameUsingName("rhythmPanel"), let screen = NSScreen.main {
@@ -102,6 +103,7 @@ private final class RhythmPanel: NSObject, NSWindowDelegate {
 
     func front() {
         window.sharedUndoManager = tool.undoManager
+        window.hidesOnDeactivate = PanelHidingSetting.isOn
         window.makeKeyAndOrderFront(nil)
     }
 

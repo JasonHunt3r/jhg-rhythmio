@@ -114,9 +114,16 @@ final class LibraryPanel: NSObject, NSWindowDelegate {
         window.minSize = NSSize(width: 240, height: 300)
         window.isFloatingPanel = true
         window.level = .floating
+        // Never hides, on or off (`PanelHidingSetting`, `spec/windows.md`,
+        // "The windows pass," Jason's own exception, 2026-09-26): it's a
+        // drop target for files dragged from Finder ("Filling a new
+        // collection," same doc), and a panel that vanished mid-drag would
+        // strand the drop. `NSPanel`'s own default is `true`.
+        window.hidesOnDeactivate = false
         window.isReleasedWhenClosed = false
         window.delegate = self
         window.sharedUndoManager = undoManager
+        SettingsWindowCoordinator.register(window)
         // Passed in via `undoManagerOverride`, not read from the
         // environment — the same fix InfoPanel's own content needed (see
         // its note): a separate window's undoManager isn't the main

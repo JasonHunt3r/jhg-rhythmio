@@ -27,6 +27,7 @@ final class SlideEditorWindow: NSObject, NSWindowDelegate {
                       undoManager: UndoManager?) {
         if let shared {
             shared.retarget(slideID: slideID, show: show)
+            shared.window.hidesOnDeactivate = PanelHidingSetting.isOn
             shared.window.makeKeyAndOrderFront(nil)
             return
         }
@@ -56,9 +57,11 @@ final class SlideEditorWindow: NSObject, NSWindowDelegate {
         window.minSize = NSSize(width: 640, height: 420)
         window.isFloatingPanel = true
         window.level = .floating
+        window.hidesOnDeactivate = PanelHidingSetting.isOn
         window.isReleasedWhenClosed = false
         window.delegate = self
         window.sharedUndoManager = undoManager
+        SettingsWindowCoordinator.register(window)
         window.onEscape = { [weak self] in self?.window.close() }
         window.setFrameAutosaveName("slideEditor")
     }
