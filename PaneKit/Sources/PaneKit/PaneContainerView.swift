@@ -443,11 +443,11 @@ func trackResize(_ split: Split, in container: PaneContainerView, from event: NS
                 container.needsLayout = true
             }
         case .resizing:
-            // A slow drag only repositions: down to the minimum and no
-            // further, never shut (Jason, 2026-09-26: "that's reposition,
-            // not close drawer"). Shutting is a flick, a swipe or a
-            // double-click.
-            if split.collapsible, PaneClutch.flicksShut(speed: speed, pushed: startExtent - at) {
+            // A slow drag repositions down to the minimum, where the divider
+            // stops dead; carried on `closePast` beyond it, it looses the
+            // drawer shut (Jason, 2026-09-26). A flick shuts it at once.
+            if split.collapsible, PaneClutch.flicksShut(speed: speed, pushed: startExtent - at)
+                || PaneClutch.shutsPastMinimum(fromEdge: at, minimum: minimum) {
                 release()
                 controller.live = nil
                 controller.slide(split.id, to: 0, target: max(target, minimum),

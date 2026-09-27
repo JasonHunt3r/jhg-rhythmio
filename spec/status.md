@@ -148,7 +148,8 @@ chosen yet. In the order they came up:
    worth granting (Jason's call)**. Sensitivity setting still to come, in
    the settings pass. Later still: **a slow drag only repositions** (down
    to the minimum, never shut — the flick, swipe and double-click shut),
-   and **every divider and handle shows the resize cursor** (it didn't
+   (later: a slow drag **brakes at the minimum and shuts 64 pt past the
+   stopped divider**), and **every divider and handle shows the resize cursor** (it didn't
    inside SwiftUI-hosted areas). **ShowTools is now signed Apple
    Development** (team `P82S39V2KJ`, `spec/xcode-port.md`); the
    extension re-registered on install. **Drag lock's hold can't be ended

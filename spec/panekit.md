@@ -231,17 +231,19 @@ the instant jump it had. Every closable split has it, whatever its handle
   the button comes up. Its own size: a default per drawer, then the last
   size it was left at. Let go before it engaged: it slides back shut
   (`settleDuration`, 0.14 s), nothing saved.
-- **Dragged slowly, an open drawer is only repositioned** (Jason,
-  2026-09-26: "that's reposition, not close drawer") — down to its
-  minimum and no further, never shut. It shuts with a **flick** toward
-  its edge, a **swipe** on its handle, or a double-click. (The first
-  build resisted past the minimum and shut 48 pt beyond it — "way too
-  soon" for the timeline, whose minimum is a few hundred points; a
-  literal close-at-36-pt rule came and went the same hour, once the
-  flick made slow closing unnecessary.) Checked on a test copy: the
-  Slide viewer dragged slowly to the window's top stopped at 121 (its 120
-  minimum and the divider); the timeline dragged to the bottom stopped at
-  its minimum.
+- **Dragged slowly, an open drawer repositions, then brakes** (Jason,
+  2026-09-26). Down to its minimum it follows the pointer; there the
+  divider **stops dead** ("the brakes are slammed on") and stays still
+  while the pointer carries on — until the pointer is `closePast` (64 pt,
+  the same literal as the pull that opens) beyond the stopped divider:
+  then it looses shut, the drag over. Let go before that and it stays
+  open at its minimum. A flick shuts it at once; so do a swipe and a
+  double-click. (Earlier the same day: it resisted past the minimum and
+  shut 48 pt beyond — "way too soon" for the timeline; then it never
+  shut on a slow drag at all, "only partly right".) Checked on a test
+  copy: the Slide viewer, 40 pt past its stopped divider and let go,
+  stayed at its minimum; 80 pt past, it shut. The timeline: 40 pt past
+  stayed; 70 and 86 pt past shut.
 - **Double-click** (a divider, an edge handle, an app's handle) and an
   app's own `setOpen(_:_:animated: true)` / `toggle(_:animated:)` slide
   rather than jump. Plain `setOpen` is unchanged (instant), for state
@@ -310,7 +312,17 @@ the instant jump it had. Every closable split has it, whatever its handle
   views underneath, so it was taken out; the loop swallows the rest of
   the press until the real tap, as before. For a drag-lock user, the
   answer is the flick and the swipe, or a different dragging style in
-  Trackpad settings (without drag lock, or three-finger drag).
+  Trackpad settings (without drag lock, or three-finger drag). A web
+  search (2026-09-26) found no established way for an app to end it:
+  the next tap is the designed end, and Apple's own split views behave
+  the same. **Idea logged, not tried** (Jason): switch drag lock off at
+  the trigger and back on just after. Doubtful — the preference doesn't
+  reach the driver live (System Settings applies it through private
+  calls), a drag already locked may not be released by it, and an app
+  flipping a system-wide accessibility setting risks leaving it off after
+  a crash. If ever tried: a standalone test app only, always restoring
+  the setting on quit. Jason, 2026-09-26: "we've exhausted this edge case
+  for now."
 - **The resize cursor, everywhere** (Jason, 2026-09-26: some dividers
   didn't show it though dragging worked). Measured with the cursor in
   screenshots: the main window's own dividers were fine; Edit Slides'

@@ -21,6 +21,14 @@ final class PaneClutchTests: XCTestCase {
         XCTAssertEqual(PaneClutch.engageDistance(opensTo: 900), PaneClutch.engage)
     }
 
+    /// Stopped dead at its minimum, it shuts only once the pointer is
+    /// `closePast` beyond the stopped divider.
+    func testASlowDragShutsOnlyWellPastTheStoppedDivider() {
+        XCTAssertFalse(PaneClutch.shutsPastMinimum(fromEdge: 120, minimum: 120))
+        XCTAssertFalse(PaneClutch.shutsPastMinimum(fromEdge: 120 - PaneClutch.closePast + 1, minimum: 120))
+        XCTAssertTrue(PaneClutch.shutsPastMinimum(fromEdge: 120 - PaneClutch.closePast, minimum: 120))
+    }
+
     /// A flick's speed: over the last `flickWindow` only, so an earlier slow
     /// stretch doesn't dilute a fast finish.
     func testSpeedIsMeasuredOverTheLastMoment() {

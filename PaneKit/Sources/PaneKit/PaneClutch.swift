@@ -28,6 +28,17 @@ public enum PaneClutch {
     /// 64 is a touch quicker than the first build's 48…110 (half the
     /// drawer's size), which Jason found "a little on the slow side".
     public static var engage: CGFloat = 64
+    /// A slow drag stops an open drawer dead at its minimum; carried on this
+    /// far past the stopped divider, it looses the drawer shut — the same
+    /// literal distance as the pull that opens it (Jason, 2026-09-26: "once
+    /// the brakes are slammed on, it should stay still until the mouse is X
+    /// distance from the stopped divider").
+    public static var closePast: CGFloat = 64
+    /// Whether a slow drag to `fromEdge` has gone far enough past the
+    /// stopped divider (at `minimum`) to shut the drawer.
+    public static func shutsPastMinimum(fromEdge: CGFloat, minimum: CGFloat) -> Bool {
+        fromEdge <= minimum - closePast
+    }
     /// The slide open or shut once engaged, and a double-click's.
     public static var slideDuration: TimeInterval = 0.18
     /// The slide back when let go before engaging.
