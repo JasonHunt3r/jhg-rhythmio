@@ -115,3 +115,47 @@ Then two changes from Jason's first look:
   their content instead.
 - Seen and not chased: the inspector showed empty stars for a file just
   rated 4 from the browser (the library said 4) — in `status.md`.
+
+## Moved from `spec/status.md` (2026-09-26, the status rewrite)
+
+Word for word. The right-click hunt was the same day as the drawer and
+the icon; the icon paragraph is how the final icon was made.
+
+### Right-click, 2026-09-26
+
+Jason found right-click "not working" in the Library pane, the inspector
+and the browser. Measured with a click logger on a scratch copy (his two-
+finger taps arrive as right-clicks): the rows' menus work; what failed
+was **places with no menu designed** (the browser's header, where his
+taps landed; the inspector bar's empty stretch, now fixed) and **list
+empty space**, where SwiftUI throws. Every such place now shows a greyed
+**"No menu yet — place › area"** note (`spec/conventions.md` §3), so the
+gaps are visible and listable (search `noMenuYet`, `ListEmptySpace`).
+**Not covered yet:** the timeline, the transport, the filter bar and sort
+strip, the defaults bar. Also found: deselecting in the browser left the
+inspector on the old slide (fixed, both directions); a click on the
+timeline's empty space now deselects everything there (fixed the same
+day: the images, transitions and audio rows and past the last slide,
+checked on a scratch copy). Escape still doesn't clear a timeline
+selection — `spec/conventions.md` §2 says it should, not built.
+
+### The app icon, as built
+
+**The app icon** is an Icon Composer document, `Resources/AppIcon.icon`
+(open it in Icon Composer to edit), made from Jason's third drawing
+(2026-09-26, `Resources/AppIcon.svg`: a rust-to-dark-red gradient square,
+the navy panel, a fan of four teal cards, the cream line and its shadow).
+A **background** layer is his gradient stretched over the whole canvas, so
+it fills the mask edge to edge; under it the fill is a solid from the
+gradient's middle (#af5928) as a floor. The other eleven shapes are layers
+in his drawing order, scaled so the line's points touch the mask's edges;
+three blue cards hidden in his drawing (`display="none"`, which Icon
+Composer's renderer ignores) are layers marked `hidden`. Why the
+background: behind the layers macOS 27 puts an opaque backing whatever
+the fill (measured: `none` gives white, fully transparent a light glass
+grey, both alpha 1) — the first drawing, with no background of its own,
+showed that grey. Icon Composer's glass lighting
+lightens the colours a little; his to tune there. A plain icon set, tried
+first, was shrunk onto a grey rounded square by macOS 27. Story, with how
+the mask and the backing were measured:
+`spec/history/2026-09-26-viewer-drawer-and-icon.md`.

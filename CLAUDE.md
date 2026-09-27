@@ -15,8 +15,8 @@ A macOS slideshow composer and player for Jason's own Mac.
 | `spec/xcode-port.md` | current | Why one Xcode project builds both bundles, and how. |
 | `spec/edit-slides-inspector-port.md` | current | The fix for the layout-loop crash: ported Edit Slides' inspector off SwiftUI's `.inspector()`. |
 | `spec/simple-things-fast.md` | current | Planned: making simple things fast — the first run, playing without building a show, and Basic / Advanced / "Bring it on!" levels. |
-| `spec/panekit.md` | current | Our own reusable pane system (two panes and one divider, nested), with edge handles and pane ⇄ panel pop-out — built and in use throughout the app (the main window, Edit Show's and Edit Slides' columns, every pop-out), meant to be reused in other Mac apps too. |
-| `spec/windows.md` | current | Areas of the main window in windows of their own (the Slide Editor, the library panel, the Inspector, the Timeline pane — all built) and editors for one thing. What's left: the open questions under "Jason's answers," and the areas nothing's asked for yet (the Library pane, the browser). |
+| `spec/panekit.md` | current | Our own reusable pane system (two panes and one divider, nested), with edge handles and pane ⇄ panel pop-out — built and in use throughout the app (the main window, Edit Show's and Edit Slides' columns, every pop-out), meant to be reused in other Mac apps too. **How every drawer feels under the hand — the clutch, flick, swipe and their dials — is in its "The clutch" section.** |
+| `spec/windows.md` | current | Areas of the main window in windows of their own (the Slide Editor, the library panel, the Inspector, the Timeline pane — all built) and editors for one thing. What's left: the timeline's height (agreed), **the windows pass** (the layer hierarchy, settings vs preferences, About — planned), the open questions under "Jason's answers," and the areas nothing's asked for yet (the Library pane, the browser). |
 | `spec/conventions.md` | current | What each gesture, key, right-click, drop and Edit-menu item means everywhere: Built / Settled / Proposed / Open, plus a log of conventions found by use. Fixes build toward it. |
 | `spec/hig-audit.md` | current | Expected Mac behaviour that was never built: the Edit menu, context menus, keyboard selection, Edit Slides vs Edit Show. Findings and fix batches. |
 | `spec/anatomy.md` | reference | The screen's map: one name for each area, how areas nest, the picture's layers, and what selecting or changing one area does to the others. Use its names. |
@@ -152,6 +152,11 @@ before moving code between targets or adding a file to one.
   reads it: the working pattern is a reply that ends "commit and push,
   then do X". An ask at the top of a long reply scrolls past unseen.
 - Tell Jason before restarting the app: he's often using it.
+- **Every bundle is signed "Apple Development", team `P82S39V2KJ`** (Jason's
+  Personal Team; `project.yml`), never ad hoc: a macOS permission granted to
+  an ad-hoc build is lost at the next build. After changing any signing
+  setting, `rm -rf build/xcode/Build` first, or embedded targets keep their
+  old signatures and the build fails. `spec/xcode-port.md` has the traps.
 - Library delete conventions (Delete asks first, ⌘Delete moves to the Trash
   without asking) and the slide-removal notice are settled decisions. See
   the plan.

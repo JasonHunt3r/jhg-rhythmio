@@ -30,12 +30,20 @@ what, and the few structural rules that go with each. Rules live in
   window's own split (library | detail | the timeline pane, full width
   under both), Edit Show's and Edit Slides' columns, and every pane's
   pop-out (the Slide Editor, the library panel, the Inspector, the
-  Timeline window).
+  Timeline window). **How a drawer feels** — the clutch, flick, swipe and
+  their dials — is `PaneClutch.swift` (with `PaneSlide`, the timed slide,
+  and `PaneSwipe`); the drag itself is `trackResize` in
+  `PaneContainerView.swift`, which also watches the pointer for the
+  resize cursor (`PaneResizeCursorView`, `PaneHandle.swift`).
 - `Sources/ShowToolsApp/`: the SwiftUI/AppKit app. `PlaybackEngine` owns a
   show's clock, media and drawing, and any number of `ShowCanvas` views
   show it (the Edit Show preview and its pop-out share one engine). A paused
   engine stops drawing about 0.6s after the last change; call `touch()`
-  after anything visible changes.
+  after anything visible changes. **`ShowView` owns the show's engine**
+  while the show is open, in either mode (Edit Slides' timeline and Slide
+  viewer draw it too); `EditShowView` no longer makes or ends it. The
+  engine's `selectionLoop` (from `ShowTimeline.loopSpans`) is Edit Slides'
+  looping Play.
 - Video export lives in Core (`MovieExport` settings and codecs,
   `MovieWriter` the one place that builds an `AVAssetWriter`,
   `MoviePictureTrack`, `MovieSoundTrack`/`MovieSoundRenderer`,
@@ -52,6 +60,12 @@ what, and the few structural rules that go with each. Rules live in
   drawn in the show's own `rows` order, with their handles and drawers;
   the blocks and the lane's transitions row), `ImagesRow` (the lane's images row),
   `MusicRow` (songs and their waveforms; move, trim, overlaps),
+  `EditShowTimelinePane` (the timeline pane: transport and storyline, live
+  in both modes; `active: false` draws them dimmed and inert, for a
+  timeline with no show), `SlideViewer` and `EditSlidesView`
+  (`ShowView.swift`; the Slide viewer drawer over the slide list),
+  `ClickTakesKeyboard` and `SingleKeys` (`EditShowView.swift`: a click
+  that gives a SwiftUI List the keyboard, and window-wide single keys),
   `LevelLine` (the level line on song and lane-image clips: volume or
   opacity, and the fades), `MusicPlayer` (plays the songs on
   AVAudioEngine and is the show's clock while it does; `PlaybackEngine.syncMusic`
@@ -92,4 +106,7 @@ what, and the few structural rules that go with each. Rules live in
 - `tools/`: `make-test-library.sh <dir>` builds a scratch library with
   generated media and a test show. There are also a window lister and a
   contact-sheet tool, for checking screenshots.
+- **Signing:** every bundle is signed "Apple Development", team
+  `P82S39V2KJ` (`project.yml`'s base settings; `spec/xcode-port.md`), so a
+  permission granted to ShowTools survives rebuilds.
 

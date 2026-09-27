@@ -11,9 +11,9 @@ Repo: `~/Projects/ShowTools`, pushed to **github.com/JasonHunt3r/jhg-showtools**
 
 ## Where it stands
 
-**Everything planned is built**, including Groups inside collections and
-the range package (below). Phases 1–5, Phase 3b, Phase 4 and video
-export. **348 tests** (335 core + 13 BGTools; PaneKit has its own 39). **Library schema 14.**
+**Everything planned is built**, and more has come from Jason's use of it.
+Phases 1–5, Phase 3b, Phase 4 and video export. **349 tests** (336 core +
+13 BGTools; PaneKit has its own 46). **Library schema 14.**
 
 | Phase | State |
 |---|---|
@@ -33,162 +33,75 @@ Every schema upgrade is additive and tested by opening a library of the
 version before (7 rows, 8 music, 9 markers, 10 editing state, 11 rhythm
 patterns, 12 their note length, 13 groups, 14 a drag order for a
 collection's/group's files). Before an upgrade the database is copied
-to `Library.sqlite.v<N>.bak`. Video export needed no schema change: a video
-slide's level line is slide settings, which are JSON.
+to `Library.sqlite.v<N>.bak`.
 
-`~/Applications/ShowTools.app` was last reinstalled 2026-09-25 20:28,
-at `c7d657e`: the rebuilt drag-to-reorder, the pile, edge scrolling and
-the Undo fix. Reinstalled again after `79ca4e0` (Escape put-back, the Library's sort
-strip), and at 23:04 at `71aa2a1` (items 13 and 30). **Reinstalled
-2026-09-26 at `e0ae45a`**: item 20, both deselect fixes (browser and
-timeline), the inspector bar's right-click, and the "No menu yet" notes. **Reinstalled
-2026-09-26 02:49 at `e283204`**: grid pinch, timeline ⌘A, the Icon
-Composer app icon. **Reinstalled at `f22a58f`**: the viewer drawer (all three
-places), the second app icon, and the grids' tools in the bar. **Reinstalled at
-`f2175dd`**: the sort strip as the drawer's second handle, with its pill
-(since changed: the strip is the only handle — see the viewer drawer below). **Reinstalled at `56f7c63`**: the dark strip as the drawer's only
-handle (a grip strip in the browser), and the v3 app icon. **Reinstalled
-2026-09-26 18:22 at `dc7f620`**: the grid selects on the first click. **Reinstalled
-2026-09-26 19:12 at `66d4982`**: Edit Slides' live timeline, Play looping the
-selected slides, and the slide list taking the keyboard on a click. **Reinstalled
-2026-09-26 19:34 at `e94b27d`**: the Slide viewer drawer (Y) and the drawers'
-clutch. **Reinstalled at `57ee418`**: the squash fix and the clutch loosing
-like a bow (engaging ends the drag). **Reinstalled at `c35b5f9`**: the pull that
-looses a drawer is a literal 64 pt. **Reinstalled at `a77c49e`**: flick and
-swipe, and the drag-lock release (active only with Accessibility granted). **Reinstalled
-2026-09-26 at `39fcbd6`** (signed Apple Development): the drag-lock post
-removed, the resize cursor everywhere, and a slow drag that brakes at the
-minimum and shuts 64 pt past it.
-Reinstalling stops the real BGTools instance (`install.sh`'s own quit
-sequence); BGTools wasn't restarted after the 20:28 install. BGTools'
-desktop extension (`BGToolsControls.appex`) was also killed before that
-morning's swap, on Jason's own call, rather than relaunched — it still
-needs re-enabling by hand before BGTools' desktop features work again.
+**Built most recently (2026-09-26)** — details in the specs, the story in
+`spec/history/2026-09-26-slides-and-the-clutch.md`:
+- **Edit Slides plays** (`spec/plan.md`, "Slides as mini movies", steps
+  1–3): its timeline is live, Play loops the selected slides cut to cut,
+  and the **Slide viewer** drawer (Y) shows the picture. A click in the
+  slide list gives it the keyboard.
+- **The clutch** — how every PaneKit drawer feels (`spec/panekit.md`):
+  bite, slip, loose at 64 pt; a slow drag brakes at the minimum and shuts
+  64 pt past it; flick and handle swipe; slides instead of jumps; the
+  resize cursor on every handle.
+- **The grid selects on the first click** (was ~350 ms late).
+- **A still no longer squashes when its view is resized** (Pan and Zoom
+  off, in any canvas).
+- **Signed "Apple Development"**, team `P82S39V2KJ` (`spec/xcode-port.md`),
+  no longer ad hoc.
 
-**The real library was set aside 2026-09-24** (Jason's own call, mid this
-session): the old one is `~/Pictures/ShowTools Library (2026-09-24).noindex`,
-untouched. A fresh one at the default path, `~/Pictures/ShowTools
-Library.noindex`, is in use (12 files and one collection on 2026-09-26).
+**Installed:** `~/Applications/ShowTools.app` at `39fcbd6`, 2026-09-26,
+signed with Jason's team. Every reinstall (`install.sh`) quits the real
+BGTools and doesn't restart it: start it again from View ▸ Desktop Show….
+
+**The real library** is a fresh one at the default path, `~/Pictures/ShowTools
+Library.noindex` (12 files and one collection on 2026-09-26); the old one,
+set aside 2026-09-24, is `~/Pictures/ShowTools Library (2026-09-24).noindex`,
+untouched.
 
 ## What's next
 
-**Jason answered the worklist's open items on 2026-09-26** (the answers
-are folded into "The 2026-09-25 feedback worklist" below). No next task is
-chosen yet. In the order they came up:
+No next task is chosen. Open, roughly in the order Jason raised them:
 
-1. **Grid selection lag — fixed 2026-09-26, needs Jason's hand.** A tile
-   click took ~half a second to draw its border. Cause: item 9's
-   double-click (`4bb2dde`, 2026-09-25) stacked `.onTapGesture(count: 2)`
-   over the single tap, so SwiftUI held every click in case a second came.
-   Measured in a harness: 356 ms stacked, 353 ms with the double as a
-   `.simultaneousGesture` (no better), **2 ms** with one tap reading
-   `NSApp.currentEvent.clickCount` — the fix (`MainView.swift`, the
-   tile's tap). Checked on a test copy: click selects, double-click
-   opens Quick Look, ⌘-click adds. Installed at `dc7f620`.
-2. **Item 33 — grown into "Slides as mini movies"** (`spec/plan.md`).
-   Step 1 built 2026-09-26 (`279680b`): the show's engine lives in both
-   modes (`ShowView`), and Edit Slides draws the real rows, dimmed and
-   inert (tools greyed, zoom and scroll live). Jason then changed course:
-   **Edit Slides' timeline is fully live**, Edit Slides gets a **Slide
-   viewer drawer** (the Slide Editor is its pop-out), and **Play there
-   loops the selected slides in order**. The dimmed state stays for a
-   timeline open with no show (the "Smart View" preference, off). The
-   drop onto a showless timeline (option (b): the show creator) waits
-   for that. **Plan steps 1 and 2 built 2026-09-26:** Edit Slides'
-   timeline is live, and Play there loops the selected slides cut to cut
-   in show order (`PlaybackEngine.selectionLoop`,
-   `ShowTimeline.loopSpans`); a mode switch pauses. Checked on a test
-   copy: one slide loops 0:14→0:19; two neighbours play through as one
-   stretch; photo_02 + photo_04 alternate; timeline and list selections
-   stay in sync. Fixed on the way: Play waited forever with no picture
-   on screen (the wait for the first slide's media only ended in
-   `render`; `tick` ends it too now). **Step 3 built the same day: the
-   Slide viewer drawer** (Y; see the plan).
-   **Fixed the same day:** a click on a row in Edit Slides' slide list
-   never gave the list the keyboard (true before this work too, on
-   `dc7f620`) — the row went grey and ↑/↓ went to the sidebar or the
-   timeline. `ClickTakesKeyboard` (`EditShowView.swift`) behind the list
-   now hands it the keyboard on a click inside it. Checked on a test
-   copy: timeline click, then a list click, then ↓ selects the next slide
-   (blue); Space loops it; a timeline click takes the keyboard back.
-   Other SwiftUI Lists (the browser, the sidebar) are untouched — the
-   same helper would suit them if they show the same thing.
-3. **Item 2, grown into a windows pass:** make every panel's behaviour
-   consistent and define each window by its purpose; the written layer
-   hierarchy in `spec/windows.md`; a **settings vs preferences** pass
-   (define which is which; one window with a tab switcher, or two);
-   **About ShowTools** in the app menu (perhaps where "Install BGTools"
-   lives). Jason's answers: whether panels hide when ShowTools isn't
-   frontmost is **a setting** — but panels that take drops from other
-   apps (the browser list as a panel) must never hide. Settings opened
-   from the menu or its key comes up frontmost; whether it then stays on
-   top or acts as a normal window is still to discuss.
-4. **Item 39: the drawers' clutch — built 2026-09-26, for every PaneKit
-   drawer** (`spec/panekit.md`, "The clutch"): bite, slip, engage with a
-   quick slide, back shut if let go early; pushed shut, it resists past
-   its minimum, then slides shut or springs back; double-clicks and Y
-   slide. Defaults chosen without asking (say if wrong): every drawer;
-   it opens to its saved size and a continuing drag resizes from there;
-   engage at about half its size (48–110 pt). The dials want Jason's
-   hand. Measured at hand speed on a test copy (numbers in the spec).
-   **Jason's first look, 2026-09-26 ("a good start"; animation tuning
-   later), and what's done about it:** (a) the Slide viewer's picture
-   squashed as the drawer resized — a still with Pan and Zoom off was
-   never redrawn at the new size (the motionless-frame skip in
-   `PlaybackEngine.render` ignored a resize); **fixed** (`3afa4f6`),
-   reproduced and re-checked on a test copy. (b) Pushed shut mid-drag,
-   the pointer stayed grabbed and moving back did nothing; **fixed the
-   way Jason chose**: engaging, open or shut, ends the drag like a bow
-   loosed — the cursor returns, the rest of the press is ignored — and a
-   drawer opens to exactly its own size (default, then last used). (c)
-   **The timeline's height** — only as tall as its contents or smaller,
-   with the background-window padding exception — **written up in
-   `spec/windows.md` ("Its height"), agreed, not built.** Later the same
-   day: the pull is a literal 64 pt; **flick** and **swipe** (on the
-   handle only) open and shut drawers; tap-to-drag's drag-lock hold ends
-   on release if ShowTools has the Accessibility permission (measured in
-   a test app with Jason's tap-drags) — **needs a stable signature to be
-   worth granting (Jason's call)**. Sensitivity setting still to come, in
-   the settings pass. Later still: **a slow drag only repositions** (down
-   to the minimum, never shut — the flick, swipe and double-click shut),
-   (later: a slow drag **brakes at the minimum and shuts 64 pt past the
-   stopped divider**), and **every divider and handle shows the resize cursor** (it didn't
-   inside SwiftUI-hosted areas). **ShowTools is now signed Apple
-   Development** (team `P82S39V2KJ`, `spec/xcode-port.md`); the
-   extension re-registered on install. **Drag lock's hold can't be ended
-   by an app** — measured with Accessibility granted: drags kept arriving
-   after a posted mouse-up (`spec/panekit.md`); the post was taken out,
-   and ShowTools needs no Accessibility permission. **For Jason's hands:**
-   the Control Center tile and BGTools' login item under the new
-   signature.
-5. **Item 34: light mode is "awful"** (Jason tried it). Light mode needs
-   more translucency than dark, and the window background has no
-   transparency at all today — Jason wants a setting (a slider) for it.
-6. **Item 35: Show Similar should be thematic.** Tried on themed images,
-   it grouped nothing at any setting: Vision's feature prints find
-   bursts and near-copies, not "dogs", "dogs filling the frame", "dogs
-   sitting". Jason wants it to surface a good *next slide*, as well as
-   winnowing seven takes of one set-up. Needs research and a discussion.
-7. **Item 36: large libraries** — scroll-scrubbing gets ahead of image
-   loading. Jason will set up a big library for testing; measure then.
-8. **Item 38: the browser's header as a switcher** — today it's only a
-   header bar over the browser (the collections list column); clicked,
-   it could drop down a list to switch which list is shown.
+1. **The timeline's height** — agreed, not built (`spec/windows.md`, "Its
+   height"): only as tall as its contents or smaller, rows scrolling;
+   growing with its contents up to a ceiling (the viewer keeps about half
+   the window); a new row scrolled fully into view.
+2. **The windows pass** — planned (`spec/windows.md`, "The windows pass"):
+   consistent panels, the layer hierarchy (panels cover Settings today),
+   the settings-vs-preferences split, About ShowTools; with it the drawers'
+   **sensitivity setting and practice drawer** (`spec/panekit.md`, "The
+   clutch"), **light mode's translucency and a background-transparency
+   setting** (item 34), and the **"Smart View"** preference.
+3. **Slides as mini movies, the rest** (`spec/plan.md`): the Slide Editor
+   as the Slide viewer's pop-out, maybe reordering in the viewer, and the
+   framework for slides with more inside (portrait shots filling a
+   frame). Also the drop onto a timeline with no show (item 33, option (b):
+   the show creator), which waits on Smart View.
+4. **Show Similar, thematic** (item 35): Vision's feature prints find
+   bursts and near-copies, not themes ("dogs", "dogs sitting"); Jason
+   wants it to surface a good next slide. Needs research and a talk.
+5. **Large libraries** (item 36): scroll-scrubbing gets ahead of image
+   loading. Measure once Jason sets up a big test library.
+6. **The browser's header as a switcher** (item 38): clicked, a dropdown
+   of which list to show.
+7. **BGTools, items 23–25** (`spec/bgtools.md`, "Next up"): the one-click
+   Control Center tile and its icon; per-screen stop — **both** the green
+   switch and "Plays Nothing" (decided); Pan and Zoom, length and
+   transition options once Quick Show's field list settles.
+8. **ModKit** (items 26/27/29 moved out): Jason's standalone look
+   auditioning app, planned with App Claude (`ModKit & DefaultsKit —
+   Design Pass.md` in the repo root, untracked, his). Here, he mainly wants
+   the glass buttons' corners less circular.
 
-BGTools (items 23–25) stays last, as planned (`spec/bgtools.md`).
+**Also open:** telling BGTools when a library moves (B7 left it; Jason not
+sure it's needed); promoting a group to its own collection (`spec/plan.md`,
+"Groups inside collections"); the Library pane and the browser as windows
+of their own (`spec/windows.md`); Simple things fast, all three to be
+built (`spec/simple-things-fast.md`, nothing left open).
 
-### New asks (Jason, 2026-09-25) — both built 2026-09-26
-
-- **Pinch to resize the grid's tiles** — built and confirmed (below).
-- **The viewer drawer over the grids** — built, all four steps, in the
-  Library grid, the library panel and Edit Show's browser (`spec/plan.md`,
-  "The viewer drawer"): Side by Side or Stack, the dark strip under the
-  bar as its handle, video and GIFs muted and looping. Checked with
-  axtool on a scratch library; waiting on Jason's hands (below). The
-  grids' tools moved into its bar the same day. Story:
-  `spec/history/2026-09-26-viewer-drawer-and-icon.md`.
-
-### Parked for later (Jason, 2026-09-25)
+### Parked for later
 
 Not pressing; each wants a discussion or a plan before any code.
 
@@ -223,241 +136,26 @@ Not pressing; each wants a discussion or a plan before any code.
   macOS 27's alert puts the app icon alone in the top-left with empty
   space beside it — "maybe room for the App name or something". Another
   reason to consider our own panel for this type.
-
-**The 2026-09-24 cloud-planning work queue is done** — every item in it
-(the audit batches, Groups inside collections, the range package, the
-grid's keyboard, PaneKit steps 4–5, the popped-out Inspector and Timeline
-panes) shipped 2026-09-24/25 and is already folded into "Where it stands"
-above. Full dated story, including what each item's `swift test` run and
-axtool check actually covered:
-`spec/history/2026-09-25-work-queue-narrative.md`.
-
-### The 2026-09-25 feedback worklist
-
-Jason's own build feedback, `ShowTools Feedback — Worklist for Next CC
-Session.md` (repo root), 37 items, worked through in batches grouped
-by shared code. **26 done** (batches 1–8 below). Jason answered the rest
-2026-09-26: 23–25 (BGTools) stay last; 26/27/29 left the list for
-**ModKit** (below); item 2's other half, 33, 34, 35, 36 and 38 are in
-"What's next"; 37 is settled (item 5 needed no code). Each fix checked
-with axtool against a scratch library, not just compiled. Full dated
-story — root causes, what each check actually covered, the commit for
-each: `spec/history/2026-09-25-feedback-worklist-batches.md`.
-
-| Batch | Done |
-|---|---|
-| 1 — PaneKit/window-layer | Items 1, 2, 9, 11 |
-| 2 — library/collections | Items 3, 4, 6, 15, 16, 28, 32 (item 5 was a mislabel, no code needed) |
-| 3 — frames row/transport | Items 7, 8, 18 (18 was already built) |
-| 4 — BGTools | Items 10, 21, 22 |
-| 5 — P2 polish | Items 30, 31 (31 was already built) |
-| 6 — transport/icon, discussed 2026-09-25 | Item 19; item 12's icon half (its promotion idea is still open, above) |
-| 7 — drawers, 2026-09-25 late | Items 13, 14; item 30 redone (the frame strip itself, not the timeline) |
-| 8 — ratings, 2026-09-26 | Item 20 |
-
-**Item 20 — built 2026-09-26** (Aperture's conventions, decided with
-Jason by Q&A). A rating belongs to the **file**, so it lives where files
-do — the Library grid, the library panel, Edit Show's browser, and the
-inspector/Info panel's stars — never the timeline, the viewer, the frame
-strip or the player. Keys (`Rating.Key`, `ShowToolsCore/Rating.swift`):
-1–5 rate, 0 clears, **9 rejects**, − / = step (− stops at unrated and
-leaves a reject alone; = lifts a reject to unrated; Jason: "−= might have
-to be contextual, we'll get to that if it arises"). **U** shows/hides the
-ratings (View ▸ Show Ratings (U), the `showRatings` default); the Library
-grid's tiles now show stars at all, on a fixed-height line so rows stay
-level. **Y** (Aperture's Viewer key) is Jason's for the **planned drawer
-viewer over the grids** (new asks, below) — build it with that. A reject
-is **−1 in the existing `rating` column** (no schema change); the rating
-filter is Show All / Unrated or Better (the default, hides rejects, and
-what every saved filter's 0 already meant) / ★…★★★★★ / Rejected Only.
-**U is window-wide on purpose** (Jason's fix the same night: U jumped
-the sidebar to "Untitled Collection" by type-select, since a tile click
-leaves it the keyboard): `MainView`'s own `SingleKeys` takes U in every
-mode, and the grid's rating digits run ahead of its sidebar check — see
-`showtools-gotchas`. Re-checked with the sidebar holding the keyboard: U
-both ways, no jump, a digit rates, the search box still types "u".
-Checked with axtool on a scratch library: 3, 5 on two files at once, −,
-9 (the file leaves the grid), Show All (its red ✕), U both ways (the
-default flips), =, ⌘Z/Redo Rate, and a screenshot of level rows.
-
-**Batch 6 — decided/built 2026-09-25** (this discussion):
-- **Item 19** (transport greyed-out state) — **built**: the timeline
-  pane's split now stays open in both edit modes (`MainView.isShowOpen`,
-  was `isEditingShow`, gated on `mode == .show` too); Edit Slides shows
-  `TimelinePanePlaceholder` (`EditShowTimelinePane.swift`), the same
-  chrome dimmed and inert, instead of the pane closing and the window
-  reflowing. Checked with axtool against the scratch library: the
-  placeholder's "Switch to Edit Show to use the timeline" reads correctly
-  in Edit Slides, and clicking back to Edit Show restores the real,
-  interactive transport and storyline, screenshotted both ways. **Not
-  what Jason meant** (2026-09-26): the rows should stay visible with only
-  the tools greyed — item 33 in "What's next" reworks it.
-- **Item 12** (groups → a library item / catalog folder) — Jason's actual
-  intent was already built 2026-09-24 (the Library pane's collapsible
-  groups-and-shows list); the only missing piece, the icon convention
-  (solid folder for a collection, outline for a group), is **built**
-  (`collectionRow` now uses `folder.fill`, confirmed by screenshot). The
-  bigger idea Jason raised alongside it — **promoting a group to its own
-  collection** — is still a design question (`spec/plan.md`, "Groups
-  inside collections," "Promotion"): what happens to the original group,
-  and whether nested sub-groups come along.
-- **Item 17 / 38** (drag-to-reorder) — **built and tried by Jason's
-  hand, 2026-09-25**: an empty gap follows the pointer, one drop handler
-  for the whole grid, a drop saves what's on screen, Undo Reorder works;
-  several files drag as a tidy pile with a count badge, fly in on pickup
-  and spring into place on drop; the grid scrolls near its edges, faster
-  and with the pile shrinking as it nears them. Design, terms and dials:
-  `spec/plan.md`, "Reordering". Story: `spec/history/2026-09-25-drag-reorder-rebuild.md`.
-  A drag let go over the plain Library says why (`LibraryOrderNotice`);
-  a drag nothing takes, or Escape, puts the files back (no message for
-  Escape); the plain Library's sort strip names the sort in use.
-  Left: the parked list under "What's next".
-- **Item 13** (the Browser's own closed-drawer state, stacking with the
-  Inspector's handle) — **step 1 built**: a fix it needed first.
-  Dragging the Inspector shut (or open from its handle) changed the
-  Browser's width, though a double-click didn't — measured on Jason's own
-  copy, 236 → 545 pt. PaneKit's drag now moves the linked split by the
-  space the side occupies, the same arithmetic as `setOpen`
-  (`dragResize`, `PaneContainerView.swift`; two new `PaneControllerTests`
-  that fail on the old code). Checked on a test copy: 236 through open,
-  drag shut, drag open, drag shut. **Step 2 built:** the Browser is a
-  drawer. Edit Show's columns are two splits nested from the right
-  (`EditColumnsLayout`, new split ids `columns.inspector`/
-  `columns.browser`), so the Browser closes to its own handle, the two
-  handles stack at the right edge when both are closed, and every open,
-  close or drag of either goes to the preview. View ▸ Show Browser (⌥⌘B).
-  Checked on a test copy: double-click the divider and the handle, drag
-  shut and open with the Inspector open (it stayed 320), the menu item and
-  ⌥⌘B, and a screenshot of the two stacked handles. **Step 3 built —
-  switching sides, for every pane** (a PaneKit feature, `spec/panekit.md`
-  "What every pane can do"): drag a pane across main and, once less than
-  its starting size is left, it trades places and mounts on the opposite
-  edge. Checked on a test copy: the Browser to the left beside the
-  Library pane (screenshot), closed there (handle on the left edge),
-  dragged back by its handle; the Inspector across to the left
-  (Inspector | preview | Browser, screenshot). **Left for Jason's hands:**
-  the feel of all three steps, and the panes not tried at all — the
-  Library pane, the timeline (it can switch to the top now) and Edit
-  Slides' inspector. No menu command or animation yet.
-- **Item 14** (the inspector's header at the top when empty) — **built**:
-  bar + message were one short stack the pane centred. The inspector is
-  now top-aligned (`SlideInspector.body`), and the empty message is an
-  overlay centred on the whole pane (Jason: align the header, don't
-  stretch the message to push it up — a first try did that). Screenshotted
-  empty and with a slide selected on a test copy.
-- **Item 30, done properly** (the frame strip as a drawer; batch 5 had
-  read it as the timeline) — **built**: Edit Show's picture and frame
-  strip are a PaneKit vertical split (`PreviewLayout`,
-  `model.previewPanes`), replacing the hand-made 12 pt bar. Dragged below
-  10 pt the strip closes to its edge handle; View ▸ Show Frame Strip
-  (⌥⌘F) and the strip's Hide item now close it to the handle rather than
-  removing it; it can switch to the top; it starts at the old bar's saved
-  height (`frameStripHeight`, now unused after that first read). Checked
-  on a test copy: drag closed, double-click the handle, drag to 214, the
-  menu item and ⌥⌘F, to the top and back (screenshot). **For Jason's
-  hands:** PaneKit's divider is a 1 pt line with a 7 pt grab band, where
-  the old bar was a 12 pt band (he'd found the system split line too
-  fiddly) — if it's fiddly again, that's a PaneKit-wide grab-width change.
-  **Resizing live, fixed the same day:** Jason found the frames didn't
-  follow a resize. Measured with screenshots mid-drag: the height followed,
-  but every frame was blank until the drag stopped (frames are cached at
-  one exact size and rendering waits 120 ms for a drag to settle — true of
-  the old bar too). `FrameCache.nearest(to:)` now stands in the closest
-  cached frame, stretched, until the real one renders.
-- **Items 23–25** — queued as their own BGTools work list, to pick up
-  once the ShowTools fixes above are done: `spec/bgtools.md`, "Next up —
-  queued 2026-09-25, after the ShowTools fixes."
-- **Items 26, 27, 29 — moved out of this list 2026-09-26.** The live
-  value-changer panel is becoming **ModKit**, a standalone dev-tool app
-  Jason is planning with App Claude (a plan doc of its own, not in this
-  repo yet): auditioning look values live, then sending the final values
-  back to Claude Code or out as a file. The look asks wait for it. What
-  Jason most wants from it here: **the glass buttons' corners less
-  circular**; he's also curious whether plain AppKit windows' corner
-  radius can be hacked. Item 29's remaining half (BGTools' icon and its
-  Control Center tile) goes with item 23. The earlier proposal is kept in
-  `spec/history/2026-09-25-feedback-worklist-batches.md`.
-- **Item 2's other half** — grown into the windows pass in "What's next"
-  (item 3 there). Audit facts found 2026-09-26: the Info panel, Rhythm
-  panel, library panel and Slide Editor hide when ShowTools isn't
-  frontmost (NSPanel's `hidesOnDeactivate`); the PaneKit pop-outs
-  (Inspector, Timeline) stay visible and drop to `.normal`
-  (`PaneWindows.swift`). And every one of them sits at `.floating` while
-  ShowTools is active, above the Settings window (an ordinary window).
-- **Item 37** (Quick Show scope) — settled: presets are separate from
-  New Show…'s (`spec/simple-things-fast.md`).
-- **Simple things fast** — Jason confirmed 2026-09-25 all three answers
-  (guided first run, Quick Show, the levels) are to be **built**, not
-  chosen among. Its doc's own "Still open" list has shrunk to one real
-  question (presets shared or separate between Quick Show and New Show…).
-- **Windows of their own** — the built pop-outs (Slide Editor, the
-  library panel, the Inspector, the Timeline pane) don't cover the whole
-  original list: **the Library pane itself** (the sidebar, not the
-  separate floating Library panel) and **the Browser** (Edit Show's file
-  column) still can't detach. Answer 7 (double-click's meaning) is also
-  still genuinely undecided — not superseded by the pop-out work.
-- **The feedback doc's five Open Questions** — all answered 2026-09-26
-  (items 33–36 and 38, in "What's next").
-
-### Also next
-
-**Telling BGTools when a library moves** (B7 left it open). BGTools
-reads the library at the path in its own settings, so if ShowTools'
-library is moved or switched (Change Library), BGTools isn't told and
-keeps looking at the old path. Jason isn't sure it's needed (2026-09-25)
-— a question, not a task yet.
-
-**Done, confirmed by Jason 2026-09-26:** pinch in the Library grid and
-the library panel changes the tile size like the slider, down to the list
-view (`MainView.swift`); ⌘A in the timeline selects every slide instead of
-beeping (audit A1's storyline half, the timeline's `SingleKeys`); and the
-app icon, "a good start."
-
-**The app icon** is an Icon Composer document, `Resources/AppIcon.icon`
-(open it in Icon Composer to edit), made from Jason's third drawing
-(2026-09-26, `Resources/AppIcon.svg`: a rust-to-dark-red gradient square,
-the navy panel, a fan of four teal cards, the cream line and its shadow).
-A **background** layer is his gradient stretched over the whole canvas, so
-it fills the mask edge to edge; under it the fill is a solid from the
-gradient's middle (#af5928) as a floor. The other eleven shapes are layers
-in his drawing order, scaled so the line's points touch the mask's edges;
-three blue cards hidden in his drawing (`display="none"`, which Icon
-Composer's renderer ignores) are layers marked `hidden`. Why the
-background: behind the layers macOS 27 puts an opaque backing whatever
-the fill (measured: `none` gives white, fully transparent a light glass
-grey, both alpha 1) — the first drawing, with no background of its own,
-showed that grey. Icon Composer's glass lighting
-lightens the colours a little; his to tune there. A plain icon set, tried
-first, was shrunk onto a grey rounded square by macOS 27. Story, with how
-the mask and the backing were measured:
-`spec/history/2026-09-26-viewer-drawer-and-icon.md`.
-
-**Done, confirmed by Jason 2026-09-25:** the two listens (an exported
-movie against the same show playing; a video slide's sound in the app),
-a show built by hand from his own photos and music (v1 end-to-end), the
-Mac-conventions audit (`spec/hig-audit.md`, G1 included), and right-click
-menus area by area.
-
-**Ken Burns → "Pan and Zoom" — done 2026-09-23** (`8db7ffc`, `a0be113`),
-in the UI, the code, the slide-settings JSON keys (`panAndZoom`,
-`panAndZoomSeed`) and the setlist TSV columns (`panzoom_*`). No old
-spelling was kept readable. The show-level default was already `.off`;
-BGTools' random-mode default was the one place still `.auto`, now `.off`
-too. `~/Applications/ShowTools.app` is rebuilt and reinstalled from HEAD.
-**A setlist folder or `show.json` exported before this date will lose its
-Pan and Zoom setting, silently, on re-import** — confirmed by hand
-against a real export. Full story: `spec/history/2026-09-23-pan-and-zoom-rename.md`.
-
-**Pan and Zoom only zooms** (Jason, 2026-09-24): Auto is mostly a zoom,
-and Custom's pan is two small frames to drag in the inspector. Wanted: a
-direction, and aiming the zoom by clicking the image. In the plan, under
-Later.
-
-Parked: image stickiness, a guided first run (`spec/first-run-brief.md`),
-and Flush presets from 2a.
+- **Pan and Zoom only zooms** (Jason, 2026-09-24): Auto is mostly a zoom,
+  and Custom's pan is two small frames to drag in the inspector. Wanted: a
+  direction, and aiming the zoom by clicking the image. In the plan, under
+  Later.
+- Image stickiness, a guided first run (`spec/first-run-brief.md`), and
+  Flush presets from 2a.
 
 ## Still needs Jason's hands
 
+- **The clutch's feel and dials** (`spec/panekit.md`): pulling, braking,
+  flicking and swiping drawers, on every kind of handle; whether 64 pt and
+  the slide's 0.18 s feel right; **a swipe's direction with natural
+  scrolling** (synthetic swipes can't carry that flag).
+- **Edit Slides playing** (`spec/plan.md`, "Slides as mini movies"): the
+  Slide viewer (Y), looping the selection with Space, ↑ ↓ in the list after
+  a click, the timeline live in both modes.
+- **The grid's first click** — the border should draw at once.
+- **BGTools under the new signature:** the Control Center tile (the
+  extension re-registered on install) and BGTools' login item, which macOS
+  may treat as new.
 - **The Library grids' tools in the bar** (2026-09-26, Jason): the
   slider, Import, Add to Show and Get Info moved from the toolbar into the
   bar under the viewer drawer; the library panel's bar wraps to two rows.
@@ -654,49 +352,31 @@ and Flush presets from 2a.
 
 ## Open questions
 
-- **The selection viewer's name** (2026-09-26): the new drawer over the
-  grids is called the viewer in the menus (View ▸ Viewer, Show Viewer)
-  and "the viewer drawer" in the plan, but `spec/anatomy.md` already has
-  **Viewer** (Edit Show's picture column) and **Drawer** (a timeline row's
-  settings). The anatomy calls it the **selection viewer** for now.
-- **Map 1 (`spec/maps/1-library-grid.png`) is stale** (2026-09-26): its
-  source, `maps.html`, has the selection viewer, the filter bar's tools
-  and the sort strip, but the PNG wasn't re-rendered — `render.js` needs
-  Playwright, which isn't installed on this Mac.
-- **Image stickiness (2c)**, at the end of Phase 3: should a lane image
-  stay at its time on the clock, or move with the slide it starts over
-  when slides are trimmed or reordered? For now it stays on the clock.
-- **Windows of their own** (`spec/windows.md`): which areas detach, the
-  Slide Editor, the library panel and Show in Library. Jason answered six
-  of seven questions 2026-09-24; what comes first is still open. Its prerequisite is moving a show's
-  editing state out of the views, which the audit's menu work wants too.
-- **Simple things fast** (`spec/simple-things-fast.md`; was "a simple
-  way in"). The editor does a lot, but simple things aren't fast. There
-  are three answers: the guided first run, playing a library or
-  collection without building a show, and three levels (Basic, Advanced,
-  "Bring it on!"). All three are to be built; one question left for
-  Jason: do Quick Show and New Show… share one set of presets?
-
-## Right-click, 2026-09-26
-
-Jason found right-click "not working" in the Library pane, the inspector
-and the browser. Measured with a click logger on a scratch copy (his two-
-finger taps arrive as right-clicks): the rows' menus work; what failed
-was **places with no menu designed** (the browser's header, where his
-taps landed; the inspector bar's empty stretch, now fixed) and **list
-empty space**, where SwiftUI throws. Every such place now shows a greyed
-**"No menu yet — place › area"** note (`spec/conventions.md` §3), so the
-gaps are visible and listable (search `noMenuYet`, `ListEmptySpace`).
-**Not covered yet:** the timeline, the transport, the filter bar and sort
-strip, the defaults bar. Also found: deselecting in the browser left the
-inspector on the old slide (fixed, both directions); a click on the
-timeline's empty space now deselects everything there (fixed the same
-day: the images, transitions and audio rows and past the last slide,
-checked on a scratch copy). Escape still doesn't clear a timeline
-selection — `spec/conventions.md` §2 says it should, not built.
+- **The selection viewer's name** (2026-09-26): the drawer over the grids
+  is called the viewer in the menus and "the viewer drawer" in the plan,
+  which clash with the anatomy's **Viewer** and **Drawer**; the anatomy
+  says **selection viewer** for now. Edit Slides' drawer is the **Slide
+  viewer**.
+- **Map 1 (`spec/maps/1-library-grid.png`) is stale**: its source,
+  `maps.html`, is current, but `render.js` needs Playwright, which isn't
+  installed on this Mac.
+- **Image stickiness (2c)**: should a lane image stay at its time on the
+  clock, or move with the slide it starts over? For now it stays on the
+  clock.
+- **Settings: always on top, or an ordinary window?** (`spec/windows.md`,
+  "The windows pass"; Apple's way recommended.)
+- **What one slide's loop covers** — its own time cut to cut (as built) or
+  its transitions too; waits on the mini-movies framework.
 
 ## Known issues
 
+- **Right-click: places with no menu yet** show a greyed "No menu yet —
+  place › area" note (`spec/conventions.md` §3; search `noMenuYet`,
+  `ListEmptySpace`). Not covered yet: the timeline, the transport, the
+  filter bar and sort strip, the defaults bar. Escape doesn't clear a
+  timeline selection (`spec/conventions.md` §2 says it should).
+- **A setlist exported before 2026-09-23 loses its Pan and Zoom setting on
+  re-import**, silently (the rename, `spec/history/2026-09-23-pan-and-zoom-rename.md`).
 - **Edit ▸ Undo was disabled once after a rating key**, on one test copy
   (2026-09-26), though ⌘Z had nothing to undo either; four later tries,
   including the same order of actions on a fresh launch, all showed
@@ -714,13 +394,6 @@ selection — `spec/conventions.md` §2 says it should, not built.
   until the next event** (AppKit's automatic group stays open). Fixed for
   drag-to-reorder by an explicit undo group; other paths that register
   undo from a `Task` or after an `await` haven't been checked.
-- **Right-click on a list's empty space — fixed 2026-09-26.** The
-  logged "Row index -1" exception (2026-09-25, and again 09-26) was a
-  right-click below a SwiftUI list's last row: SwiftUI throws there and
-  shows nothing, in the Library pane and the browser alike.
-  `ListEmptySpace` now answers those clicks with a "No menu yet" note
-  (`showtools-gotchas`). Reproduced, fixed and re-checked on a scratch
-  copy: no exception, the note shows, rows keep their own menus.
 - **The layout-loop crash — fixed 2026-09-23, and its 2026-09-24
   recurrence also fixed.** `NSGenericException` from AppKit's layout-loop
   guard; root cause was SwiftUI's `.inspector()` modifier, fixed by
@@ -771,16 +444,22 @@ selection — `spec/conventions.md` §2 says it should, not built.
 
 `ShowTools.app` in `~/Applications` (the real one, with BGTools and the
 tiles inside), `build/DesktopProbe.app` (not running), and XcodeGen
-(`brew install xcodegen`, now required to build the app at all). Stale
-Background Task Management entries for `com.jhg.bgtools` and two
-`com.jhg.nestprobe` ids remain — `sfltool resetbtm` would clear them but
-resets every app's login items, so they are left alone.
+(`brew install xcodegen`, required to build the app). **Apple's WWDR G3
+intermediate certificate** was added to the login keychain 2026-09-26
+(signing needs it). **ShowTools has the Accessibility permission**, granted
+2026-09-26 for a drag-lock experiment that failed; nothing uses it now, so
+Jason can switch it off. Xcode's own DerivedData build of ShowTools
+(ad hoc, 2026-09-24) was deleted the same day. Stale Background Task
+Management entries for `com.jhg.bgtools` and two `com.jhg.nestprobe` ids
+remain — `sfltool resetbtm` would clear them but resets every app's login
+items, so they are left alone.
 
 ## Quick start
 
 ```sh
-swift test                                  # 335 core + 13 BGTools tests
-./make-app.sh                               # → build/ShowTools.app
+swift test                                  # 336 core + 13 BGTools tests
+(cd PaneKit && swift test)                  # 46 PaneKit tests
+./make-app.sh                               # → build/ShowTools.app (signed, team P82S39V2KJ)
 tools/make-test-library.sh <scratch>/STTest # scratch library + generated media
 open -n --env SHOWTOOLS_LIBRARY=<scratch>/STTest/TestLib.noindex build/ShowTools.app
 ```

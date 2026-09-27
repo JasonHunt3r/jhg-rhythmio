@@ -8,9 +8,10 @@ can leave the main window," below) that the built pop-outs don't cover:
 is the separate *Library panel*, all files in a floating window, not this
 area detaching) and **the Browser** (Edit Show's collection-file column).
 Also still open: the "scrolling a window that's partly covered" idea
-(designed, not built), and item 2's other half from the 2026-09-25
-feedback worklist — a written window-layer hierarchy, and an audit of the
-built pop-outs against it.
+(designed, not built), the timeline's height ("Its height", agreed
+2026-09-26, not built), and **the windows pass** (below, planned
+2026-09-26: the window-layer hierarchy — item 2's other half — the
+settings-and-preferences split, and About ShowTools).
 
 **Superseded by PaneKit, 2026-09-24** (`spec/panekit.md`): this doc's own
 "suggested approach" below — a standalone harness proving `ColumnsSplitView`
@@ -103,18 +104,16 @@ thing that could be a tool window of its own, the Timeline window. The
 transport goes with it, since zoom, snapping and the range belong with
 the rows wherever they are.
 
-**Its height (Jason, 2026-09-26) — not built.** Docked or in its own
-window, the timeline is **only as tall as its contents** — the transport,
-the ruler and the rows — **or smaller**; it can't be dragged taller.
-**One exception, the Timeline window behind another window** (the main
-window, say, with a large viewer): scrolling it while it's in the
-background lets padding open above the rows, so they can slide up into
-view from under the covering window's bottom edge — all the rows at a
-glance beside a big viewer. Brought to the front, the padding **stays**,
-so the tools don't jump from where they were, until it's scrolled back
-into place, filling the window again. **Smaller than its contents, the
-rows scroll up and down as normal** (Jason, 2026-09-26), docked or in a
-window.
+**Its height (Jason, 2026-09-26) — agreed, not built.** Docked or in its
+own window, the timeline is **only as tall as its contents** — the
+transport, the ruler and the rows — **or smaller**; it can't be dragged
+taller. **Smaller than its contents, the rows scroll up and down as
+normal**, docked or in a window. **The one exception** is the Timeline
+window behind another window, whose padding lets it grow past its
+contents while covered: "Scrolling a window that's partly covered",
+below (Jason restated it 2026-09-26: the padding stays when the window
+comes to the front, "so as not to make the tools jump", until it's
+scrolled back into place).
 
 **When the contents grow** (a row's drawer opens, a preference makes the
 rows taller, a row is added) — Jason: "to a point", never squashing the
@@ -376,6 +375,50 @@ second:**
      round.
    - Worth knowing when this is tried: ⌥-click on a row handle already
      opens or closes every drawer at once.
+
+## The windows pass (planned 2026-09-26)
+
+Item 2's other half from the 2026-09-25 feedback worklist, grown by
+Jason's answers into one pass over every window. Not started.
+
+**Make the windows consistent, each defined by its purpose.** What the
+code does today (audited 2026-09-26): the Info panel, the Rhythm panel,
+the library panel and the Slide Editor are `NSPanel`s that **hide** when
+ShowTools isn't frontmost (`hidesOnDeactivate`); the PaneKit pop-outs (the
+Inspector, the Timeline window) **stay visible** and drop to `.normal`
+(`PaneWindows.swift`). Every one of them sits at `.floating` while
+ShowTools is active — **above the Settings window**, an ordinary window.
+
+**Jason's answers:**
+- **Whether panels hide when ShowTools isn't frontmost is a setting** —
+  polite for some kinds of window — but **panels that take drops from
+  other apps never hide** (the browser list, popped out, is a
+  destination for files dragged from Finder).
+- **Settings, opened from the menu or its key, comes up frontmost.**
+  Whether it then stays on top or acts as a normal window is to discuss.
+  For that discussion: Apple's guidance makes Settings an ordinary,
+  non-modal window — opened from the app menu or ⌘, in front, its
+  minimise and zoom buttons dimmed, a fixed toolbar of panes, the title
+  naming the pane, reopening on the last pane used (HIG, "Settings");
+  Adobe's Preferences (Photoshop ⌘K, Premiere) are modal dialogs with OK
+  and Cancel. Claude's recommendation: Apple's way — you can watch a
+  setting's effect while changing it (the light-mode translucency
+  slider wants exactly that) — with the layer fix being that Settings
+  comes up in front and panels stop covering it.
+- **A settings-and-preferences pass:** define which is which, and
+  whether they share one window with a tab switcher or get two. Apple has
+  had one "Settings" window since macOS 13; pro apps split app-wide
+  choices (⌘,) from a document's own (a show's settings in its inspector,
+  a library's in its Info). To settle with Jason.
+- **About ShowTools** in the app menu — perhaps where "Install BGTools"
+  lives.
+
+**Goes in the same pass:** the drawers' sensitivity setting with its
+practice drawer (`spec/panekit.md`, "The clutch"); light mode's
+translucency and a window-background transparency setting (item 34,
+Jason: light mode "is awful"); the "Smart View" preference (panes open
+and close by context — on by default — or keep your own choices;
+`spec/plan.md`, "Slides as mini movies").
 
 ## Filling a new collection: the problem the library panel solves
 

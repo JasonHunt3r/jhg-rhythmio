@@ -44,6 +44,7 @@ thing.
 | **Filter bar** | Top of the grid: Search, Filter, Sort, Similar, and at its right the tools (Import, Add to Show, Get Info) and the tile-size slider — moved down from the toolbar 2026-09-26. Two rows where one doesn't fit (the library panel) | the bar |
 | **Sort strip** | The dark strip under the filter bar: which sort is in use. Also the selection viewer's **handle**, with a pill in its middle: drag to open or size it, double-click to open or close. The browser, which has no sort strip, has a plain **grip strip** in its place | sort status bar (`sortStatusBar`), `DrawerGripStrip` |
 | **Selection viewer** (working name) | Above the filter bar of the Library grid, the library panel's grid and the browser: the selected files big, Side by Side or Stack. Y opens and closes it, ⇧Y switches the view; closed, it takes no room. `spec/plan.md`, "The viewer drawer". **The name is open:** the plan and the menus call it the viewer (View ▸ Viewer, Show Viewer) and "the viewer drawer", which clash with **Viewer** and **Drawer** here — Jason to settle | the viewer drawer, `SelectionViewer` |
+| **Slide viewer** | Edit Slides' drawer above the defaults bar: the show's own picture at the playhead, so it plays what the timeline plays (Play there loops the selected slides). Y opens and closes it; its handle is a grip strip under the defaults bar. The **Slide Editor** window is its pop-out (without a second inspector) — `spec/plan.md`, "Slides as mini movies" | `SlideViewer` |
 | **Edit Slides** | A show's list mode | |
 | **Edit Show** | A show's timeline mode | |
 | **Defaults bar** | Top of Edit Slides: the show's name and defaults | |
@@ -52,7 +53,7 @@ thing.
 | **Viewer** | Edit Show's top-left column: the picture, and the frame strip under it | preview, work area, stage |
 | **Frame strip** | Under the viewer: rendered frames of the finished show | |
 | **Browser** | Edit Show's middle column: the show's collection, uses first | Collection Browser |
-| **Timeline pane** | The bottom of the main window, full width under the Library pane too — not nested inside Edit Show's own columns: the unit that holds the rows, meaning the transport, ruler and rows together. "The timeline" for short. Shows real content only while a show is open in Edit Show; closed the rest of the time. Pops out into the **Timeline window** (`spec/windows.md`, `spec/panekit.md`) | edit zone (Jason's first word), storyline (`StorylineView` draws it) |
+| **Timeline pane** | The bottom of the main window, full width under the Library pane too — not nested inside Edit Show's own columns: the unit that holds the rows, meaning the transport, ruler and rows together. "The timeline" for short. **Live in both edit modes** (2026-09-26): in Edit Slides, Play loops the selected slides; closed when no show is open. Its height: `spec/windows.md`, "Its height". Pops out into the **Timeline window** (`spec/windows.md`, `spec/panekit.md`) | edit zone (Jason's first word), storyline (`StorylineView` draws it) |
 | **Transport** | Top of the timeline pane: play, clock, toggles, zoom | transport row |
 | **Storyline** | The slides row alone, as in Final Cut's primary storyline | |
 | **Ruler** | Top of the timeline: time, the range, markers, the playhead | |
@@ -104,7 +105,9 @@ Main window
 │   └─ Show                      (a show selected) — one of two modes, one selection shared:
 │       ├─ Edit Slides
 │       │   ├─ Main column
+│       │   │   ├─ Slide viewer    (closed until opened; Y)
 │       │   │   ├─ Defaults bar
+│       │   │   ├─ Grip strip      (the Slide viewer's handle)
 │       │   │   └─ Slide list
 │       │   └─ Inspector
 │       └─ Edit Show
@@ -119,8 +122,8 @@ Main window
 │               │   └─ Uses and files
 │               └─ Inspector
 └─ Timeline pane                 (full width, under the Library pane too — not nested
-    │                             inside Detail; shown while a show is open in Edit Show,
-    │                             closed the rest of the time — `spec/panekit.md`,
+    │                             inside Detail; live while a show is open, in either
+    │                             mode, closed the rest of the time — `spec/panekit.md`,
     │                             "The order," steps 4–5, 2026-09-25)
     ├─ Transport
     └─ Timeline
@@ -206,8 +209,14 @@ Main window
 - **Slide list:** a numbered row per slide, showing its length,
   transition and Pan and Zoom. What a slide sets itself is shown in the
   accent colour, and what it inherits is shown grey. Drag rows to
-  reorder. Double-click toggles the inspector.
-- **Has no picture.** Nothing plays in place. Play opens the player.
+  reorder. Double-click opens the Slide Editor. A click gives the list
+  the keyboard, so ↑ ↓ move through the slides.
+- **Slides as mini movies** (2026-09-26): the **Slide viewer** drawer
+  shows the picture, and the **timeline under it is live**. Picking a
+  slide in the list or on the timeline selects it in both; while paused,
+  the playhead goes to it. **Play (Space) loops the selected slides**, in
+  show order, each cut to cut. The toolbar's Play buttons still open the
+  player.
 
 ### Edit Show
 

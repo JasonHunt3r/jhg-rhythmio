@@ -23,6 +23,12 @@ screen changed but a pane in another window now has something to read.
 (`Package.swift` and `project.yml`), named PaneKit, and lives in this
 repo for now (settled, Jason).
 
+**The clutch — how every drawer feels under the hand: built 2026-09-26**
+("What every pane can do", "The clutch"): bite, slip and loose at a
+literal 64 pt; a slow drag that brakes at the minimum and shuts 64 pt past
+it; flicks and handle swipes; slides instead of jumps; the resize cursor
+on every handle. Left: Jason's tuning and the sensitivity setting.
+
 **Step 4, first piece — the Slide Editor: built 2026-09-24**
 (`Sources/ShowToolsApp/SlideEditorWindow.swift`). Jason picked the build
 order (Slide Editor, then the library panel, then one detachable area) and
@@ -213,142 +219,102 @@ Assistant). Not needed for our fix.
 
 ### The clutch: how a drawer feels (Jason, 2026-09-26) — built
 
-Jason: "a cantilevered clutch" — a drawer should show it's about to
-happen, then hold back until it's sure, then pop with a quick slide, not
-the instant jump it had. Every closable split has it, whatever its handle
-(edge, divider, or the app's own view). `PaneClutch.swift`.
+Jason: "a cantilevered clutch" — a drawer shows it's about to happen,
+holds back until it's sure, then looses "like pulling back a bow". Every
+closable split has it, whatever its handle (an edge handle, a divider, or
+the app's own view). The dials are `PaneClutch`'s static properties, one
+place, tuned by feel; the drag is `trackResize` (`PaneContainerView.swift`).
+How it got here, draft by draft: `spec/history/2026-09-26-slides-and-the-clutch.md`.
 
 - **Pulled from closed:** it **bites** (follows the pointer exactly for
-  `bite`, 14 pt), then **slips** (takes `slip`, 0.35, of the pointer's
-  further travel), until the pull reaches `engage` — **a literal 64 pt, the same for every
-  drawer whatever its size or last size** (Jason, 2026-09-26; the first
-  build used half its size, 48…110 pt, "a little on the slow side"):
-  then it **engages**,
-  sliding open to its own size in `slideDuration` (0.18 s, easing out) —
-  **and the drag is over** (Jason: "like pulling back a bow and then it
-  releases at the threshold"): the cursor is the arrow again and the rest
-  of that press is ignored, by the drawer and everything under it, until
-  the button comes up. Its own size: a default per drawer, then the last
-  size it was left at. Let go before it engaged: it slides back shut
-  (`settleDuration`, 0.14 s), nothing saved.
-- **Dragged slowly, an open drawer repositions, then brakes** (Jason,
-  2026-09-26). Down to its minimum it follows the pointer; there the
-  divider **stops dead** ("the brakes are slammed on") and stays still
-  while the pointer carries on — until the pointer is `closePast` (64 pt,
-  the same literal as the pull that opens) beyond the stopped divider:
-  then it looses shut, the drag over. Let go before that and it stays
-  open at its minimum. A flick shuts it at once; so do a swipe and a
-  double-click. (Earlier the same day: it resisted past the minimum and
-  shut 48 pt beyond — "way too soon" for the timeline; then it never
-  shut on a slow drag at all, "only partly right".) Checked on a test
-  copy: the Slide viewer, 40 pt past its stopped divider and let go,
-  stayed at its minimum; 80 pt past, it shut. The timeline: 40 pt past
-  stayed; 70 and 86 pt past shut.
+  `bite`, 14 pt), **slips** (takes `slip`, 0.35, of further travel), and
+  at `engage` — **a literal 64 pt, the same for every drawer** whatever
+  its size or last size — it **looses**: slides open to its own size (a
+  default per drawer, then the last size it was left at) in
+  `slideDuration` (0.18 s, easing out), **and the drag is over**: the
+  cursor is the arrow again and the rest of the press is swallowed, by
+  the drawer and everything under it, until the button comes up. Let go
+  before: it slides back shut (`settleDuration`, 0.14 s), nothing saved.
+- **Dragged slowly, an open drawer repositions, then brakes.** Down to its
+  minimum it follows the pointer; there the divider **stops dead** and
+  stays still while the pointer carries on, until the pointer is
+  `closePast` (64 pt) beyond the stopped divider — then it looses shut,
+  the drag over. Let go before and it stays open at its minimum.
+- **A flick** — faster than `flickSpeed` (1000 pt/s over the last
+  `flickWindow`, 60 ms) after at least `flickTravel` (12 pt) — looses it
+  at once: shut toward its edge, open away from it. Judged while dragging
+  and **at the release** (a flick usually ends with the finger coming
+  off), if the pointer was still moving in the last 60 ms.
+- **A two-finger swipe on a handle** — only where the resize cursor shows
+  (the grip strip, a closed edge handle, an open drawer's divider), so a
+  swipe anywhere else scrolls as always — `swipeDistance` (24 pt) toward
+  its edge shuts it, away opens it. One swipe, one change; its glide is
+  swallowed; trackpad gestures only (`PaneSwipe`).
 - **Double-click** (a divider, an edge handle, an app's handle) and an
   app's own `setOpen(_:_:animated: true)` / `toggle(_:animated:)` slide
-  rather than jump. Plain `setOpen` is unchanged (instant), for state
-  bridging and launch.
+  rather than jump. Plain `setOpen` stays instant, for state bridging and
+  launch.
 - **While it slides, its content keeps its full size** and is revealed,
-  flush with the divider (`PaneHostView.slide`), like a drawer — not
-  squeezed, and SwiftUI doesn't relayout it every frame. Drawn with a
-  live, never-saved extent per split (`PaneController.peek`, honoured by
-  `PaneLayout.layout(…, peek:)`); the slide's timer runs in the run
-  loop's common modes, so it keeps going inside a drag.
-- **Reduce Motion** (System Settings ▸ Accessibility) turns the slides
-  off.
-- **Why the drag ends at the threshold** (Jason, 2026-09-26, after the
-  first build, where the pointer stayed grabbed once it shut and moving
-  back did nothing): one gesture, one outcome, nothing left half-attached
-  to the hand. An interim build let the same drag pull it open again
-  (`3afa4f6`); Jason preferred the release — "if one wants to regrab the
-  handle, one simply can." Measured on a test copy: pushed from 290, it
-  resisted to 105 and slid shut, then stayed shut for the rest of a press
-  dragged back down over the slide list (the list didn't react); pulled
-  220 pt from closed, it slipped to 47, engaged, slid to exactly 290 and
-  stayed there while the pointer went on.
-- **Next: a sensitivity setting** (Jason, 2026-09-26: "the snapping of
-  the bowstring is a little on the slow side"). From almost instant to
-  today's as the slowest. His idea for the control: something visual to
-  drag — a line inside a box marking the trigger distance. Proposed: a
-  working practice drawer in Settings, the line dragged to set the pull,
-  its handle pulled right there to feel it; a Quick ↔ Smooth slider if
-  the slide's speed wants its own. Belongs in the settings-and-preferences
-  pass. Open: which felt slow — the pull's distance, the slide's speed,
-  or both.
-- **A flick** (Jason, 2026-09-26): a drag faster than `flickSpeed`
-  (1000 pt/s, over the last `flickWindow`, 60 ms) looses a drawer at once
-  — shut when pushed toward its edge, open when pulled away — after at
-  least `flickTravel` (12 pt), so a twitch doesn't count. Judged while
-  dragging and **at the release**, since a flick usually ends with the
-  finger coming off (the release counts if the pointer was still moving
-  in the last 60 ms). A slow push or pull behaves as before. Checked on a
-  test copy: a fast 30-pt flick opened (to its last size, 260) and shut,
-  twice each; the same 30 pt slowly only resized (290 → 260), or sprang
-  back shut when pulled. `PaneClutchTests` for the speed and the rules.
-- **A swipe** (Jason): two fingers on a handle — **only where the pointer
-  shows the handle's resize cursor** (the grip strip, a closed edge
-  handle, an open drawer's divider), so a swipe anywhere else scrolls as
-  always — `swipeDistance` (24 pt) toward its edge shuts it, away opens
-  it. One gesture, one change; its glide afterwards is swallowed.
-  Trackpad gestures only (a mouse wheel passes through). `PaneSwipe`.
-  Checked with synthetic trackpad swipes: four alternating swipes on the
-  Slide viewer's grip shut, opened, shut, opened; swipes over the slide
-  list and the picture left the drawer alone. The first build ignored the
-  first swipe after a swipe shut (its "fired" state waited for a new
-  gesture's start); it resets at every gesture's end and after a pause
-  now. **Direction with "natural" scrolling wants Jason's own swipe** —
-  synthetic events don't carry the natural-scrolling flag.
-- **Tap-to-drag with drag lock** (Jason's trackpad: Dragging and
-  DragLock on) — **an app can't end its hold; settled 2026-09-26.** The
-  trackpad driver keeps the button down after the finger lifts, until the
-  next tap. A test app first seemed to show that posting a system
-  mouse-up ends it (the button read as up, the drag ended) — but it
-  stopped watching there, and nobody confirmed the feel. Measured in
-  ShowTools itself, with Accessibility granted (which took a stable
-  signature, a `tccutil reset` of three stale entries, and the app
-  prompting for itself): the post cleared the button state, yet **15–90
-  drags kept arriving in the next 3 s** — the driver was still dragging.
-  Posting only ended PaneKit's loop early and let those drags reach the
-  views underneath, so it was taken out; the loop swallows the rest of
-  the press until the real tap, as before. For a drag-lock user, the
-  answer is the flick and the swipe, or a different dragging style in
-  Trackpad settings (without drag lock, or three-finger drag). A web
-  search (2026-09-26) found no established way for an app to end it:
-  the next tap is the designed end, and Apple's own split views behave
-  the same. **Idea logged, not tried** (Jason): switch drag lock off at
-  the trigger and back on just after. Doubtful — the preference doesn't
-  reach the driver live (System Settings applies it through private
-  calls), a drag already locked may not be released by it, and an app
-  flipping a system-wide accessibility setting risks leaving it off after
-  a crash. If ever tried: a standalone test app only, always restoring
-  the setting on quit. Jason, 2026-09-26: "we've exhausted this edge case
-  for now."
-- **The resize cursor, everywhere** (Jason, 2026-09-26: some dividers
-  didn't show it though dragging worked). Measured with the cursor in
-  screenshots: the main window's own dividers were fine; Edit Slides'
-  inspector divider and the Slide viewer's grip showed the arrow — inside
-  a SwiftUI-hosted area the hosting view sets its own. Cursor rects alone
-  lose to it, and tracking areas on the views never fired (a probe logged
-  nothing). Each `PaneContainerView` now watches its window's pointer
-  moves (`acceptsMouseMovedEvents`, a local monitor), and when the view
-  under the pointer is a divider or handle (`PaneResizeCursorView`) sets
-  the resize cursor, again after the event so SwiftUI's arrow doesn't
-  win. Re-measured: every divider and the grip show the resize cursor,
-  and the picture beside them the arrow.
+  flush with the divider (`PaneHostView.slide`) — not squeezed, and
+  SwiftUI doesn't relayout it every frame. Drawn with a live, never-saved
+  extent per split (`PaneController.peek`, honoured by
+  `PaneLayout.layout(…, peek:)`); the slide's timer runs in the run loop's
+  common modes, so it keeps going inside a drag.
+- **Reduce Motion** turns the slides off.
+- **The resize cursor shows on every divider and handle.** Each
+  `PaneContainerView` watches its window's pointer moves and, over a
+  `PaneResizeCursorView`, sets the cursor after the event — inside a
+  SwiftUI-hosted area the hosting view's arrow otherwise wins (cursor
+  rects lost to it; tracking areas never fired).
+- **Tap-to-drag with drag lock: an app can't end its hold.** The trackpad
+  driver keeps the button down after the finger lifts, until the next
+  tap; measured in ShowTools with Accessibility granted, a posted
+  system mouse-up cleared the button state but 15–90 drags kept arriving
+  in the next 3 s. So PaneKit posts nothing and swallows the rest of the
+  press until the real tap; for a drag-lock user the answer is the flick
+  and the swipe, or another dragging style in Trackpad settings (without
+  drag lock, or three-finger drag). A web search found no established
+  way either: the tap is the designed end, and Apple's own split views
+  behave the same. **Logged, not tried** (Jason): switching drag lock off
+  at the trigger and back on just after — doubtful (the preference
+  doesn't reach the driver live; a drag already locked may not be
+  released; an app flipping a system-wide accessibility setting risks
+  leaving it off after a crash). If ever tried: a standalone test app
+  only, always restoring the setting on quit. Jason: "we've exhausted
+  this edge case for now."
 
-Tests: `PaneClutchTests` (5: the bite and slip, where it engages, the
-resistance and where it shuts, a peek drawn below the minimum, a peek
-never crowding the main side). Checked on a ShowTools test copy at hand
-speed (a pointer stepping every 25 ms, the drawer's extent sampled every
-~35 ms) on Edit Slides' Slide viewer: a 40-pt pull bit to 14, slipped to
-24, slid back shut on release; a 170-pt pull slipped to 47, engaged,
-slid 47 → 187 → 250 → 276 → 281 in ~160 ms, then resized on to 315;
-double-clicks slid 315 → 0 and back in ~180 ms; pushed 20 pt past its
-120-pt minimum it resisted to 114 and sprang back to 121; pushed through,
-it resisted to 104 and slid shut. And on Edit Slides' inspector (an edge
-handle, the other axis): a 60-pt pull peeked 31 pt and went back; a
-200-pt pull opened it; a divider double-click closed it. **The dials
-want Jason's hand** — tuning is by feel.
+**Tests:** `PaneClutchTests` (7: the bite and slip; the same pull for
+every size; where a slow drag shuts past the stopped divider; a flick's
+speed over the last moment; a flick needs speed and travel; a peek drawn
+below the minimum; a peek never crowding the main side).
+
+**Checked on a ShowTools test copy at hand speed** (a pointer stepping
+every 25 ms, the drawer's extent sampled every ~35 ms), 2026-09-26, on
+Edit Slides' Slide viewer unless said: a 55-pt pull sprang back, a 70-pt
+pull opened to exactly its saved 290 and stayed there as the pointer went
+on; a push to 40 pt past the stopped divider stayed at the minimum, 80 pt
+past shut, and the rest of that press, dragged back over the slide list,
+did nothing; fast 30-pt flicks opened and shut it, twice each, while the
+same 30 pt slowly only resized; four alternating swipes on the grip shut,
+opened, shut, opened, and swipes over the list and the picture left it
+alone; double-clicks slid 315 → 0 and back in ~180 ms. The timeline:
+40 pt past its stopped divider stayed, 70 and 86 pt past shut. Edit
+Slides' inspector (an edge handle, the other axis): a 60-pt pull peeked
+31 pt and went back; a 200-pt pull opened it. The cursor: screenshots
+with the pointer, every divider and the grip.
+
+**Left:**
+- **The dials want Jason's hand.** He called the first snap "a little on
+  the slow side"; tuning waits for the sensitivity setting.
+- **A sensitivity setting**, from almost instant to today's as the
+  slowest. Jason's idea for the control: something visual to drag — a
+  line inside a box marking the trigger distance. Proposed: a working
+  practice drawer in Settings, the line dragged to set the pull, its
+  handle pulled right there to feel it; a Quick ↔ Smooth slider if the
+  slide's speed wants its own. In the windows pass (`spec/windows.md`).
+  Open: which felt slow — the pull's distance, the slide's speed, or both.
+- **A swipe's direction with "natural" scrolling** wants Jason's own
+  swipe: synthetic events don't carry the natural-scrolling flag.
 
 ## Building a row (added 2026-09-24)
 

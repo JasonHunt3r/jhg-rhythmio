@@ -146,6 +146,33 @@ A file carries no slide settings. Each slide, one *use* of a file, has
 its own. The same photo can be three slides, three ways. (Settled
 2026-09-20, `spec/plan.md`.)
 
+## One gesture, one outcome
+
+A drag that crosses a threshold hands the rest over: the drawer finishes
+opening or shutting on its own, and the pointer is let go. It never
+stays half-attached to the hand (Jason, 2026-09-26: "like pulling back a
+bow and then it releases at the threshold, or springs back if the
+threshold isn't met"). The first build kept the pointer grabbed after a
+drawer shut, and moving back did nothing — a moment of "what is
+happening?". If one wants to regrab the handle, one simply can.
+
+## The same pull everywhere
+
+A gesture's distances are literal, not a share of the thing's size: the
+pull that opens a drawer is 64 pt for every drawer, whatever its size or
+last size, so the hand learns it once (Jason, 2026-09-26: "so all
+interactions will be the same"). The first build used half the drawer's
+size, and the timeline — a tall drawer — shut "way too soon".
+
+## A slow drag places; a quick one acts
+
+Dragged slowly, a drawer is being positioned, so it follows, stops dead
+at its minimum and waits; only a deliberate distance past that — or a
+flick, fast and short — means "shut it" (Jason: "that's reposition, not
+close drawer"). The speed of a gesture says what it's for, the way a
+flick on a phone does. Nothing that happens by accident on the way to a
+size should close the thing being sized.
+
 ## Two kinds of expected behaviour
 
 - **The obvious ones:** what every Mac app does. ⌘A selects all, Delete
@@ -231,3 +258,10 @@ that difference was the crash.
   repeated as fact until Jason caught it. Caught early, it cost one
   paragraph. Caught late, it could have steered a long build. Check a
   belief's date against what's been learned since.
+- **Watch the whole gesture, not its first half.** On 2026-09-26 a test
+  app seemed to show that posting a mouse-up ends tap-to-drag's drag
+  lock: the button read as up and the drag ended — and the test stopped
+  watching there. Built into ShowTools, it "remained unchanged" in
+  Jason's hands; measured for three seconds after the release, 15–90
+  drags were still arriving. The measurement was right about what it
+  measured; it just ended too soon, and the feel was never asked about.

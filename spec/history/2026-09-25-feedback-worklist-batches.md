@@ -233,3 +233,152 @@ proposal as it stood, for the record:
   itself; changing it may need hacks — test before promising. Jason: what
   he mostly wants is the **glass buttons' corners less circular**, and
   he's curious whether AppKit's plain windows can be hacked too.
+
+## Batches 6–8 (2026-09-25 late – 2026-09-26), moved from `spec/status.md`
+
+Moved here word for word on 2026-09-26 when status was rewritten; the
+current state of each item is in `spec/status.md` and the specs.
+
+**Batch 6 — decided/built 2026-09-25** (this discussion):
+- **Item 19** (transport greyed-out state) — **built**: the timeline
+  pane's split now stays open in both edit modes (`MainView.isShowOpen`,
+  was `isEditingShow`, gated on `mode == .show` too); Edit Slides shows
+  `TimelinePanePlaceholder` (`EditShowTimelinePane.swift`), the same
+  chrome dimmed and inert, instead of the pane closing and the window
+  reflowing. Checked with axtool against the scratch library: the
+  placeholder's "Switch to Edit Show to use the timeline" reads correctly
+  in Edit Slides, and clicking back to Edit Show restores the real,
+  interactive transport and storyline, screenshotted both ways. **Not
+  what Jason meant** (2026-09-26): the rows should stay visible with only
+  the tools greyed — item 33 in "What's next" reworks it.
+- **Item 12** (groups → a library item / catalog folder) — Jason's actual
+  intent was already built 2026-09-24 (the Library pane's collapsible
+  groups-and-shows list); the only missing piece, the icon convention
+  (solid folder for a collection, outline for a group), is **built**
+  (`collectionRow` now uses `folder.fill`, confirmed by screenshot). The
+  bigger idea Jason raised alongside it — **promoting a group to its own
+  collection** — is still a design question (`spec/plan.md`, "Groups
+  inside collections," "Promotion"): what happens to the original group,
+  and whether nested sub-groups come along.
+- **Item 17 / 38** (drag-to-reorder) — **built and tried by Jason's
+  hand, 2026-09-25**: an empty gap follows the pointer, one drop handler
+  for the whole grid, a drop saves what's on screen, Undo Reorder works;
+  several files drag as a tidy pile with a count badge, fly in on pickup
+  and spring into place on drop; the grid scrolls near its edges, faster
+  and with the pile shrinking as it nears them. Design, terms and dials:
+  `spec/plan.md`, "Reordering". Story: `spec/history/2026-09-25-drag-reorder-rebuild.md`.
+  A drag let go over the plain Library says why (`LibraryOrderNotice`);
+  a drag nothing takes, or Escape, puts the files back (no message for
+  Escape); the plain Library's sort strip names the sort in use.
+  Left: the parked list under "What's next".
+- **Item 13** (the Browser's own closed-drawer state, stacking with the
+  Inspector's handle) — **step 1 built**: a fix it needed first.
+  Dragging the Inspector shut (or open from its handle) changed the
+  Browser's width, though a double-click didn't — measured on Jason's own
+  copy, 236 → 545 pt. PaneKit's drag now moves the linked split by the
+  space the side occupies, the same arithmetic as `setOpen`
+  (`dragResize`, `PaneContainerView.swift`; two new `PaneControllerTests`
+  that fail on the old code). Checked on a test copy: 236 through open,
+  drag shut, drag open, drag shut. **Step 2 built:** the Browser is a
+  drawer. Edit Show's columns are two splits nested from the right
+  (`EditColumnsLayout`, new split ids `columns.inspector`/
+  `columns.browser`), so the Browser closes to its own handle, the two
+  handles stack at the right edge when both are closed, and every open,
+  close or drag of either goes to the preview. View ▸ Show Browser (⌥⌘B).
+  Checked on a test copy: double-click the divider and the handle, drag
+  shut and open with the Inspector open (it stayed 320), the menu item and
+  ⌥⌘B, and a screenshot of the two stacked handles. **Step 3 built —
+  switching sides, for every pane** (a PaneKit feature, `spec/panekit.md`
+  "What every pane can do"): drag a pane across main and, once less than
+  its starting size is left, it trades places and mounts on the opposite
+  edge. Checked on a test copy: the Browser to the left beside the
+  Library pane (screenshot), closed there (handle on the left edge),
+  dragged back by its handle; the Inspector across to the left
+  (Inspector | preview | Browser, screenshot). **Left for Jason's hands:**
+  the feel of all three steps, and the panes not tried at all — the
+  Library pane, the timeline (it can switch to the top now) and Edit
+  Slides' inspector. No menu command or animation yet.
+- **Item 14** (the inspector's header at the top when empty) — **built**:
+  bar + message were one short stack the pane centred. The inspector is
+  now top-aligned (`SlideInspector.body`), and the empty message is an
+  overlay centred on the whole pane (Jason: align the header, don't
+  stretch the message to push it up — a first try did that). Screenshotted
+  empty and with a slide selected on a test copy.
+- **Item 30, done properly** (the frame strip as a drawer; batch 5 had
+  read it as the timeline) — **built**: Edit Show's picture and frame
+  strip are a PaneKit vertical split (`PreviewLayout`,
+  `model.previewPanes`), replacing the hand-made 12 pt bar. Dragged below
+  10 pt the strip closes to its edge handle; View ▸ Show Frame Strip
+  (⌥⌘F) and the strip's Hide item now close it to the handle rather than
+  removing it; it can switch to the top; it starts at the old bar's saved
+  height (`frameStripHeight`, now unused after that first read). Checked
+  on a test copy: drag closed, double-click the handle, drag to 214, the
+  menu item and ⌥⌘F, to the top and back (screenshot). **For Jason's
+  hands:** PaneKit's divider is a 1 pt line with a 7 pt grab band, where
+  the old bar was a 12 pt band (he'd found the system split line too
+  fiddly) — if it's fiddly again, that's a PaneKit-wide grab-width change.
+  **Resizing live, fixed the same day:** Jason found the frames didn't
+  follow a resize. Measured with screenshots mid-drag: the height followed,
+  but every frame was blank until the drag stopped (frames are cached at
+  one exact size and rendering waits 120 ms for a drag to settle — true of
+  the old bar too). `FrameCache.nearest(to:)` now stands in the closest
+  cached frame, stretched, until the real one renders.
+- **Items 23–25** — queued as their own BGTools work list, to pick up
+  once the ShowTools fixes above are done: `spec/bgtools.md`, "Next up —
+  queued 2026-09-25, after the ShowTools fixes."
+- **Items 26, 27, 29 — moved out of this list 2026-09-26.** The live
+  value-changer panel is becoming **ModKit**, a standalone dev-tool app
+  Jason is planning with App Claude (a plan doc of its own, not in this
+  repo yet): auditioning look values live, then sending the final values
+  back to Claude Code or out as a file. The look asks wait for it. What
+  Jason most wants from it here: **the glass buttons' corners less
+  circular**; he's also curious whether plain AppKit windows' corner
+  radius can be hacked. Item 29's remaining half (BGTools' icon and its
+  Control Center tile) goes with item 23. The earlier proposal is kept in
+  `spec/history/2026-09-25-feedback-worklist-batches.md`.
+- **Item 2's other half** — grown into the windows pass in "What's next"
+  (item 3 there). Audit facts found 2026-09-26: the Info panel, Rhythm
+  panel, library panel and Slide Editor hide when ShowTools isn't
+  frontmost (NSPanel's `hidesOnDeactivate`); the PaneKit pop-outs
+  (Inspector, Timeline) stay visible and drop to `.normal`
+  (`PaneWindows.swift`). And every one of them sits at `.floating` while
+  ShowTools is active, above the Settings window (an ordinary window).
+- **Item 37** (Quick Show scope) — settled: presets are separate from
+  New Show…'s (`spec/simple-things-fast.md`).
+- **Simple things fast** — Jason confirmed 2026-09-25 all three answers
+  (guided first run, Quick Show, the levels) are to be **built**, not
+  chosen among. Its doc's own "Still open" list has shrunk to one real
+  question (presets shared or separate between Quick Show and New Show…).
+- **Windows of their own** — the built pop-outs (Slide Editor, the
+  library panel, the Inspector, the Timeline pane) don't cover the whole
+  original list: **the Library pane itself** (the sidebar, not the
+  separate floating Library panel) and **the Browser** (Edit Show's file
+  column) still can't detach. Answer 7 (double-click's meaning) is also
+  still genuinely undecided — not superseded by the pop-out work.
+- **The feedback doc's five Open Questions** — all answered 2026-09-26
+  (items 33–36 and 38, in "What's next").
+
+**Item 20 — built 2026-09-26** (Aperture's conventions, decided with
+Jason by Q&A). A rating belongs to the **file**, so it lives where files
+do — the Library grid, the library panel, Edit Show's browser, and the
+inspector/Info panel's stars — never the timeline, the viewer, the frame
+strip or the player. Keys (`Rating.Key`, `ShowToolsCore/Rating.swift`):
+1–5 rate, 0 clears, **9 rejects**, − / = step (− stops at unrated and
+leaves a reject alone; = lifts a reject to unrated; Jason: "−= might have
+to be contextual, we'll get to that if it arises"). **U** shows/hides the
+ratings (View ▸ Show Ratings (U), the `showRatings` default); the Library
+grid's tiles now show stars at all, on a fixed-height line so rows stay
+level. **Y** (Aperture's Viewer key) is Jason's for the **planned drawer
+viewer over the grids** (new asks, below) — build it with that. A reject
+is **−1 in the existing `rating` column** (no schema change); the rating
+filter is Show All / Unrated or Better (the default, hides rejects, and
+what every saved filter's 0 already meant) / ★…★★★★★ / Rejected Only.
+**U is window-wide on purpose** (Jason's fix the same night: U jumped
+the sidebar to "Untitled Collection" by type-select, since a tile click
+leaves it the keyboard): `MainView`'s own `SingleKeys` takes U in every
+mode, and the grid's rating digits run ahead of its sidebar check — see
+`showtools-gotchas`. Re-checked with the sidebar holding the keyboard: U
+both ways, no jump, a digit rates, the search box still types "u".
+Checked with axtool on a scratch library: 3, 5 on two files at once, −,
+9 (the file leaves the grid), Show All (its red ✕), U both ways (the
+default flips), =, ⌘Z/Redo Rate, and a screenshot of level rows.

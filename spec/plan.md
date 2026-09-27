@@ -1363,6 +1363,17 @@ cut to cut) and 3 (the Slide viewer drawer) built 2026-09-26. Left: 4
 pop-out (today it's still its own window, opened by double-click); the
 framework for slides with more inside.
 
+**Steps 1–2 as built:** the show's engine lives while the show is open,
+in either mode (`ShowView` owns it; a mode switch pauses it, and leaving
+Edit Show closes its player windows). The timeline pane is live in both
+modes. Play in Edit Slides loops the selected slides, each cut to cut
+(transitions not included, until the framework below says otherwise), in
+show order, neighbours joined into one stretch (`ShowTimeline.loopSpans`,
+tested; `PlaybackEngine.selectionLoop`, which overrides the range loop
+while set); nothing selected plays the show. Checked on a test copy: one
+slide looped 0:14 → 0:19; two neighbours played through as one stretch;
+two apart alternated; the list and the timeline kept one selection.
+
 **Step 3 as built:** `ViewerPlace.slides`, its own `PaneController`
 (`AppModel.slidesViewer`), the drawer above the defaults bar with a
 `DrawerGripStrip` under the bar as its handle; **Y** opens and closes it,
