@@ -54,7 +54,8 @@ selected slides, and the slide list taking the keyboard on a click. **Reinstalle
 2026-09-26 19:34 at `e94b27d`**: the Slide viewer drawer (Y) and the drawers'
 clutch. **Reinstalled at `57ee418`**: the squash fix and the clutch loosing
 like a bow (engaging ends the drag). **Reinstalled at `c35b5f9`**: the pull that
-looses a drawer is a literal 64 pt.
+looses a drawer is a literal 64 pt. **Reinstalled at `a77c49e`**: flick and
+swipe, and the drag-lock release (active only with Accessibility granted).
 Reinstalling stops the real BGTools instance (`install.sh`'s own quit
 sequence); BGTools wasn't restarted after the 20:28 install. BGTools'
 desktop extension (`BGToolsControls.appex`) was also killed before that
