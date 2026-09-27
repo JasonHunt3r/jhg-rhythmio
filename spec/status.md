@@ -55,7 +55,10 @@ selected slides, and the slide list taking the keyboard on a click. **Reinstalle
 clutch. **Reinstalled at `57ee418`**: the squash fix and the clutch loosing
 like a bow (engaging ends the drag). **Reinstalled at `c35b5f9`**: the pull that
 looses a drawer is a literal 64 pt. **Reinstalled at `a77c49e`**: flick and
-swipe, and the drag-lock release (active only with Accessibility granted).
+swipe, and the drag-lock release (active only with Accessibility granted). **Reinstalled
+2026-09-26 at `39fcbd6`** (signed Apple Development): the drag-lock post
+removed, the resize cursor everywhere, and a slow drag that brakes at the
+minimum and shuts 64 pt past it.
 Reinstalling stops the real BGTools instance (`install.sh`'s own quit
 sequence); BGTools wasn't restarted after the 20:28 install. BGTools'
 desktop extension (`BGToolsControls.appex`) was also killed before that
