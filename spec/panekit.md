@@ -268,15 +268,40 @@ the instant jump it had. Every closable split has it, whatever its handle
   the slide's speed wants its own. Belongs in the settings-and-preferences
   pass. Open: which felt slow — the pull's distance, the slide's speed,
   or both.
+- **A flick** (Jason, 2026-09-26): a drag faster than `flickSpeed`
+  (1000 pt/s, over the last `flickWindow`, 60 ms) looses a drawer at once
+  — shut when pushed toward its edge, open when pulled away — after at
+  least `flickTravel` (12 pt), so a twitch doesn't count. Judged while
+  dragging and **at the release**, since a flick usually ends with the
+  finger coming off (the release counts if the pointer was still moving
+  in the last 60 ms). A slow push or pull behaves as before. Checked on a
+  test copy: a fast 30-pt flick opened (to its last size, 260) and shut,
+  twice each; the same 30 pt slowly only resized (290 → 260), or sprang
+  back shut when pulled. `PaneClutchTests` for the speed and the rules.
+- **A swipe** (Jason): two fingers on a handle — **only where the pointer
+  shows the handle's resize cursor** (the grip strip, a closed edge
+  handle, an open drawer's divider), so a swipe anywhere else scrolls as
+  always — `swipeDistance` (24 pt) toward its edge shuts it, away opens
+  it. One gesture, one change; its glide afterwards is swallowed.
+  Trackpad gestures only (a mouse wheel passes through). `PaneSwipe`.
+  Checked with synthetic trackpad swipes: four alternating swipes on the
+  Slide viewer's grip shut, opened, shut, opened; swipes over the slide
+  list and the picture left the drawer alone. The first build ignored the
+  first swipe after a swipe shut (its "fired" state waited for a new
+  gesture's start); it resets at every gesture's end and after a pause
+  now. **Direction with "natural" scrolling wants Jason's own swipe** —
+  synthetic events don't carry the natural-scrolling flag.
 - **Tap-to-drag with drag lock** (Jason's trackpad: Dragging and
   DragLock on). The system itself keeps the button held after the finger
-  lifts, until the next tap — so when a drawer looses, the hold is still
-  on and Jason has to tap deliberately to end it. PaneKit already ignores
-  the rest of the press; what it can't do on its own is end the
-  system's hold. Options put to Jason 2026-09-26: an app with
-  Accessibility permission can post a mouse-up (untested against drag
-  lock — worth a harness first); or a trackpad setting (dragging without
-  drag lock ends the drag a moment after the finger lifts).
+  lifts, until the next tap, so when a drawer looses the hold is still
+  on. **Measured 2026-09-26 in a test app with Jason's own tap-drags:**
+  posting a system mouse-up at the threshold ended it — a mouse-up came
+  back 12 ms later, the system reported no button held from then on, and
+  no more drags arrived. PaneKit now does that on release **if the app
+  has the Accessibility permission** (`AXIsProcessTrusted`); without it,
+  nothing changes. ShowTools is ad-hoc signed, so a permission granted to
+  it is lost at every reinstall — a stable signature (a free Apple
+  Development certificate) would keep it. Jason's call.
 
 Tests: `PaneClutchTests` (5: the bite and slip, where it engages, the
 resistance and where it shuts, a peek drawn below the minimum, a peek

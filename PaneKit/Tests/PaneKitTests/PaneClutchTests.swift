@@ -28,6 +28,25 @@ final class PaneClutchTests: XCTestCase {
         XCTAssertTrue(PaneClutch.shuts(fromEdge: 120 - PaneClutch.closeEngage, minimum: 120))
     }
 
+    /// A flick's speed: over the last `flickWindow` only, so an earlier slow
+    /// stretch doesn't dilute a fast finish.
+    func testSpeedIsMeasuredOverTheLastMoment() {
+        XCTAssertEqual(PaneClutch.speed([]), 0)
+        XCTAssertEqual(PaneClutch.speed([(1.0, 100)]), 0, "one sample: no speed")
+        // Slow for a second, then 30 pt in the last 20 ms.
+        let s: [(t: TimeInterval, at: CGFloat)] = [(0, 200), (0.5, 195), (1.0, 190), (1.01, 175), (1.02, 160)]
+        XCTAssertEqual(PaneClutch.speed(s), -1500, accuracy: 1, "toward the edge, fast")
+    }
+
+    func testAFlickNeedsSpeedAndSomeTravel() {
+        XCTAssertTrue(PaneClutch.flicksShut(speed: -1500, pushed: 30))
+        XCTAssertFalse(PaneClutch.flicksShut(speed: -1500, pushed: 5), "a twitch")
+        XCTAssertFalse(PaneClutch.flicksShut(speed: -400, pushed: 60), "a push, not a flick")
+        XCTAssertFalse(PaneClutch.flicksShut(speed: 1500, pushed: 30), "the wrong way")
+        XCTAssertTrue(PaneClutch.flicksOpen(speed: 1500, pulled: 20))
+        XCTAssertFalse(PaneClutch.flicksOpen(speed: 1500, pulled: 5))
+    }
+
     let drawer: PaneNode = .split("viewer", .vertical, sized: .first, size: 280, range: 120...600,
                                   handle: .external,
                                   .pane("viewer", title: "Viewer"),

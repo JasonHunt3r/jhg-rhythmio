@@ -38,6 +38,13 @@ public final class PaneHandleView: NSView {
         }
         trackResize(split, in: container, from: event, keepGrabOffset: true)
     }
+
+    private let swipe = PaneSwipe()
+    public override func scrollWheel(with event: NSEvent) {
+        if let controller, let split, split.handle == .external,
+           swipe.scroll(event, split: split, controller: controller) { return }
+        super.scrollWheel(with: event)
+    }
 }
 
 /// `PaneHandleView` for SwiftUI (`View.paneHandle`).

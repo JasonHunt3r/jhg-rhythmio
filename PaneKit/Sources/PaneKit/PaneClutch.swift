@@ -34,6 +34,17 @@ public enum PaneClutch {
     public static var slideDuration: TimeInterval = 0.18
     /// The slide back when let go before engaging.
     public static var settleDuration: TimeInterval = 0.14
+    /// **A flick** (Jason, 2026-09-26): a drag this fast — points a second,
+    /// over the last `flickWindow` — looses the drawer at once, open or
+    /// shut, without the full pull or push; after at least `flickTravel`, so
+    /// a twitch on the handle doesn't count.
+    public static var flickSpeed: CGFloat = 1000
+    public static var flickTravel: CGFloat = 12
+    public static var flickWindow: TimeInterval = 0.06
+    /// **A swipe** (Jason, 2026-09-26): two fingers this far on a handle —
+    /// only where the pointer shows the handle's resize cursor — toward
+    /// its edge shuts the drawer, away from it opens it.
+    public static var swipeDistance: CGFloat = 24
 
     /// How far the pointer pulls a closed drawer before it engages: always
     /// `engage`, whatever size it opens to.
@@ -55,6 +66,26 @@ public enum PaneClutch {
     /// Whether a push to `fromEdge` has gone far enough to shut it.
     public static func shuts(fromEdge: CGFloat, minimum: CGFloat) -> Bool {
         fromEdge <= minimum - closeEngage
+    }
+
+    /// The drag's speed along the drawer's axis, points a second, from its
+    /// recent samples (time, distance from the edge): positive is away from
+    /// the edge. Over the last `flickWindow`; 0 with too little to go on.
+    public static func speed(_ samples: [(t: TimeInterval, at: CGFloat)]) -> CGFloat {
+        guard let last = samples.last,
+              let first = samples.first(where: { $0.t >= last.t - flickWindow }),
+              last.t - first.t > 0.004 else { return 0 }
+        return (last.at - first.at) / CGFloat(last.t - first.t)
+    }
+
+    /// A flick open: fast enough away from the edge, and far enough.
+    public static func flicksOpen(speed: CGFloat, pulled: CGFloat) -> Bool {
+        speed >= flickSpeed && pulled >= flickTravel
+    }
+
+    /// A flick shut: fast enough toward the edge, and far enough.
+    public static func flicksShut(speed: CGFloat, pushed: CGFloat) -> Bool {
+        speed <= -flickSpeed && pushed >= flickTravel
     }
 
     /// Reduce Motion (System Settings ▸ Accessibility): no slides.
@@ -163,5 +194,59 @@ extension PaneController {
 
     public func toggle(_ splitID: String, animated: Bool) {
         setOpen(splitID, !isOpen(splitID), animated: animated)
+    }
+}
+
+/// Two fingers on a handle (`PaneClutch.swipeDistance`): one gesture, one
+/// open or shut. Only trackpad gestures (with phases); a mouse wheel and a
+/// gesture's momentum after it fired pass through or are swallowed as the
+/// comments say. Each handle view keeps one.
+@MainActor
+final class PaneSwipe {
+    private var travel: CGFloat = 0
+    private var fired = false
+    /// The glide after a gesture that fired is swallowed too.
+    private var swallowGlide = false
+    private var lastEvent: TimeInterval = 0
+
+    /// True if the event was the handle's (and shouldn't scroll anything).
+    func scroll(_ e: NSEvent, split: Split, controller: PaneController) -> Bool {
+        guard split.collapsible, e.hasPreciseScrollingDeltas else { return false }
+        if e.momentumPhase != [] { return swallowGlide }
+        // A new gesture: its start, or anything after a pause — so a gesture
+        // whose start went elsewhere isn't blocked by the last one (measured:
+        // the first swipe after a swipe shut was ignored).
+        if e.phase.contains(.began) || e.phase.contains(.mayBegin) || e.timestamp - lastEvent > 0.25 {
+            travel = 0; fired = false; swallowGlide = false
+        }
+        lastEvent = e.timestamp
+        defer {
+            if e.phase.contains(.ended) || e.phase.contains(.cancelled) {
+                swallowGlide = fired; fired = false; travel = 0
+            }
+        }
+        // The fingers' own direction, whichever way scrolling is set:
+        // "natural" reports the content moving with the fingers.
+        let sign: CGFloat = e.isDirectionInvertedFromDevice ? 1 : -1
+        let down = e.scrollingDeltaY * sign, right = e.scrollingDeltaX * sign
+        let towardEdge: CGFloat
+        switch split.edge(in: controller.displayState) {
+        case .top: towardEdge = -down
+        case .bottom: towardEdge = down
+        case .leading: towardEdge = -right
+        case .trailing: towardEdge = right
+        }
+        travel += towardEdge
+        if !fired {
+            let open = controller.isOpen(split.id)
+            if open, travel >= PaneClutch.swipeDistance {
+                fired = true
+                controller.setOpen(split.id, false, animated: true)
+            } else if !open, travel <= -PaneClutch.swipeDistance {
+                fired = true
+                controller.setOpen(split.id, true, animated: true)
+            }
+        }
+        return true
     }
 }

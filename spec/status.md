@@ -139,8 +139,13 @@ chosen yet. In the order they came up:
    drawer opens to exactly its own size (default, then last used). (c)
    **The timeline's height** — only as tall as its contents or smaller,
    with the background-window padding exception — **written up in
-   `spec/windows.md` ("Its height"), not built**; two small questions
-   open there.
+   `spec/windows.md` ("Its height"), agreed, not built.** Later the same
+   day: the pull is a literal 64 pt; **flick** and **swipe** (on the
+   handle only) open and shut drawers; tap-to-drag's drag-lock hold ends
+   on release if ShowTools has the Accessibility permission (measured in
+   a test app with Jason's tap-drags) — **needs a stable signature to be
+   worth granting (Jason's call)**. Sensitivity setting still to come, in
+   the settings pass.
 5. **Item 34: light mode is "awful"** (Jason tried it). Light mode needs
    more translucency than dark, and the window background has no
    transparency at all today — Jason wants a setting (a slider) for it.

@@ -1,4 +1,5 @@
 import AppKit
+import ApplicationServices
 
 /// The view that lays out a `PaneController`'s tree: one host per pane,
 /// one divider per split, and one edge handle per closable split. Frames
@@ -230,6 +231,12 @@ final class PaneDividerView: NSView {
         }
         trackResize(split, in: container, from: event)
     }
+
+    private let swipe = PaneSwipe()
+    override func scrollWheel(with event: NSEvent) {
+        if let container, swipe.scroll(event, split: split, controller: container.controller) { return }
+        super.scrollWheel(with: event)
+    }
 }
 
 /// A closed pane's grip on the window edge: always visible, clickable.
@@ -290,6 +297,12 @@ final class PaneEdgeHandleView: NSView {
     override func accessibilityPerformPress() -> Bool {
         container?.controller.setOpen(split.id, true)
         return true
+    }
+
+    private let swipe = PaneSwipe()
+    override func scrollWheel(with event: NSEvent) {
+        if let container, swipe.scroll(event, split: split, controller: container.controller) { return }
+        super.scrollWheel(with: event)
     }
 }
 
@@ -353,18 +366,41 @@ func trackResize(_ split: Split, in container: PaneContainerView, from event: NS
     func release() {
         phase = .released
         NSCursor.arrow.set()
+        // Tap-to-drag with drag lock holds the button down in the system
+        // itself until the next tap. An app allowed to post events (the
+        // Accessibility permission) ends that hold with a button-up —
+        // measured 2026-09-26 in a test app with Jason's own tap-drags: the
+        // system reported no button held from then on, and no more drags
+        // came. Without the permission this does nothing, and the loop
+        // below still swallows the rest of the press.
+        if AXIsProcessTrusted() {
+            let at = CGEvent(source: nil)?.location ?? .zero
+            CGEvent(mouseEventSource: nil, mouseType: .leftMouseUp, mouseCursorPosition: at,
+                    mouseButton: .left)?.post(tap: .cghidEventTap)
+        }
     }
 
+    /// Recent (time, distance) readings, for a flick's speed.
+    var samples: [(t: TimeInterval, at: CGFloat)] = []
+
+    /// When the button came up: a flick usually ends with the release, so
+    /// its speed is judged then too, if the pointer was still moving.
+    var upTime: TimeInterval?
+
     while let e = window.nextEvent(matching: [.leftMouseDragged, .leftMouseUp]) {
-        if e.type == .leftMouseUp { break }
+        if e.type == .leftMouseUp { upTime = e.timestamp; break }
         if phase == .released { continue }
         let p = container.convert(e.locationInWindow, from: nil)
         if !moved, hypot(p.x - start.x, p.y - start.y) < 3 { continue }
         moved = true
         let at = raw(p)
+        samples.append((e.timestamp, at))
+        if samples.count > 12 { samples.removeFirst() }
+        let speed = PaneClutch.speed(samples)
         switch phase {
         case .pulling:
-            if at >= PaneClutch.engageDistance(opensTo: target) {
+            if at >= PaneClutch.engageDistance(opensTo: target)
+                || PaneClutch.flicksOpen(speed: speed, pulled: at - startExtent) {
                 // Loosed: it slides open to its own size.
                 release()
                 controller.slide(split.id, to: target, target: target, duration: PaneClutch.slideDuration) {
@@ -376,8 +412,10 @@ func trackResize(_ split: Split, in container: PaneContainerView, from event: NS
                 container.needsLayout = true
             }
         case .resizing, .resisting:
-            if split.collapsible && at < minimum {
-                if PaneClutch.shuts(fromEdge: at, minimum: minimum) {
+            if split.collapsible,
+               PaneClutch.flicksShut(speed: speed, pushed: startExtent - at) || at < minimum {
+                if PaneClutch.shuts(fromEdge: at, minimum: minimum)
+                    || PaneClutch.flicksShut(speed: speed, pushed: startExtent - at) {
                     // Loosed: it slides shut. Reopening is a new pull.
                     release()
                     controller.live = nil
@@ -402,6 +440,25 @@ func trackResize(_ split: Split, in container: PaneContainerView, from event: NS
             }
         case .released:
             break
+        }
+    }
+
+    // Let go mid-flick: the flick counts, open or shut.
+    if moved, let up = upTime, let last = samples.last, up - last.t < PaneClutch.flickWindow {
+        let speed = PaneClutch.speed(samples)
+        if phase == .pulling, PaneClutch.flicksOpen(speed: speed, pulled: last.at - startExtent) {
+            controller.slide(split.id, to: target, target: target, duration: PaneClutch.slideDuration) {
+                controller.setOpen(split.id, true)
+            }
+            return
+        }
+        if phase == .resizing || phase == .resisting, split.collapsible,
+           PaneClutch.flicksShut(speed: speed, pushed: startExtent - last.at) {
+            controller.live = nil
+            controller.slide(split.id, to: 0, target: max(target, minimum), duration: PaneClutch.slideDuration) {
+                controller.setOpen(split.id, false)
+            }
+            return
         }
     }
 
