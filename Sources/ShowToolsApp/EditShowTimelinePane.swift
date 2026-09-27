@@ -25,12 +25,14 @@ struct EditShowTimelinePane: View {
     let show: Show
     let timeline: ShowTimeline
     let session: ShowSession
-    /// Whether Edit Show is the current mode. False while Edit Slides has
-    /// the show open: the show's real rows still show, dimmed, with the
-    /// tools greyed and only scrolling and zooming live (item 33, Jason
-    /// 2026-09-26). The engine lives in both modes (`ShowView`). What a
-    /// drop onto the greyed timeline does is item 33's next step.
+    /// False: the rows show dimmed, the tools greyed, and only scrolling
+    /// and zooming live (item 33 step 1). Both edit modes are live now
+    /// (plan, "Slides as mini movies"); this is kept for a timeline open
+    /// with no show (the "Smart View" preference, off), not built yet.
     let active: Bool
+    /// Edit Slides: Play loops the selected slides in order, not the show,
+    /// and the slide list keeps its own arrow keys while it has the keyboard.
+    var editSlides = false
     let mutate: ShowMutator
     @Environment(AppModel.self) private var model
     @Environment(\.undoManager) private var undoManager
@@ -64,6 +66,14 @@ struct EditShowTimelinePane: View {
                                   inert: !active)
                 }
                 .background { if active { shortcuts(engine) } }
+                // Edit Slides' Play loops the selection (nil, the whole
+                // show, with nothing selected or in Edit Show).
+                // Recomputed from this view's own timeline, so a trim or a
+                // reorder moves the stretches too.
+                .onChange(of: editSlides && active ? timeline.loopSpans(for: session.selection) : nil,
+                          initial: true) { _, spans in
+                    engine.selectionLoop = spans
+                }
             } else {
                 TimelinePanePlaceholder()
             }
@@ -347,6 +357,10 @@ struct EditShowTimelinePane: View {
     private func shortcuts(_ engine: PlaybackEngine) -> some View {
         ZStack {
             SingleKeys { event in
+                // Edit Slides: the slide list (a table) keeps its own
+                // arrow keys while it has the keyboard.
+                if editSlides, (123...126).contains(event.keyCode),
+                   NSApp.keyWindow?.firstResponder is NSTableView { return false }
                 switch (event.keyCode, event.charactersIgnoringModifiers?.lowercased(), event.plainModifiers) {
                 case (49, _, []): engine.togglePlay()                  // space
                 case (_, "j", []): engine.shuttle(-1)

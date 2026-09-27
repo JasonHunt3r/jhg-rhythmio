@@ -101,16 +101,18 @@ struct ShowView: View {
                 session.engine = e
             }
         }
-        // Leaving Edit Show pauses it and closes its player windows, as
+        // A mode switch pauses it — Play means the show in Edit Show but the
+        // selected slides in Edit Slides, so neither carries on as the
+        // other. Leaving Edit Show also closes its player windows, as
         // shutting it down used to; coming back puts the playhead on the
         // first selected slide, as a fresh engine did.
         .onChange(of: mode) { _, m in
             guard let engine = session.engine else { return }
+            engine.pause()
             if m == .show {
                 if let first = firstSelectedIndex { engine.go(to: first) }
             } else {
                 Player.closeWindows(for: engine)
-                engine.pause()
             }
         }
         .onDisappear { model.closeShowSession() }

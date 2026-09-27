@@ -1355,7 +1355,12 @@ SwiftUI's text took the clicks, so a double-click on it did nothing
 **Open:** the cap of 12 (proposed); whether a click in the viewer should
 do anything later.
 
-### Slides as mini movies: Edit Slides' Slide viewer and live timeline (Jason, 2026-09-26) — Planned
+### Slides as mini movies: Edit Slides' Slide viewer and live timeline (Jason, 2026-09-26) — Building
+
+**Status:** steps 1 (live timeline) and 2 (looping Play of the
+selection, cut to cut) built 2026-09-26. Left: 3, the Slide viewer
+drawer; 4 (maybe), reordering in the viewer; the framework for slides
+with more inside.
 
 Came out of item 33 (the greyed timeline). Jason: a slide is **a length
 of time in a show**, and inside it more can happen — so a slide is a mini

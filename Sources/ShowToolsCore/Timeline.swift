@@ -449,3 +449,23 @@ extension ResolvedSlide {
         peakMagnification(outputSize: outputSize) > Self.softAbove
     }
 }
+
+extension ShowTimeline {
+    /// Edit Slides' Play (plan, "Slides as mini movies"): the stretches to
+    /// loop for a set of selected slides — each from its cut in to its cut
+    /// out (its transitions not included, for now), in show order, with
+    /// slides that sit side by side joined into one stretch so playing
+    /// across their cut doesn't jump.
+    public func loopSpans(for selected: Set<Int64>) -> [ClosedRange<Double>] {
+        var spans: [ClosedRange<Double>] = []
+        for r in slides where selected.contains(r.slide.id) && r.length > 0 {
+            let lo = r.start, hi = r.start + r.length
+            if let last = spans.last, abs(last.upperBound - lo) < 0.001 {
+                spans[spans.count - 1] = last.lowerBound...hi
+            } else {
+                spans.append(lo...hi)
+            }
+        }
+        return spans
+    }
+}

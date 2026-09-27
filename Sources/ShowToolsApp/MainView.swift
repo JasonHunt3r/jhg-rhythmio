@@ -320,11 +320,13 @@ struct MainView: View {
     private var timelinePane: some View {
         Group {
             if case .show(let id) = model.sidebar, let show = model.show(id) {
-                // Rendered in both modes now (feedback item 19): Edit Slides
-                // shows the same bar, greyed out, rather than the pane
-                // vanishing and the window reflowing under it.
+                // Live in both modes (plan, "Slides as mini movies", Jason
+                // 2026-09-26): in Edit Slides, Play loops the selected
+                // slides. `active: false` (dimmed, inert) is kept for a
+                // timeline left open with no show — nothing uses it yet.
                 EditShowTimelinePane(show: show, timeline: model.timeline(for: show),
-                                     session: model.session(for: id), active: mode == .show,
+                                     session: model.session(for: id), active: true,
+                                     editSlides: mode == .slides,
                                      mutate: { action, change in
                                          var s = show
                                          change(&s)

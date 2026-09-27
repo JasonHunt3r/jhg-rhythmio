@@ -123,7 +123,21 @@ public final class PlaybackEngine {
 
     // MARK: Keeping up with edits
 
+    /// Play waits for the first slide's media, so a show never opens on
+    /// black; this ends the wait once it's ready. Asked by every frame
+    /// drawn and every tick — the tick is what starts it with no picture on
+    /// screen at all (Edit Slides' timeline, before its Slide viewer).
+    private func startIfReady() {
+        let t = clock.now
+        guard waitingToStart, let first = timeline.frame(at: t).layers.last?.slide, media.isReady(first) else { return }
+        waitingToStart = false
+        clock.seek(t)
+        clock.play(rate: 1)
+        syncMusic()
+    }
+
     private func tick() {
+        startIfReady()
         if !isEditingLive, let latest = model?.show(showID), latest != show { reload(latest) }
         keepInLoop()
         let t = clock.now
@@ -198,7 +212,12 @@ public final class PlaybackEngine {
     public func play() {
         if !timeline.loops, clock.now >= timeline.duration - 0.01 { clock.seek(0) }
         // Looping a range from outside it starts at its beginning.
-        if show.editor.loopPlayback, let r = range, !r.contains(timeline.wrap(clock.now)) { clock.seek(r.lowerBound) }
+        if let target = selectionLoopTarget(at: timeline.wrap(clock.now)) {
+            // Edit Slides: from outside the selected slides, start at the next one.
+            if !target.inside { clock.seek(target.start) }
+        } else if show.editor.loopPlayback, let r = range, !r.contains(timeline.wrap(clock.now)) {
+            clock.seek(r.lowerBound)
+        }
         if let first = timeline.frame(at: clock.now).layers.last?.slide, !media.isReady(first) {
             waitingToStart = true
             media.prepare(around: first.index, in: timeline, visible: [])
@@ -302,10 +321,32 @@ public final class PlaybackEngine {
     /// they go through `mutate`, not `updateEditor`.
     public var roundedNow: Double { (timeline.wrap(clock.now) * 100).rounded() / 100 }
 
+    /// Edit Slides' Play (plan, "Slides as mini movies"): the stretches of
+    /// the show that loop, in show order — each selected slide from its cut
+    /// in to its cut out, neighbours already joined. Reaching one's end
+    /// goes on to the next, the last back to the first. Overrides the
+    /// range and loop playback while set; nil plays the show as usual.
+    @ObservationIgnored public var selectionLoop: [ClosedRange<Double>]? {
+        didSet { if selectionLoop?.isEmpty == true { selectionLoop = nil } }
+    }
+
+    /// The stretch to be in: the one the playhead's in, else the next one
+    /// ahead of it, else (past the last) the first.
+    private func selectionLoopTarget(at local: Double) -> (inside: Bool, start: Double)? {
+        guard let spans = selectionLoop else { return nil }
+        if spans.contains(where: { local >= $0.lowerBound - 0.001 && local < $0.upperBound }) { return (true, local) }
+        return (false, (spans.first { $0.lowerBound > local } ?? spans[0]).lowerBound)
+    }
+
     /// With loop playback on, reaching the range's end (or the show's, with
     /// no range) goes back to its start. Checked every frame drawn and every
     /// tick, so it overshoots by a frame at most.
     private func keepInLoop() {
+        if listening == nil, clock.playing, clock.rate > 0,
+           let target = selectionLoopTarget(at: timeline.wrap(clock.now)) {
+            if !target.inside { seek(target.start) }
+            return
+        }
         guard show.editor.loopPlayback || listening != nil, clock.playing, clock.rate > 0, duration > 0 else { return }
         let region = listening?.range ?? range ?? 0...duration
         let local = timeline.wrap(clock.now)
@@ -399,14 +440,9 @@ public final class PlaybackEngine {
         drawnSize[key] = size
 
         keepInLoop()
+        startIfReady()
         let t = clock.now
         let state = timeline.frame(at: t)
-        if waitingToStart, let first = state.layers.last?.slide, media.isReady(first) {
-            waitingToStart = false
-            clock.seek(t)
-            clock.play(rate: 1)
-            syncMusic()
-        }
         let overlay = timeline.overlay(at: t)
         // Nothing moving, nothing new to draw: skip this frame.
         let motionless = state.isMotionless && overlay == nil && (view as? ShowCanvas)?.stage == nil

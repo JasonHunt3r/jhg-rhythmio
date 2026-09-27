@@ -84,7 +84,22 @@ chosen yet. In the order they came up:
    loops the selected slides in order**. The dimmed state stays for a
    timeline open with no show (the "Smart View" preference, off). The
    drop onto a showless timeline (option (b): the show creator) waits
-   for that. Build order not chosen yet.
+   for that. **Plan steps 1 and 2 built 2026-09-26:** Edit Slides'
+   timeline is live, and Play there loops the selected slides cut to cut
+   in show order (`PlaybackEngine.selectionLoop`,
+   `ShowTimeline.loopSpans`); a mode switch pauses. Checked on a test
+   copy: one slide loops 0:14→0:19; two neighbours play through as one
+   stretch; photo_02 + photo_04 alternate; timeline and list selections
+   stay in sync. Fixed on the way: Play waited forever with no picture
+   on screen (the wait for the first slide's media only ended in
+   `render`; `tick` ends it too now). **Next: step 3, the Slide viewer
+   drawer.**
+   **Found, not caused by this (same on `dc7f620`):** clicking a row in
+   Edit Slides' slide list never gives the list the keyboard — the row
+   selects in grey and ↑/↓ go to whatever had it (the sidebar; or, since
+   step 1, the timeline if it was clicked last, where ↓ moves to a row
+   and clears the slide selection). The same family as the grid's
+   tile-click focus (`showtools-gotchas`). Not fixed yet.
 3. **Item 2, grown into a windows pass:** make every panel's behaviour
    consistent and define each window by its purpose; the written layer
    hierarchy in `spec/windows.md`; a **settings vs preferences** pass

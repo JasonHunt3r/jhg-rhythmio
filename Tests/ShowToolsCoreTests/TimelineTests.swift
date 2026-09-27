@@ -24,6 +24,18 @@ final class TimelineTests: XCTestCase {
         return (Show(id: 1, name: "t", defaults: d, slides: slides), items)
     }
 
+    // Edit Slides' Play loops the selection (plan, "Slides as mini movies").
+    func testLoopSpansAreEachSelectedSlideCutToCutInShowOrderWithNeighboursJoined() {
+        let (s, items) = show([4, 5, 6, 7])                  // cuts at 4, 9, 15; ends 22
+        let t = ShowTimeline(show: s, items: items)
+        XCTAssertEqual(t.loopSpans(for: [3]), [9...15], "one slide: its own cut in to cut out")
+        XCTAssertEqual(t.loopSpans(for: [4, 1]), [0...4, 15...22], "show order, not selection order")
+        XCTAssertEqual(t.loopSpans(for: [2, 3]), [4...15], "side by side: one stretch, no jump at their cut")
+        XCTAssertEqual(t.loopSpans(for: [1, 2, 4]), [0...9, 15...22])
+        XCTAssertEqual(t.loopSpans(for: []), [])
+        XCTAssertEqual(t.loopSpans(for: [99]), [], "an id not in the show")
+    }
+
     func testStartsFollowLengthsAndDefaults() {
         let (s, items) = show([nil, 3, nil])
         let t = ShowTimeline(show: s, items: items)
