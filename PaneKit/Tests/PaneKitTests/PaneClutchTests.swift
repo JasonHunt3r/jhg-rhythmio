@@ -21,13 +21,6 @@ final class PaneClutchTests: XCTestCase {
         XCTAssertEqual(PaneClutch.engageDistance(opensTo: 900), PaneClutch.engage)
     }
 
-    func testPushedPastItsMinimumItResistsThenShuts() {
-        XCTAssertEqual(PaneClutch.closing(fromEdge: 200, minimum: 120), 200, "above the minimum: as usual")
-        XCTAssertEqual(PaneClutch.closing(fromEdge: 100, minimum: 120), 120 - 20 * PaneClutch.slip, accuracy: 0.001)
-        XCTAssertFalse(PaneClutch.shuts(fromEdge: 120 - PaneClutch.closeEngage + 1, minimum: 120))
-        XCTAssertTrue(PaneClutch.shuts(fromEdge: 120 - PaneClutch.closeEngage, minimum: 120))
-    }
-
     /// A flick's speed: over the last `flickWindow` only, so an earlier slow
     /// stretch doesn't dilute a fast finish.
     func testSpeedIsMeasuredOverTheLastMoment() {

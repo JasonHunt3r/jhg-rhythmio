@@ -10,7 +10,8 @@ import SwiftUI
 /// It must be in the same window as the split's `PaneContainerView` (a
 /// handle inside a pane that has popped out does nothing).
 @MainActor
-public final class PaneHandleView: NSView {
+public final class PaneHandleView: NSView, PaneResizeCursorView {
+    var cursorAxis: PaneAxis? { split?.handle == .external ? split?.axis : nil }
     public weak var controller: PaneController?
     public var splitID: String
 
@@ -45,6 +46,28 @@ public final class PaneHandleView: NSView {
            swipe.scroll(event, split: split, controller: controller) { return }
         super.scrollWheel(with: event)
     }
+}
+
+/// A view that wants the resize cursor while the pointer is over it: a
+/// divider, a closed edge handle, an app's own handle.
+@MainActor
+protocol PaneResizeCursorView: NSView {
+    var cursorAxis: PaneAxis? { get }
+}
+
+@MainActor
+func resizeCursor(for axis: PaneAxis) -> NSCursor {
+    axis == .horizontal ? .resizeLeftRight : .resizeUpDown
+}
+
+/// Sets the resize cursor now, and again once the current event is done:
+/// inside a SwiftUI-hosted area the hosting view sets its own arrow for the
+/// same move, so the last word has to be ours.
+@MainActor
+func showResizeCursor(for axis: PaneAxis) {
+    let cursor = resizeCursor(for: axis)
+    cursor.set()
+    DispatchQueue.main.async { cursor.set() }
 }
 
 /// `PaneHandleView` for SwiftUI (`View.paneHandle`).

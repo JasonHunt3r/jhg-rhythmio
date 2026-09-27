@@ -47,8 +47,43 @@ public final class PaneContainerView: NSView {
 
     public override var isFlipped: Bool { true }
 
+    // MARK: The resize cursor
+
+    /// The resize cursor over every divider and handle, reliably. Cursor
+    /// rects alone weren't: inside a SwiftUI-hosted area the hosting view
+    /// sets its own arrow, so a nested divider or an app's handle showed the
+    /// arrow while dragging still worked (Jason, 2026-09-26; measured with
+    /// the cursor in screenshots — the main window's own divider was fine,
+    /// Edit Slides' inspector divider and the Slide viewer's grip weren't —
+    /// and tracking areas on the views never fired). So the layout watches
+    /// the window's pointer moves itself, and whenever the view under the
+    /// pointer is one of its handles, sets the cursor last.
+    private var pointerMonitor: Any?
+
+    private func watchPointer() {
+        if let pointerMonitor { NSEvent.removeMonitor(pointerMonitor) }
+        pointerMonitor = nil
+        guard let window else { return }
+        window.acceptsMouseMovedEvents = true
+        pointerMonitor = NSEvent.addLocalMonitorForEvents(matching: [.mouseMoved, .cursorUpdate]) { [weak self] event in
+            MainActor.assumeIsolated {
+                guard let self, let window = self.window, event.window === window,
+                      let frame = window.contentView?.superview,
+                      let hit = frame.hitTest(frame.convert(event.locationInWindow, from: nil)) as? PaneResizeCursorView,
+                      hit.isDescendant(of: self), let axis = hit.cursorAxis else { return }
+                showResizeCursor(for: axis)
+            }
+            return event
+        }
+    }
+
+    isolated deinit {
+        if let pointerMonitor { NSEvent.removeMonitor(pointerMonitor) }
+    }
+
     public override func viewDidMoveToWindow() {
         super.viewDidMoveToWindow()
+        watchPointer()
         guard let window else { return }
         if controller.undoSource == nil { controller.undoSource = window }
         // Panes saved as popped out go back out, now there's a window to
@@ -191,7 +226,8 @@ final class PaneHostView: NSView {
 /// to resize the sized side; drag past half its minimum to close it
 /// against its edge; double-click to close it.
 @MainActor
-final class PaneDividerView: NSView {
+final class PaneDividerView: NSView, PaneResizeCursorView {
+    var cursorAxis: PaneAxis? { split.axis }
     /// How far the grab strip reaches either side of the line.
     static let grab: CGFloat = 3
     let split: Split
@@ -243,7 +279,8 @@ final class PaneDividerView: NSView {
 /// Drag it to pull the pane out to a size; double-click it to open the
 /// pane at its last size.
 @MainActor
-final class PaneEdgeHandleView: NSView {
+final class PaneEdgeHandleView: NSView, PaneResizeCursorView {
+    var cursorAxis: PaneAxis? { split.axis }
     let split: Split
     private weak var container: PaneContainerView?
 
@@ -313,9 +350,8 @@ final class PaneEdgeHandleView: NSView {
 /// **The clutch** (`PaneClutch`, Jason 2026-09-26): pulled from closed, the
 /// side bites, slips, then engages — and the drag is over: it slides open
 /// to its own size, the pointer let go; let go first, it slides back shut.
-/// Pushed below its minimum it resists, and slides shut (the drag over)
-/// once pushed `closeEngage` past it; let go first, it springs back to its
-/// minimum.
+/// An open side dragged slowly is only repositioned — down to its minimum,
+/// never shut; a flick shuts it (the drag over), as it opens a closed one.
 ///
 /// `keepGrabOffset`: for an `.external` handle, grabbed anywhere on the
 /// app's own view rather than on the edge line — the sized side changes
@@ -350,7 +386,7 @@ func trackResize(_ split: Split, in container: PaneContainerView, from event: NS
 
     /// `released`: it engaged — sliding open or shut on its own, the drag
     /// over (Jason, 2026-09-26: like a bow, it looses at the threshold).
-    enum Phase { case pulling, resizing, resisting, released }
+    enum Phase { case pulling, resizing, released }
     var phase: Phase = startedClosed ? .pulling : .resizing
 
     /// The pointer's distance from the edge, as the sized side would have it.
@@ -411,30 +447,21 @@ func trackResize(_ split: Split, in container: PaneContainerView, from event: NS
                 controller.peek[split.id] = PaneClutch.opening(pull: at)
                 container.needsLayout = true
             }
-        case .resizing, .resisting:
-            if split.collapsible,
-               PaneClutch.flicksShut(speed: speed, pushed: startExtent - at) || at < minimum {
-                if PaneClutch.shuts(fromEdge: at, minimum: minimum)
-                    || PaneClutch.flicksShut(speed: speed, pushed: startExtent - at) {
-                    // Loosed: it slides shut. Reopening is a new pull.
-                    release()
-                    controller.live = nil
-                    controller.slide(split.id, to: 0, target: max(target, minimum),
-                                     duration: PaneClutch.slideDuration) {
-                        controller.setOpen(split.id, false)
-                    }
-                } else {
-                    phase = .resisting
-                    controller.peekTarget[split.id] = max(target, minimum)
-                    controller.peek[split.id] = PaneClutch.closing(fromEdge: at, minimum: minimum)
-                    container.needsLayout = true
+        case .resizing:
+            // A slow drag only repositions: down to the minimum and no
+            // further, never shut (Jason, 2026-09-26: "that's reposition,
+            // not close drawer"). Shutting is a flick, a swipe or a
+            // double-click.
+            if split.collapsible, PaneClutch.flicksShut(speed: speed, pushed: startExtent - at) {
+                release()
+                controller.live = nil
+                controller.slide(split.id, to: 0, target: max(target, minimum),
+                                 duration: PaneClutch.slideDuration) {
+                    controller.setOpen(split.id, false)
                 }
             } else {
-                phase = .resizing
-                controller.peek[split.id] = nil
-                controller.peekTarget[split.id] = nil
                 controller.liveChange { s in
-                    dragResize(split, root: controller.root, fromEdge: at, total: total,
+                    dragResize(split, root: controller.root, fromEdge: max(at, minimum), total: total,
                                start: dragStart, into: &s)
                 }
             }
@@ -452,7 +479,7 @@ func trackResize(_ split: Split, in container: PaneContainerView, from event: NS
             }
             return
         }
-        if phase == .resizing || phase == .resisting, split.collapsible,
+        if phase == .resizing, split.collapsible,
            PaneClutch.flicksShut(speed: speed, pushed: startExtent - last.at) {
             controller.live = nil
             controller.slide(split.id, to: 0, target: max(target, minimum), duration: PaneClutch.slideDuration) {
@@ -467,16 +494,6 @@ func trackResize(_ split: Split, in container: PaneContainerView, from event: NS
         // Let go before it engaged: back shut, nothing saved.
         guard moved else { return }
         controller.slide(split.id, to: 0, target: target, duration: PaneClutch.settleDuration) {}
-    case .resisting:
-        // Let go before it shut: back to its minimum, open.
-        controller.slide(split.id, to: minimum, target: max(target, minimum),
-                         duration: PaneClutch.settleDuration) {
-            controller.liveChange { s in
-                dragResize(split, root: controller.root, fromEdge: minimum, total: total,
-                           start: dragStart, into: &s)
-            }
-            controller.endLive()
-        }
     case .resizing:
         if moved { controller.endLive() }
     case .released:

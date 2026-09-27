@@ -146,7 +146,10 @@ chosen yet. In the order they came up:
    on release if ShowTools has the Accessibility permission (measured in
    a test app with Jason's tap-drags) — **needs a stable signature to be
    worth granting (Jason's call)**. Sensitivity setting still to come, in
-   the settings pass.
+   the settings pass. Later still: **a slow drag only repositions** (down
+   to the minimum, never shut — the flick, swipe and double-click shut),
+   and **every divider and handle shows the resize cursor** (it didn't
+   inside SwiftUI-hosted areas).
 5. **Item 34: light mode is "awful"** (Jason tried it). Light mode needs
    more translucency than dark, and the window background has no
    transparency at all today — Jason wants a setting (a slider) for it.

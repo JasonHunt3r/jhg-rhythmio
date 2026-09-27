@@ -8,10 +8,10 @@ import AppKit
 /// (its default, then the last size it was left at), the drag over: the
 /// pointer is an arrow again and the rest of the press is ignored until the
 /// button comes up. Let go before that and it slides back shut.
-/// Pushed shut, the same pressure the other way: it resizes as usual down to
-/// its minimum, resists past it, and once pushed far enough slides shut, the
-/// drag over the same way (reopening is a new pull); let go before and it
-/// springs back to its minimum. A double-click (and an
+/// An open drawer dragged slowly is only **repositioned**, down to its
+/// minimum and no further — never shut (Jason: "that's reposition, not
+/// close drawer"). It shuts with a **flick** toward its edge, a **swipe** on
+/// its handle, or a double-click (and an
 /// app's own toggle, `animated: true`) slides rather than jumping.
 ///
 /// The dials, tuned by feel. All distances are points. Main-actor, like
@@ -28,8 +28,6 @@ public enum PaneClutch {
     /// 64 is a touch quicker than the first build's 48…110 (half the
     /// drawer's size), which Jason found "a little on the slow side".
     public static var engage: CGFloat = 64
-    /// How far past its minimum an open drawer must be pushed to go shut.
-    public static var closeEngage: CGFloat = 48
     /// The slide open or shut once engaged, and a double-click's.
     public static var slideDuration: TimeInterval = 0.18
     /// The slide back when let go before engaging.
@@ -55,17 +53,6 @@ public enum PaneClutch {
     public static func opening(pull: CGFloat) -> CGFloat {
         let p = max(0, pull)
         return p <= bite ? p : bite + (p - bite) * slip
-    }
-
-    /// An open drawer's extent while pushed to `fromEdge`, below its
-    /// minimum `minimum`, before it goes shut: it resists.
-    public static func closing(fromEdge: CGFloat, minimum: CGFloat) -> CGFloat {
-        fromEdge >= minimum ? fromEdge : max(0, minimum - (minimum - fromEdge) * slip)
-    }
-
-    /// Whether a push to `fromEdge` has gone far enough to shut it.
-    public static func shuts(fromEdge: CGFloat, minimum: CGFloat) -> Bool {
-        fromEdge <= minimum - closeEngage
     }
 
     /// The drag's speed along the drawer's axis, points a second, from its

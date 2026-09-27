@@ -231,12 +231,17 @@ the instant jump it had. Every closable split has it, whatever its handle
   the button comes up. Its own size: a default per drawer, then the last
   size it was left at. Let go before it engaged: it slides back shut
   (`settleDuration`, 0.14 s), nothing saved.
-- **Pushed shut** (Jason: the same pressure, but closing's visual logic
-  is its own): it resizes as always down to its minimum, then **resists**
-  (the same `slip`), and slides shut once pushed `closeEngage` (48 pt)
-  past the minimum — the drag over, the same way. Let go before: it
-  springs back to its minimum, open. Reopening is a new pull, back to the
-  size it had when the push began.
+- **Dragged slowly, an open drawer is only repositioned** (Jason,
+  2026-09-26: "that's reposition, not close drawer") — down to its
+  minimum and no further, never shut. It shuts with a **flick** toward
+  its edge, a **swipe** on its handle, or a double-click. (The first
+  build resisted past the minimum and shut 48 pt beyond it — "way too
+  soon" for the timeline, whose minimum is a few hundred points; a
+  literal close-at-36-pt rule came and went the same hour, once the
+  flick made slow closing unnecessary.) Checked on a test copy: the
+  Slide viewer dragged slowly to the window's top stopped at 121 (its 120
+  minimum and the divider); the timeline dragged to the bottom stopped at
+  its minimum.
 - **Double-click** (a divider, an edge handle, an app's handle) and an
   app's own `setOpen(_:_:animated: true)` / `toggle(_:animated:)` slide
   rather than jump. Plain `setOpen` is unchanged (instant), for state
@@ -302,6 +307,18 @@ the instant jump it had. Every closable split has it, whatever its handle
   nothing changes. ShowTools is ad-hoc signed, so a permission granted to
   it is lost at every reinstall — a stable signature (a free Apple
   Development certificate) would keep it. Jason's call.
+- **The resize cursor, everywhere** (Jason, 2026-09-26: some dividers
+  didn't show it though dragging worked). Measured with the cursor in
+  screenshots: the main window's own dividers were fine; Edit Slides'
+  inspector divider and the Slide viewer's grip showed the arrow — inside
+  a SwiftUI-hosted area the hosting view sets its own. Cursor rects alone
+  lose to it, and tracking areas on the views never fired (a probe logged
+  nothing). Each `PaneContainerView` now watches its window's pointer
+  moves (`acceptsMouseMovedEvents`, a local monitor), and when the view
+  under the pointer is a divider or handle (`PaneResizeCursorView`) sets
+  the resize cursor, again after the event so SwiftUI's arrow doesn't
+  win. Re-measured: every divider and the grip show the resize cursor,
+  and the picture beside them the arrow.
 
 Tests: `PaneClutchTests` (5: the bite and slip, where it engages, the
 resistance and where it shuts, a peek drawn below the minimum, a peek
