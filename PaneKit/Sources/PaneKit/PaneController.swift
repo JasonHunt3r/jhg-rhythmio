@@ -30,6 +30,12 @@ public final class PaneController {
     @ObservationIgnored var windows: [String: PaneWindowController] = [:]
     /// A drag in progress: drawn, not saved, until the drag ends.
     @ObservationIgnored var live: PaneKitState?
+    /// The clutch and the slides (`PaneClutch`): a split's sized side drawn
+    /// at this extent for now, and the size it's heading for (its content
+    /// keeps that size and slides, rather than squeezing). Never saved.
+    @ObservationIgnored var peek: [String: CGFloat] = [:]
+    @ObservationIgnored var peekTarget: [String: CGFloat] = [:]
+    @ObservationIgnored var slides: [String: PaneSlide] = [:]
     @ObservationIgnored private let store: UserDefaults
     private var storeKey: String { "PaneKit.\(id)" }
 

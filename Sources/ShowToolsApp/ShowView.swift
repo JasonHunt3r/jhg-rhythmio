@@ -269,7 +269,7 @@ struct EditSlidesView: View {
         // Y opens and closes it, as in the grids (text fields keep their "y").
         .background(SingleKeys { event in
             guard event.charactersIgnoringModifiers?.lowercased() == "y", event.plainModifiers == [] else { return false }
-            viewer.toggle(ViewerLayout.split)
+            viewer.toggle(ViewerLayout.split, animated: true)
             return true
         }.opacity(0).allowsHitTesting(false))
     }

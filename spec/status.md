@@ -115,16 +115,14 @@ chosen yet. In the order they came up:
    apps (the browser list as a panel) must never hide. Settings opened
    from the menu or its key comes up frontmost; whether it then stays on
    top or acts as a normal window is still to discuss.
-4. **Item 39 (new): the drawers' pull-out animation** — a "cantilevered
-   clutch": the drawer starts to follow at once (you're onto
-   something), then resists and lags the pointer until a threshold, then
-   pops open with a quick slide instead of today's instant jump; let go
-   before the threshold and the edge slides back shut. Jason confirmed
-   this reading (bite, slip, engage, release early) 2026-09-26. **Closing
-   gets the same pressure feel**, but not necessarily the same animation
-   — the visual logic of closing differs from opening. Still to ask:
-   double-click, open-to-saved-width vs keep sizing, the threshold's
-   measure, and which drawers.
+4. **Item 39: the drawers' clutch — built 2026-09-26, for every PaneKit
+   drawer** (`spec/panekit.md`, "The clutch"): bite, slip, engage with a
+   quick slide, back shut if let go early; pushed shut, it resists past
+   its minimum, then slides shut or springs back; double-clicks and Y
+   slide. Defaults chosen without asking (say if wrong): every drawer;
+   it opens to its saved size and a continuing drag resizes from there;
+   engage at about half its size (48–110 pt). The dials want Jason's
+   hand. Measured at hand speed on a test copy (numbers in the spec).
 5. **Item 34: light mode is "awful"** (Jason tried it). Light mode needs
    more translucency than dark, and the window background has no
    transparency at all today — Jason wants a setting (a slider) for it.

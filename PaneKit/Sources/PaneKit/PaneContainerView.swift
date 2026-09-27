@@ -60,8 +60,20 @@ public final class PaneContainerView: NSView {
     /// another layout.
     public override func layout() {
         super.layout()
-        let result = PaneLayout.layout(controller.root, in: bounds, state: controller.displayState)
+        let result = PaneLayout.layout(controller.root, in: bounds, state: controller.displayState,
+                                       peek: controller.peek)
         lastLayout = result
+        // A drawer sliding (`PaneClutch`): its pane's content keeps the
+        // size it's heading for and slides, flush with the divider.
+        var sliding: [String: PaneHostView.Slide] = [:]
+        for (splitID, target) in controller.peekTarget {
+            guard let split = controller.root.split(splitID), case .leaf(let pane) = split.sizedNode else { continue }
+            sliding[pane.id] = .init(axis: split.axis, extent: target,
+                                     flushWithEnd: split.sizedFirst(in: controller.displayState))
+        }
+        for (id, host) in hosts {
+            if host.slide != sliding[id] { host.slide = sliding[id] }
+        }
         for (id, host) in hosts where host.superview === self {
             if let frame = result.panes[id] {
                 host.frame = frame
@@ -144,9 +156,28 @@ final class PaneHostView: NSView {
         needsLayout = true
     }
 
+    /// Set while its drawer slides: the content's full extent along the
+    /// axis, and which end it keeps flush with (the divider's side).
+    struct Slide: Equatable {
+        var axis: PaneAxis
+        var extent: CGFloat
+        var flushWithEnd: Bool
+    }
+    var slide: Slide? { didSet { if slide != oldValue { needsLayout = true } } }
+
     override func layout() {
         super.layout()
-        content.frame = bounds
+        guard let s = slide else { content.frame = bounds; return }
+        // Unflipped: y grows upward. A drawer at the top (sized first) has
+        // its divider at the bottom, so its content sits on y = 0.
+        switch s.axis {
+        case .vertical:
+            let h = max(s.extent, bounds.height)
+            content.frame = CGRect(x: 0, y: s.flushWithEnd ? 0 : bounds.height - h, width: bounds.width, height: h)
+        case .horizontal:
+            let w = max(s.extent, bounds.width)
+            content.frame = CGRect(x: s.flushWithEnd ? bounds.width - w : 0, y: 0, width: w, height: bounds.height)
+        }
     }
 
     override func hitTest(_ point: NSPoint) -> NSView? {
@@ -194,7 +225,7 @@ final class PaneDividerView: NSView {
     override func mouseDown(with event: NSEvent) {
         guard let container else { return }
         if event.clickCount == 2, split.collapsible {
-            container.controller.setOpen(split.id, false)
+            container.controller.setOpen(split.id, false, animated: true)
             return
         }
         trackResize(split, in: container, from: event)
@@ -250,7 +281,7 @@ final class PaneEdgeHandleView: NSView {
     override func mouseDown(with event: NSEvent) {
         guard let container else { return }
         if event.clickCount == 2 {
-            container.controller.setOpen(split.id, true)
+            container.controller.setOpen(split.id, true, animated: true)
             return
         }
         trackResize(split, in: container, from: event)
@@ -263,9 +294,14 @@ final class PaneEdgeHandleView: NSView {
 }
 
 /// A drag on a divider or a handle, tracked here until the mouse comes up.
-/// The size follows the pointer and is drawn live; past half the sized
-/// side's minimum it closes (if it can); on release it's one transaction.
-/// A drag that never moves changes nothing.
+/// An open side's size follows the pointer and is drawn live; on release
+/// it's one transaction. A drag that never moves changes nothing.
+///
+/// **The clutch** (`PaneClutch`, Jason 2026-09-26): pulled from closed, the
+/// side bites, slips, then engages and slides open to its size (a drag that
+/// carries on resizes it from there); let go first, it slides back shut.
+/// Pushed below its minimum it resists, and slides shut once pushed
+/// `closeEngage` past it; let go first, it springs back to its minimum.
 ///
 /// `keepGrabOffset`: for an `.external` handle, grabbed anywhere on the
 /// app's own view rather than on the edge line — the sized side changes
@@ -275,9 +311,14 @@ final class PaneEdgeHandleView: NSView {
 func trackResize(_ split: Split, in container: PaneContainerView, from event: NSEvent,
                  keepGrabOffset: Bool = false) {
     guard let window = container.window, let rect = container.lastLayout.splits[split.id] else { return }
+    let controller = container.controller
+    // A slide still running (a double-click a moment ago) stops where it is,
+    // and the drag carries on from there.
+    let drawnAtStart = controller.drawnExtent(split.id)
+    controller.stopSliding(split.id)
     let start = container.convert(event.locationInWindow, from: nil)
     var moved = false
-    let dragStart = container.controller.state
+    var dragStart = controller.state
     let edge = split.edge(in: dragStart)
     let total = split.axis == .horizontal ? rect.width : rect.height
     func distance(_ p: CGPoint) -> CGFloat {
@@ -288,22 +329,97 @@ func trackResize(_ split: Split, in container: PaneContainerView, from event: NS
         case .bottom: rect.maxY - p.y
         }
     }
-    let startExtent = dragStart.isCollapsed(split.id) && split.collapsible
-        ? 0 : PaneLayout.sizedExtent(for: split, available: total, state: dragStart)
+    let startedClosed = dragStart.isCollapsed(split.id) && split.collapsible
+    let startExtent = startedClosed ? drawnAtStart : PaneLayout.sizedExtent(for: split, available: total, state: dragStart)
+    let minimum = split.range.lowerBound
+    let target = controller.openExtent(split.id)
+
+    enum Phase { case pulling, engaging, resizing, resisting, shutting }
+    var phase: Phase = startedClosed ? .pulling : .resizing
+    /// Added to the pointer's reading once a pulled drawer has engaged, so
+    /// the drag carries on from its opened size without a jump.
+    var shift: CGFloat = 0
+    var lastFromEdge = startExtent
+
+    func fromEdge(_ p: CGPoint) -> CGFloat {
+        let raw = keepGrabOffset || startedClosed
+            ? handleDragExtent(startExtent: startExtent, grabbedAt: distance(start), pointerAt: distance(p))
+            : distance(p)
+        return raw + shift
+    }
+
     while let e = window.nextEvent(matching: [.leftMouseDragged, .leftMouseUp]) {
         if e.type == .leftMouseUp { break }
         let p = container.convert(e.locationInWindow, from: nil)
         if !moved, hypot(p.x - start.x, p.y - start.y) < 3 { continue }
         moved = true
-        let fromEdge = keepGrabOffset
-            ? handleDragExtent(startExtent: startExtent, grabbedAt: distance(start), pointerAt: distance(p))
-            : distance(p)
-        container.controller.liveChange { s in
-            dragResize(split, root: container.controller.root, fromEdge: fromEdge, total: total,
-                       start: dragStart, into: &s)
+        let at = fromEdge(p)
+        lastFromEdge = at
+        switch phase {
+        case .pulling:
+            if at >= PaneClutch.engageDistance(opensTo: target) {
+                // Engaged: slide open; the drag resizes from there.
+                phase = .engaging
+                controller.slide(split.id, to: target, target: target, duration: PaneClutch.slideDuration) {
+                    controller.setOpen(split.id, true)
+                    dragStart = controller.state
+                    shift = target - (lastFromEdge - shift)
+                    phase = .resizing
+                }
+            } else {
+                controller.peekTarget[split.id] = target
+                controller.peek[split.id] = PaneClutch.opening(pull: at)
+                container.needsLayout = true
+            }
+        case .engaging, .shutting:
+            break   // the slide is running; its ending sets what's next
+        case .resizing, .resisting:
+            if split.collapsible && at < minimum {
+                if PaneClutch.shuts(fromEdge: at, minimum: minimum) {
+                    phase = .shutting
+                    controller.live = nil
+                    controller.slide(split.id, to: 0, target: max(target, minimum),
+                                     duration: PaneClutch.slideDuration) {
+                        controller.setOpen(split.id, false)
+                    }
+                } else {
+                    phase = .resisting
+                    controller.peekTarget[split.id] = max(target, minimum)
+                    controller.peek[split.id] = PaneClutch.closing(fromEdge: at, minimum: minimum)
+                    container.needsLayout = true
+                }
+            } else {
+                phase = .resizing
+                controller.peek[split.id] = nil
+                controller.peekTarget[split.id] = nil
+                controller.liveChange { s in
+                    dragResize(split, root: controller.root, fromEdge: at, total: total,
+                               start: dragStart, into: &s)
+                }
+            }
         }
     }
-    if moved { container.controller.endLive() }
+
+    switch phase {
+    case .pulling:
+        // Let go before it engaged: back shut, nothing saved.
+        guard moved else { return }
+        controller.slide(split.id, to: 0, target: target, duration: PaneClutch.settleDuration) {}
+    case .resisting:
+        // Let go before it shut: back to its minimum, open.
+        controller.slide(split.id, to: minimum, target: max(target, minimum),
+                         duration: PaneClutch.settleDuration) {
+            controller.liveChange { s in
+                dragResize(split, root: controller.root, fromEdge: minimum, total: total,
+                           start: dragStart, into: &s)
+            }
+            controller.endLive()
+        }
+    case .resizing:
+        if moved { controller.endLive() }
+    case .engaging, .shutting:
+        break   // the slide finishes on its own
+    }
 }
 
 /// Where a drag on an app's own handle puts the sized side: its size when

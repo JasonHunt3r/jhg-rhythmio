@@ -176,7 +176,7 @@ struct CollectionBrowser: View {
         .background(SingleKeys { event in
             if event.charactersIgnoringModifiers?.lowercased() == "y" {
                 switch event.plainModifiers {
-                case []: viewer.toggle(ViewerLayout.split); return true
+                case []: viewer.toggle(ViewerLayout.split, animated: true); return true
                 case [.shift]: viewerMode = viewerMode.other; return true
                 default: return false
                 }

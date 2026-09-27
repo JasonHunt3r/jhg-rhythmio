@@ -261,7 +261,7 @@ struct AppCommands: Commands {
             Menu("Viewer") {
                 Toggle("Show Viewer  (Y)", isOn: Binding(
                     get: { model.viewer(model.activeViewerPlace).isOpen(ViewerLayout.split) },
-                    set: { model.viewer(model.activeViewerPlace).setOpen(ViewerLayout.split, $0) }))
+                    set: { model.viewer(model.activeViewerPlace).setOpen(ViewerLayout.split, $0, animated: true) }))
                 Divider()
                 Picker("Viewer", selection: viewerModeBinding) {
                     Text("Side by Side  (⇧Y)").tag(ViewerMode.sideBySide)

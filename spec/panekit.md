@@ -211,6 +211,53 @@ Assistant). Not needed for our fix.
   toggle; the search field types and the button's double-click doesn't
   toggle.
 
+### The clutch: how a drawer feels (Jason, 2026-09-26) — built
+
+Jason: "a cantilevered clutch" — a drawer should show it's about to
+happen, then hold back until it's sure, then pop with a quick slide, not
+the instant jump it had. Every closable split has it, whatever its handle
+(edge, divider, or the app's own view). `PaneClutch.swift`.
+
+- **Pulled from closed:** it **bites** (follows the pointer exactly for
+  `bite`, 14 pt), then **slips** (takes `slip`, 0.35, of the pointer's
+  further travel), until the pull reaches about half the size it opens to
+  (`engageFraction`, within `engageRange` 48…110 pt): then it **engages**,
+  sliding open to its saved size in `slideDuration` (0.18 s, easing out).
+  A drag that carries on resizes it from there, without a jump. Let go
+  before it engaged: it slides back shut (`settleDuration`, 0.14 s),
+  nothing saved.
+- **Pushed shut** (Jason: the same pressure, but closing's visual logic
+  is its own): it resizes as always down to its minimum, then **resists**
+  (the same `slip`), and slides shut once pushed `closeEngage` (48 pt)
+  past the minimum. Let go before: it springs back to its minimum, open.
+  Reopening goes back to the size it had when the push began.
+- **Double-click** (a divider, an edge handle, an app's handle) and an
+  app's own `setOpen(_:_:animated: true)` / `toggle(_:animated:)` slide
+  rather than jump. Plain `setOpen` is unchanged (instant), for state
+  bridging and launch.
+- **While it slides, its content keeps its full size** and is revealed,
+  flush with the divider (`PaneHostView.slide`), like a drawer — not
+  squeezed, and SwiftUI doesn't relayout it every frame. Drawn with a
+  live, never-saved extent per split (`PaneController.peek`, honoured by
+  `PaneLayout.layout(…, peek:)`); the slide's timer runs in the run
+  loop's common modes, so it keeps going inside a drag.
+- **Reduce Motion** (System Settings ▸ Accessibility) turns the slides
+  off.
+
+Tests: `PaneClutchTests` (5: the bite and slip, where it engages, the
+resistance and where it shuts, a peek drawn below the minimum, a peek
+never crowding the main side). Checked on a ShowTools test copy at hand
+speed (a pointer stepping every 25 ms, the drawer's extent sampled every
+~35 ms) on Edit Slides' Slide viewer: a 40-pt pull bit to 14, slipped to
+24, slid back shut on release; a 170-pt pull slipped to 47, engaged,
+slid 47 → 187 → 250 → 276 → 281 in ~160 ms, then resized on to 315;
+double-clicks slid 315 → 0 and back in ~180 ms; pushed 20 pt past its
+120-pt minimum it resisted to 114 and sprang back to 121; pushed through,
+it resisted to 104 and slid shut. And on Edit Slides' inspector (an edge
+handle, the other axis): a 60-pt pull peeked 31 pt and went back; a
+200-pt pull opened it; a divider double-click closed it. **The dials
+want Jason's hand** — tuning is by feel.
+
 ## Building a row (added 2026-09-24)
 
 The primitive is strictly two panes. Three or more independently-sized

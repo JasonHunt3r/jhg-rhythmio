@@ -29,14 +29,18 @@ public enum PaneLayout {
         split.handle == .external ? 0 : handleThickness
     }
 
-    public static func layout(_ node: PaneNode, in rect: CGRect, state: PaneKitState) -> PaneLayoutResult {
+    /// `peek`: a split's sized side drawn at exactly this extent, open or
+    /// closed, whatever its range — the clutch and the slide in and out
+    /// (`PaneClutch`) draw with it. Never saved.
+    public static func layout(_ node: PaneNode, in rect: CGRect, state: PaneKitState,
+                              peek: [String: CGFloat] = [:]) -> PaneLayoutResult {
         var result = PaneLayoutResult()
-        place(node, in: rect, state: state, into: &result)
+        place(node, in: rect, state: state, peek: peek, into: &result)
         return result
     }
 
     private static func place(_ node: PaneNode, in rect: CGRect, state: PaneKitState,
-                              into result: inout PaneLayoutResult) {
+                              peek: [String: CGFloat] = [:], into result: inout PaneLayoutResult) {
         switch node {
         case .leaf(let pane):
             if !state.isPoppedOut(pane.id) { result.panes[pane.id] = rect }
@@ -46,15 +50,20 @@ public enum PaneLayout {
             let sizedEmpty = isEmpty(split.sizedNode, state: state)
             let mainEmpty = isEmpty(split.mainNode, state: state)
             if sizedEmpty && mainEmpty { return }
-            if sizedEmpty { place(split.mainNode, in: rect, state: state, into: &result); return }
-            if mainEmpty { place(split.sizedNode, in: rect, state: state, into: &result); return }
+            if sizedEmpty { place(split.mainNode, in: rect, state: state, peek: peek, into: &result); return }
+            if mainEmpty { place(split.sizedNode, in: rect, state: state, peek: peek, into: &result); return }
 
             result.splits[split.id] = rect
             let total = extent(of: rect, along: split.axis)
             let extentSized: CGFloat
             let gap: CGFloat
-            let closed = state.isCollapsed(split.id) && split.collapsible
-            if closed {
+            var closed = state.isCollapsed(split.id) && split.collapsible
+            if let p = peek[split.id] {
+                let room = max(0, total - dividerThickness - minExtent(split.mainNode, along: split.axis, state: state))
+                extentSized = min(max(p, 0), room)
+                closed = extentSized == 0
+                gap = closed ? min(closedThickness(split), total) : dividerThickness
+            } else if closed {
                 extentSized = 0
                 gap = min(closedThickness(split), total)
             } else {
@@ -64,12 +73,12 @@ public enum PaneLayout {
             let (sizedRect, gapRect, mainRect) = carve(rect, axis: split.axis, sizedFirst: split.sizedFirst(in: state),
                                                        sized: extentSized, gap: gap)
             if extentSized > 0 {
-                place(split.sizedNode, in: sizedRect, state: state, into: &result)
+                place(split.sizedNode, in: sizedRect, state: state, peek: peek, into: &result)
                 result.dividers[split.id] = gapRect
             } else if !(closed && split.handle == .external) {
                 result.handles[split.id] = gapRect
             }
-            place(split.mainNode, in: mainRect, state: state, into: &result)
+            place(split.mainNode, in: mainRect, state: state, peek: peek, into: &result)
         }
     }
 

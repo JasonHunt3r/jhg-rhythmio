@@ -1489,7 +1489,7 @@ struct LibraryGridView: View {
             // selection instead of changing it (Jason, Aperture's multi-up).
             if event.charactersIgnoringModifiers?.lowercased() == "y" {
                 switch event.plainModifiers {
-                case []: model.viewer(viewerPlace).toggle(ViewerLayout.split); return true
+                case []: model.viewer(viewerPlace).toggle(ViewerLayout.split, animated: true); return true
                 case [.shift]: viewerMode = viewerMode.other; return true
                 default: break
                 }

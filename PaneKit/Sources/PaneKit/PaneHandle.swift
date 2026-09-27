@@ -33,7 +33,7 @@ public final class PaneHandleView: NSView {
         guard let controller, let split, split.handle == .external,
               let container = controller.container, container.window === window else { return }
         if event.clickCount == 2 {
-            if split.collapsible { controller.toggle(splitID) }
+            if split.collapsible { controller.toggle(splitID, animated: true) }
             return
         }
         trackResize(split, in: container, from: event, keepGrabOffset: true)
