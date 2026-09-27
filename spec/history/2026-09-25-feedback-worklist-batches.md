@@ -210,3 +210,26 @@ code items, leave the rest for design direction.
 Every fix above shipped as its own commit on `main`, pushed after each
 batch; `swift test` (306 core + 13 BGTools, plus 23 in `PaneKit/` on its
 own) and `./make-app.sh` stayed clean throughout.
+
+## 2026-09-26 — items 26, 27, 29 leave the list for ModKit
+
+Jason's answer to the proposal below: he is planning the value-changer
+as **ModKit**, a standalone dev-tool app for auditioning look values,
+with App Claude, in a plan doc of its own; its output goes back to Claude
+Code or out as a file. So the three look items left this worklist. The
+proposal as it stood, for the record:
+
+- **Where the values live:** each look value a preference the views read,
+  so a change shows live.
+- **Where it sits:** a reusable package like PaneKit, opened from a Debug
+  menu.
+- **Keeping a value:** a "Bake" button copies the values out; Claude Code
+  makes them the defaults in code, so the panel never becomes where the
+  app's look lives.
+- **First knobs:** control corner radius, header text size, control size
+  (mini/small/regular), header spacing, container borders on/off (item
+  26's "Pro" look).
+- **Caution on item 27:** macOS draws a standard window's corner radius
+  itself; changing it may need hacks — test before promising. Jason: what
+  he mostly wants is the **glass buttons' corners less circular**, and
+  he's curious whether AppKit's plain windows can be hacked too.

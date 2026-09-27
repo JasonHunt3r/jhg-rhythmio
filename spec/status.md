@@ -61,11 +61,53 @@ Library.noindex`, is in use (12 files and one collection on 2026-09-26).
 
 ## What's next
 
-**Items 13, 14 and 30 are done** (2026-09-25, late): the Browser is a
-drawer, any pane can switch sides, the frame strip is a drawer, and the
-empty inspector's header sits at the top. No next task is set; the
-feedback worklist's remaining items, the new asks and the parked list
-below are what's open.
+**Jason answered the worklist's open items on 2026-09-26** (the answers
+are folded into "The 2026-09-25 feedback worklist" below). No next task is
+chosen yet. In the order they came up:
+
+1. **Grid selection is slow** (new, 2026-09-26, pressing) — clicking a
+   tile in the Library grid takes about half a second to draw its
+   selection border, even in Jason's own tiny library. It should feel
+   instant. Probably new, not a large-library cost. Measure first.
+2. **Item 33, first step: grey out the tools, not the timeline.** Jason
+   meant that the transport's *tools* grey out while the rows stay
+   visible, whenever no show is selected to play through it. Today's
+   `TimelinePanePlaceholder` swaps the whole pane for an inert copy with a
+   message — rework it to the real rows, tools dimmed. Then the drop:
+   start the hands-on with option (b) — switch to Edit Show and open the
+   show creator (pick or make the collection it goes in). Which view you
+   land on after the show is made is decided by hand, later.
+3. **Item 2, grown into a windows pass:** make every panel's behaviour
+   consistent and define each window by its purpose; the written layer
+   hierarchy in `spec/windows.md`; a **settings vs preferences** pass
+   (define which is which; one window with a tab switcher, or two);
+   **About ShowTools** in the app menu (perhaps where "Install BGTools"
+   lives). Jason's answers: whether panels hide when ShowTools isn't
+   frontmost is **a setting** — but panels that take drops from other
+   apps (the browser list as a panel) must never hide. Settings opened
+   from the menu or its key comes up frontmost; whether it then stays on
+   top or acts as a normal window is still to discuss.
+4. **Item 39 (new): the drawers' pull-out animation** — a "cantilevered
+   clutch": the drawer starts to follow at once (you're onto
+   something), then resists and lags the pointer until a threshold, then
+   pops open with a quick slide instead of today's instant jump; let go
+   before the threshold and the edge slides back shut. Being clarified
+   with Jason before any code.
+5. **Item 34: light mode is "awful"** (Jason tried it). Light mode needs
+   more translucency than dark, and the window background has no
+   transparency at all today — Jason wants a setting (a slider) for it.
+6. **Item 35: Show Similar should be thematic.** Tried on themed images,
+   it grouped nothing at any setting: Vision's feature prints find
+   bursts and near-copies, not "dogs", "dogs filling the frame", "dogs
+   sitting". Jason wants it to surface a good *next slide*, as well as
+   winnowing seven takes of one set-up. Needs research and a discussion.
+7. **Item 36: large libraries** — scroll-scrubbing gets ahead of image
+   loading. Jason will set up a big library for testing; measure then.
+8. **Item 38: the browser's header as a switcher** — today it's only a
+   header bar over the browser (the collections list column); clicked,
+   it could drop down a list to switch which list is shown.
+
+BGTools (items 23–25) stays last, as planned (`spec/bgtools.md`).
 
 ### New asks (Jason, 2026-09-25) — both built 2026-09-26
 
@@ -115,9 +157,10 @@ axtool check actually covered:
 
 Jason's own build feedback, `ShowTools Feedback — Worklist for Next CC
 Session.md` (repo root), 37 items, worked through in batches grouped
-by shared code. **26 done** (batches 1–8 below). Still open: 23–25 (BGTools), 26/27/29 (the value-changer panel
-idea), item 2's other half, and 33–38, which are questions for Jason
-(item 5 needed no code). Each fix checked
+by shared code. **26 done** (batches 1–8 below). Jason answered the rest
+2026-09-26: 23–25 (BGTools) stay last; 26/27/29 left the list for
+**ModKit** (below); item 2's other half, 33, 34, 35, 36 and 38 are in
+"What's next"; 37 is settled (item 5 needed no code). Each fix checked
 with axtool against a scratch library, not just compiled. Full dated
 story — root causes, what each check actually covered, the commit for
 each: `spec/history/2026-09-25-feedback-worklist-batches.md`.
@@ -167,10 +210,9 @@ default flips), =, ⌘Z/Redo Rate, and a screenshot of level rows.
   reflowing. Checked with axtool against the scratch library: the
   placeholder's "Switch to Edit Show to use the timeline" reads correctly
   in Edit Slides, and clicking back to Edit Show restores the real,
-  interactive transport and storyline, screenshotted both ways. **Left,
-  on purpose:** what a drop onto the greyed bar should do (item 33) — an
-  Open Question Jason wants to answer once he has a working copy to play
-  with, not before.
+  interactive transport and storyline, screenshotted both ways. **Not
+  what Jason meant** (2026-09-26): the rows should stay visible with only
+  the tools greyed — item 33 in "What's next" reworks it.
 - **Item 12** (groups → a library item / catalog folder) — Jason's actual
   intent was already built 2026-09-24 (the Library pane's collapsible
   groups-and-shows list); the only missing piece, the icon convention
@@ -246,16 +288,25 @@ default flips), =, ⌘Z/Redo Rate, and a screenshot of level rows.
 - **Items 23–25** — queued as their own BGTools work list, to pick up
   once the ShowTools fixes above are done: `spec/bgtools.md`, "Next up —
   queued 2026-09-25, after the ShowTools fixes."
-- **Items 26, 27, 29** (header-bar restyling, corner-radius override, app
-  icons) — Jason's counter-proposal: a small **live value-changer
-  panel** (corner radius, text size, control size, container-border
-  visibility, …) as a reusable dev tool for tuning any app's look by
-  trial and error, rather than one-off asks each needing a build. Not
-  scoped yet: still needs a design pass (where its values live —
-  UserDefaults keys the views already read, most likely — and which knobs
-  it exposes first).
-- Item 2's other half (a written window-layer hierarchy, and an audit of
-  the built pop-outs against it) — still open, not started.
+- **Items 26, 27, 29 — moved out of this list 2026-09-26.** The live
+  value-changer panel is becoming **ModKit**, a standalone dev-tool app
+  Jason is planning with App Claude (a plan doc of its own, not in this
+  repo yet): auditioning look values live, then sending the final values
+  back to Claude Code or out as a file. The look asks wait for it. What
+  Jason most wants from it here: **the glass buttons' corners less
+  circular**; he's also curious whether plain AppKit windows' corner
+  radius can be hacked. Item 29's remaining half (BGTools' icon and its
+  Control Center tile) goes with item 23. The earlier proposal is kept in
+  `spec/history/2026-09-25-feedback-worklist-batches.md`.
+- **Item 2's other half** — grown into the windows pass in "What's next"
+  (item 3 there). Audit facts found 2026-09-26: the Info panel, Rhythm
+  panel, library panel and Slide Editor hide when ShowTools isn't
+  frontmost (NSPanel's `hidesOnDeactivate`); the PaneKit pop-outs
+  (Inspector, Timeline) stay visible and drop to `.normal`
+  (`PaneWindows.swift`). And every one of them sits at `.floating` while
+  ShowTools is active, above the Settings window (an ordinary window).
+- **Item 37** (Quick Show scope) — settled: presets are separate from
+  New Show…'s (`spec/simple-things-fast.md`).
 - **Simple things fast** — Jason confirmed 2026-09-25 all three answers
   (guided first run, Quick Show, the levels) are to be **built**, not
   chosen among. Its doc's own "Still open" list has shrunk to one real
@@ -266,10 +317,8 @@ default flips), =, ⌘Z/Redo Rate, and a screenshot of level rows.
   separate floating Library panel) and **the Browser** (Edit Show's file
   column) still can't detach. Answer 7 (double-click's meaning) is also
   still genuinely undecided — not superseded by the pop-out work.
-- **Five Open Questions** in the feedback doc itself (greyed-transport
-  drag target, glass/vibrancy in light mode, Show Similar's engine,
-  large-library DB/indexing, the collections list column dropdown) —
-  none buildable without Jason's call first.
+- **The feedback doc's five Open Questions** — all answered 2026-09-26
+  (items 33–36 and 38, in "What's next").
 
 ### Also next
 

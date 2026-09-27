@@ -332,10 +332,10 @@ worklist is finished, not before.
    not `build/`). The icon itself is art, not code — pairs with item 29
    (app icons) below.
 2. **Per-screen stop, not just the master switch** (item 24). Jason's
-   framing: keep the master switch at the top; add *either* a per-monitor
-   on/off toggle in each monitor's title bar (colour-coded green when on),
-   *or* a "Plays Nothing" entry in the per-Space list — two mechanisms,
-   his own call which one before building either. Sits next to the
+   framing: keep the master switch at the top; add a per-monitor on/off
+   toggle in each monitor's title bar (colour-coded green when on) **and**
+   a "Plays Nothing" entry in the per-Space list. **Decided 2026-09-26:
+   build both** (Jason: "Simple, do both"). Sits next to the
    naming/map work above (`MainWindow.swift`, `Arrangement`), same area
    of the sidebar.
 3. **BGTools pan & zoom, length and transition options** (item 25) — a

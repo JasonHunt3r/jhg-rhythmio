@@ -172,7 +172,7 @@ thinking (the levels, the first run). The overlap:
 | Pan and Zoom | yes | yes | as played |
 | Audio: a file or a playlist, Loop | yes | yes: goes into the audio row | as played |
 | Rhythm | yes | later, in the show | as played |
-| Presets | yes | yes, the same presets | — |
+| Presets | yes, its own | yes, its own (separate, Jason 2026-09-26) | — |
 | Main button | **Play** (and Send to BGTools) | **Make Show** | **Make Show** |
 
 - **Make Show from Quick Show** (Jason: "a very sweet idea") turns a
@@ -182,9 +182,8 @@ thinking (the levels, the first run). The overlap:
   a collection or a grid selection, it opens the panel. Return accepts
   the pre-filled settings, so it stays one keystroke when the defaults
   are fine.
-- **Presets:** the table assumes the two panels share them, so "3.5
-  seconds, a quick cut" is set up once. With two panels, that's a choice
-  to make, not a given.
+- **Presets:** each panel keeps its own (Jason, 2026-09-26) — Quick Show
+  is the casual one and gets used with different instincts.
 
 **Read across the table, the essentials are:** the pictures (a pool or
 a selection), their order, how long each shows, how one gives way to the
@@ -323,6 +322,9 @@ Also answered 2026-09-24: the levels' contents (Jason arranges each
 level, and Claude Code captures it), the level picker (the title bar,
 with a setting to hide it), and one panel or two (two).
 
-Still open:
-1. **Presets across the two panels:** do Quick Show and New Show… share
-   one set of presets, or keep their own?
+Answered 2026-09-26: **presets are separate** — Quick Show and New Show…
+each keep their own. Jason: Quick Show "is more casual and would be used
+with different instincts." (The table's "the same presets" row above
+predates this answer.)
+
+Nothing is still open here.
