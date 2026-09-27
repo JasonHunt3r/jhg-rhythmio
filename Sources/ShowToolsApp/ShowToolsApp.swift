@@ -700,6 +700,18 @@ private struct WindowsSettingsTab: View {
                     }
                 }
             }
+            // spec/windows.md, item 34: "light mode's translucency and a
+            // window-background transparency setting."
+            Section("Transparency") {
+                Button("Adjust Transparency…") {
+                    SettingsBox.present(section: "Transparency", title: "Adjust") { dismiss in
+                        TranslucencySettingsBox(dismiss: dismiss)
+                    }
+                }
+                Text("Three tunable backgrounds (“Opacity Channels”), each with its own opacity, blur and tint, kept separately for Dark and Light. Which part of the app uses which channel is set inside.")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+            }
         }
     }
 }

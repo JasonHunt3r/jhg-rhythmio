@@ -132,6 +132,8 @@ struct InfoPanelContent: View {
             }
         }
         .frame(minWidth: 260, idealWidth: 280, minHeight: 200)
+        // spec/windows.md, item 34: the panels' own tunable Opacity Channel.
+        .background(TranslucentBackground(region: .panels))
     }
 
     // MARK: Header: thumbnail and metadata for one, a count for several

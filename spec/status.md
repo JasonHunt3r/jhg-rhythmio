@@ -180,11 +180,11 @@ untouched.
 ## What's next
 
 **Chosen, in order (Jason, 2026-09-27):** adjust the drawer-sensitivity
-module (his own hands, by feel — see "Still needs Jason's hands"), then
-discuss how to build light mode's translucency and a
-background-transparency setting, then flesh out the "Smart View"
-preference. The rest below is open, not next, roughly in the order Jason
-raised them:
+module (his own hands, by feel — see "Still needs Jason's hands"). Light
+mode's translucency and a background-transparency setting is now built
+too (below) — left is his own tuning of it. Then flesh out the "Smart
+View" preference. The rest below is open, not next, roughly in the order
+Jason raised them:
 
 1. ~~**The timeline's height**~~ (`spec/windows.md`, "Its height") —
    **built 2026-09-26, both halves**, including vertical row-scrolling in
@@ -199,10 +199,14 @@ raised them:
    by a floating panel, About ShowTools (already there for free), a
    pro-style tabbed Settings window, and the drawers' sensitivity setting
    with its practice drawer. The settings-vs-preferences split turned out
-   moot. Left, in the order Jason chose to take them: his own tuning of
-   the sensitivity dials by feel; then a discussion (not yet had) on how
-   to build **light mode's translucency and a background-transparency
-   setting** (item 34); then fleshing out the **"Smart View"** preference.
+   moot. **Light mode's translucency and a background-transparency
+   setting** (item 34) is also now built (`spec/windows.md`, "The windows
+   pass"): three numbered Opacity Channels (opacity, tint, blur), kept
+   separately for Dark and Light, each app region's channel itself a
+   picker. Left, in the order Jason chose to take them: his own tuning of
+   the drawer-sensitivity dials by feel; his own tuning of the
+   transparency channels; then fleshing out the **"Smart View"**
+   preference.
 3. **Slides as mini movies, the rest** (`spec/plan.md`): the Slide Editor
    as the Slide viewer's pop-out, maybe reordering in the viewer, and the
    framework for slides with more inside (portrait shots filling a
@@ -275,6 +279,23 @@ Not pressing; each wants a discussion or a plan before any code.
 
 ## Still needs Jason's hands
 
+- **The transparency settings module** (built 2026-09-27, `spec/windows.md`
+  item 34, `TranslucencySetting.swift`): the "Adjust Transparency…" box
+  opens from the Windows tab with all three Opacity Channels' Opacity,
+  Blur (System/Custom) and Tint controls and the three region pickers
+  (Main window, Inspector, Panels), checked with axtool against a scratch
+  library — Done closes it, reopening shows the same values back, and the
+  Library window's own look is unchanged with every channel left at its
+  default (opacity 100%, system blur, no tint). **Nothing has been tuned
+  by feel yet** — the whole point of the control. Also unconfirmed: the
+  Custom blur mode's real effect, since it reaches into a private,
+  undocumented `NSVisualEffectView` layer property that may or may not do
+  anything on this Mac's OS version — worth checking with the switch off
+  and on, side by side, before relying on it. A test session's own
+  slider drags landed briefly in the shared `com.jhg.showtools` domain
+  (`translucencyChannel.1.dark` / `.2.dark`) and were deleted with
+  `defaults delete` before this was written — Jason's copy never had
+  stray values to inherit, but worth knowing the keys exist now.
 - **The Set Up Triggers box, and the Responsiveness slider** (built,
   reversed twice, and floating by the end of 2026-09-27, `spec/windows.md`,
   "A reusable modal box"): confirmed with axtool against a scratch

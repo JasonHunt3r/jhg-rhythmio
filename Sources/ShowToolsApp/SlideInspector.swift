@@ -71,6 +71,8 @@ struct SlideInspector: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        // spec/windows.md, item 34: the Inspector's own tunable Opacity Channel.
+        .background(TranslucentBackground(region: .inspector))
         .overlay { if selected.isEmpty { emptyMessage } }
     }
 

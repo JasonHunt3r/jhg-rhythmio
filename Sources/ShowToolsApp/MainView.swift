@@ -285,6 +285,11 @@ struct MainView: View {
             }
             .padding(8)
         }
+        // spec/windows.md, item 34: lets the tunable background (Main
+        // window's own Opacity Channel) show through the List's own
+        // otherwise-opaque background.
+        .scrollContentBackground(.hidden)
+        .background(TranslucentBackground(region: .mainWindow))
     }
 
     /// The detail pane's content: PaneKit's "detail" pane. A fresh detail

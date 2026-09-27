@@ -775,9 +775,35 @@ header bar reads "Drawer Sensitivity: Set Up Triggers." "It's good."
    2026-09-27**, in the Windows tab (`spec/panekit.md`, "The clutch," has
    the story and what's left: Jason's own tuning by feel — next). Its
    fine controls moved into the new modal box the same day (above).
-2. Light mode's translucency and a window-background transparency setting
-   (item 34, Jason: light mode "is awful") — **a discussion, not yet
-   had**, on how to build it.
+2. ~~Light mode's translucency and a window-background transparency
+   setting~~ (item 34, Jason: light mode "is awful") — **built
+   2026-09-27**, after the discussion this line asked for. Three numbered,
+   reusable **Opacity Channels** (`TranslucencySetting.swift`), not one
+   setting per named region: Jason, "Main window is class 1... panes that
+   sit on it can share class 1 values, or be assigned class 2 or 3." Each
+   channel carries its own Opacity, Tint (color + amount) and Blur, kept
+   **separately for Dark and Light** ("a switch inside the secondary
+   window that allows for fine tuning... different slider values
+   depending on the Dark Mode/Light Mode setting"), and which of three
+   regions (Main window, Inspector, Panels — Info and Rhythm) uses which
+   channel is itself a picker in the box, not fixed. Blur has two modes:
+   **System** (the material's own fixed blur, no private API, on by
+   default) and **Custom**, a continuous slider that reaches into
+   `NSVisualEffectView`'s private `CABackdropLayer` for a radius —
+   undocumented, could stop doing anything on a future macOS update, kept
+   as an explicit opt-in per channel rather than the only way to get a
+   blur (Jason: "include it, but also have an on/off switch that would use
+   the system without having to be a workaround"). Opened from the Windows
+   tab's **"Adjust Transparency…"** button, the same `SettingsBox` case
+   built for Drawer Sensitivity's "Set Up Triggers…". Defaults reproduce
+   today's plain opaque look exactly (opacity 100%, system blur, no tint)
+   so nothing changes on screen until a slider actually moves. Checked
+   with axtool against a scratch library: the box opens with all three
+   channels' controls and the region pickers, Done closes it, and the
+   Library window's own look is unchanged with defaults left alone. Left
+   for Jason: tuning any of it by feel — nothing here has been dialed in
+   yet, and the Custom blur slider's real effect (if any, on this Mac's
+   OS version) hasn't been looked at.
 3. The "Smart View" preference (panes open and close by context — on by
    default — or keep your own choices; `spec/plan.md`, "Slides as mini
    movies") — **wants fleshing out**: today it's a one-paragraph sketch,
