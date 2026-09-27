@@ -67,12 +67,98 @@ of the divider itself; the arithmetic and the unchanged render are what's
 checked. Closed the test copy cleanly (`kill`, not `-9`) and confirmed
 `runningTestLaunches` came back empty (`showtools-testing`).
 
-## What's left of "Its height"
+## "Its height," the floor: vertical row-scrolling (same day, later)
 
-Vertical row-scrolling in `StorylineView`, as its own piece — then the
-floor can come down off full content, and "a new row lands at or near
-the bottom, scrolled into view" becomes meaningful. Tracked in
-`spec/status.md`'s "What's next," item 1.
+Jason: finish the leftovers from the first two things before starting
+the windows pass. Three were named: vertical row-scrolling (the timeline
+height floor), scrolling a newly-added row into view, and the wider
+browser collection switch. Built the first two together; the third
+needs a design answer first (below).
+
+`StorylineView`'s rows (images, transitions, slides, music — one `ZStack`,
+absolute-positioned by `rowTop(kind)`) had never scrolled vertically,
+only horizontally with the timeline's own clock. Before touching it,
+traced every risk by reading the code rather than guessing:
+- **Coordinate spaces:** block drag/reorder, trim, markers and scrub all
+  use `DragGesture(coordinateSpace: .named("storyline"))`, declared on
+  the VStack wrapping both the ruler and the rows. SwiftUI's named spaces
+  report position in a view's own *unscrolled* content frame — the same
+  reason the existing horizontal scroll never broke these gestures — so
+  nesting a second, vertical `ScrollView` around just the rows (not that
+  VStack) doesn't change what any gesture measures.
+- **`rowHandles`:** pinned outside the horizontal scroll on purpose (so
+  it never travels sideways with the timeline). Once rows can scroll
+  vertically inside their own nested `ScrollView`, this handle overlay —
+  still outside that scroll entirely — needed to start following its
+  offset by hand, or the handles would drift out of alignment with their
+  rows the moment someone scrolled. Solved with the same preference-key
+  pattern the horizontal scroll already used for the frame strip
+  (`StorylineScrollKey` → `RowsScrollKey`), then an `.offset` + `.frame`
+  + `.clipped()` stack on `rowHandles` itself.
+- **The playhead and marker lines:** overlays on the same outer VStack,
+  outside the new inner scroll — reasoned that they don't need to track
+  vertical scroll at all (a time-marker line just needs to span whatever
+  rows are currently visible, which the VStack's own measured height,
+  now capped at the viewport, already gives it for free). Left untouched.
+- **`ScrollViewReader.scrollTo` across the nest:** the existing horizontal
+  `proxy.scrollTo` (playback auto-scroll, Go Back/Forward) targets ids
+  that would now sit two scroll levels deep. SwiftUI's anchor-preference
+  mechanism for `scrollTo` bubbles through nested containers regardless
+  of axis, so this was assessed as safe without a full harness — the
+  same reasoning extended to a *new* inner `ScrollViewReader` for the
+  rows themselves.
+
+Built: `StorylineView.rowsScrollView` (`ScrollViewReader` +
+`ScrollView(.vertical)`, sized to `rowsViewportHeight` — exactly
+`rowsHeight` until the pane's given less room) wraps the existing rows
+content, extracted unchanged into `rowsZStack`, plus one addition: an
+invisible 1×1 anchor per row kind, purely so `scrollTo(kind)` has
+somewhere to land. `EditShowTimelinePane.minContentHeight` (transport +
+divider + ruler + one row) replaced `contentHeight` as the pane's floor
+in `AppModel.mainPanes`. `rowDragGesture`'s `onEnded` now sets
+`pendingRowScroll` after a successful move, scrolled into view by a new
+`onChange` inside `rowsScrollView` — the same one-shot pattern
+`session.pendingScroll` already used for the horizontal scroll. This
+also covers "a new row lands... scrolled into view" for whenever a row
+can be added, which nothing does today (`TimelineRow.normalized` keeps
+every show at all four kinds) — reasoned through, not exercised.
+
+**Checked:** `swift build` clean, `swift test` unchanged (336 core, 51
+PaneKit). A scratch-library launch at the default size rendered
+identically to before (same screenshot, pixel for pixel by eye). Shrunk
+well below full content by writing a 200-pt stored size directly into
+the scratch library's shared preferences (`showtools-testing`'s rules
+throughout: Jason's real `com.jhg.showtools` domain backed up with
+`defaults export` before any of this, restored with `defaults import`
+after, diffed to confirm — the diff came back clean except a stale
+`runningTestLaunches` entry that predated this session, cleared as a
+bonus): the pane showed only the ruler and the rows that fit (images,
+slides), cut cleanly at its own edge, no overlap or corruption.
+
+**Not confirmed:** the divider drag itself (see below), a real two-finger
+scroll revealing the hidden rows, `rowHandles` visibly tracking that
+scroll, and a row-reorder drag's `pendingRowScroll` actually landing.
+Coordinate-guessing against the tiny, densely-packed pane (axtool's
+`dump` doesn't expose PaneKit's custom divider views by role, so their
+screen position had to be inferred rather than read directly) proved too
+unreliable to trust this session — several attempts hit nothing, and one
+scroll attempt showed an unexpected, larger layout that looked like the
+unrelated frame-strip drawer, not reproduced and left no trace in
+`PaneKit.main`'s saved state, so nothing was actually changed by it. All
+of this is flagged in `spec/status.md`, "Still needs Jason's hands,"
+rather than claimed as verified.
+
+## Item C: the wider browser collection switch — not built
+
+The third leftover, extending the browser header's switcher (item 38,
+already built to the show's own collection and its groups) to every
+collection in the library, needs a real decision first: does picking a
+different collection there change `show.collectionID` — a real,
+undoable edit to which collection the show belongs to — or is it a
+transient, view-only filter that doesn't touch the show at all?
+`spec/anatomy.md` currently defines the Browser as "the show's
+collection, uses first," which the second reading would break. Asked
+Jason rather than guess; not yet answered, so not built.
 
 ## Item 38: the browser's header as a switcher
 

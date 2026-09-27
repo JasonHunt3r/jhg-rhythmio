@@ -30,6 +30,12 @@ struct EditShowTimelinePane: View {
     /// what a content-tracking split reports as the pane's content extent,
     /// via `PaneController.setContentExtent` (`AppModel.mainPanes`).
     static let contentHeight = StorylineView.fullHeight + 56 + 1
+    /// The least the pane can shrink to now that the rows scroll
+    /// vertically (`StorylineView.rowsScrollView`, `spec/windows.md`,
+    /// "Its height," 2026-09-26): the transport, its divider, the ruler,
+    /// and room for one row — `StorylineView.roomForRows`'s own floor —
+    /// rather than every row at once.
+    static let minContentHeight = 56 + 1 + StorylineView.rulerHeight + 4 + StorylineView.blockHeight + 12
 
     let show: Show
     let timeline: ShowTimeline

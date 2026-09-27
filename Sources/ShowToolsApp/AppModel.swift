@@ -54,14 +54,14 @@ final class AppModel {
                // The static range is just an outer backstop now: the real
                // ceiling is `contentTracking`'s own, computed live from the
                // window's height and the viewer's (`ContentTracking`,
-               // `spec/windows.md`, "Its height," 2026-09-26). With no
-               // vertical scrolling in the rows yet, the floor stays at
-               // the pane's full content — it can't shrink further without
-               // clipping a row invisibly — so today this only ever
-               // enforces the other half of the rule: **it can't be
-               // dragged taller than its content**, which the old static
-               // range's `+456` slack let it do, for no reason.
-               range: EditShowTimelinePane.contentHeight...(EditShowTimelinePane.contentHeight + 4000),
+               // `spec/windows.md`, "Its height," 2026-09-26); the floor is
+               // `EditShowTimelinePane.minContentHeight` — the transport,
+               // ruler and one row — now that `StorylineView`'s rows scroll
+               // vertically below that (`rowsScrollView`) rather than
+               // clipping. It can't be dragged taller than its content
+               // either, which the old static range's `+456` slack let it
+               // do, for no reason.
+               range: EditShowTimelinePane.minContentHeight...(EditShowTimelinePane.contentHeight + 4000),
                contentTracking: ContentTracking(),
                // Item 15, `ShowTools Feedback — Worklist for Next CC
                // Session.md`: 180 read too wide as a floor. 140 still
@@ -71,7 +71,7 @@ final class AppModel {
                       range: 140...360, title: "Library",
                       .pane("library", title: "Library", minSize: 140),
                       .pane("detail", title: "Detail", minSize: 240)),
-               .pane("storyline", title: "Timeline", minSize: EditShowTimelinePane.contentHeight, popOut: .window)))
+               .pane("storyline", title: "Timeline", minSize: EditShowTimelinePane.minContentHeight, popOut: .window)))
     /// Edit Show's and Edit Slides' columns (`spec/panekit.md`, step 3): one
     /// controller each, shared across every show (`ColumnsSplitView`'s own
     /// saved widths were shared the same way), so switching shows doesn't

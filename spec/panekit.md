@@ -229,9 +229,10 @@ Assistant). Not needed for our fix.
   only ever shrink the content into a scroll, never grow past it.
   `PaneLayout.sizedExtent`; `PaneLayoutTests`, 5 cases. ShowTools' own use
   (`AppModel.mainPanes`'s `"window"` split, `EditShowTimelinePane
-  .contentHeight`) only exercises the ceiling half so far — the timeline
-  pane's floor still has nowhere to shrink to, since `StorylineView` has
-  no vertical row-scrolling yet (`spec/windows.md` has the rest).
+  .contentHeight`/`.minContentHeight`) exercises both halves: the
+  timeline pane's floor came down once `StorylineView` grew its own
+  vertical row-scrolling the same day (`spec/windows.md`, "Its height,"
+  has the rest).
 
 ### The clutch: how a drawer feels (Jason, 2026-09-26) — built
 

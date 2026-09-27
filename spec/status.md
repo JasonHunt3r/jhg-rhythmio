@@ -38,12 +38,14 @@ to `Library.sqlite.v<N>.bak`.
 **Built most recently (2026-09-26)** — details in the specs, the story in
 `spec/history/2026-09-26-slides-and-the-clutch.md` and
 `spec/history/2026-09-26-timeline-height.md`:
-- **The timeline pane can no longer be dragged taller than its content**
-  (`spec/windows.md`, "Its height"; `spec/panekit.md`, a new general
-  PaneKit mechanism, `Split.contentTracking`). The other half — shrinking
-  below its content, with the rows scrolling — waits on vertical
-  row-scrolling in `StorylineView`, which doesn't exist yet; scoped with
-  Jason to ship the ceiling half now.
+- **The timeline pane's height, both halves** (`spec/windows.md`, "Its
+  height"; `spec/panekit.md`, a new general PaneKit mechanism,
+  `Split.contentTracking`): it can no longer be dragged taller than its
+  content, and — once `StorylineView` grew its own vertical
+  row-scrolling, built the same day — it can be dragged smaller too, the
+  rows scrolling instead of clipping. Checked at full size (identical to
+  before) and shrunk via a direct preference write (clips cleanly, no
+  corruption); not yet by a real drag or scroll gesture.
 - **The browser's header is a switcher** (item 38, `spec/plan.md`, "the
   browser filter"): a click now shows and switches which of the show's
   own collection's lists the browser shows — the collection itself, or
@@ -79,12 +81,11 @@ untouched.
 
 No next task is chosen. Open, roughly in the order Jason raised them:
 
-1. **The timeline's height, the rest** (`spec/windows.md`, "Its height"):
-   the ceiling half is built 2026-09-26 (can't be dragged taller than its
-   content). Left: **vertical row-scrolling in `StorylineView`**, which
-   doesn't exist yet (only horizontal, for the clock) — needed before the
-   pane can actually shrink below its content; then a new row scrolled
-   fully into view.
+1. ~~**The timeline's height**~~ (`spec/windows.md`, "Its height") —
+   **built 2026-09-26, both halves**, including vertical row-scrolling in
+   `StorylineView` (which didn't exist before) and scrolling a moved row
+   into view. Not yet confirmed by a real drag or scroll — see "Still
+   needs Jason's hands."
 2. **The windows pass** — planned (`spec/windows.md`, "The windows pass"):
    consistent panels, the layer hierarchy (panels cover Settings today),
    the settings-vs-preferences split, About ShowTools; with it the drawers'
@@ -162,13 +163,24 @@ Not pressing; each wants a discussion or a plan before any code.
 
 ## Still needs Jason's hands
 
-- **The timeline pane's new ceiling** (built 2026-09-26, `spec/windows.md`
-  "Its height," `spec/panekit.md`'s new `contentTracking` mechanism):
-  pinned by 5 new PaneKit arithmetic tests and a scratch-library launch
-  that renders identically to before, but never confirmed by a real drag
-  of the divider — try dragging it taller; it should stop dead at the
-  content's own height instead of leaving ~400 pt of dead space below the
-  rows, as it did before.
+- **The timeline pane's new height, both halves** (built 2026-09-26,
+  `spec/windows.md` "Its height," `spec/panekit.md`'s new
+  `contentTracking` mechanism, `StorylineView.rowsScrollView`): pinned by
+  5 new PaneKit arithmetic tests, a scratch-library launch that renders
+  identically to before at full size, and a shrunk-via-direct-preference
+  check that clips cleanly with no corruption — but never confirmed by a
+  real drag or scroll. Try: dragging the divider taller (should stop dead
+  at the content's own height, not leave ~400 pt of dead space below the
+  rows as it did before); dragging it shorter (should scroll the rows,
+  not clip or corrupt them); a two-finger scroll over the rows once
+  shrunk (should reveal the hidden rows, with the row handles on the left
+  edge tracking the scroll); dragging a row to reorder it (should scroll
+  the moved row into view if it's now off-screen). One coordinate-guessed
+  scroll attempt this session showed an unexpected larger layout
+  (possibly the frame-strip drawer, briefly) — not reproduced, and
+  `PaneKit.main`'s own saved state showed no change before or after, so
+  nothing persisted; mentioned only in case the same thing turns up
+  again.
 - **The clutch's feel and dials** (`spec/panekit.md`): pulling, braking,
   flicking and swiping drawers, on every kind of handle; whether 64 pt and
   the slide's 0.18 s feel right; **a swipe's direction with natural

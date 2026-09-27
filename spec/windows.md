@@ -104,8 +104,7 @@ thing that could be a tool window of its own, the Timeline window. The
 transport goes with it, since zoom, snapping and the range belong with
 the rows wherever they are.
 
-**Its height (Jason, 2026-09-26) — the ceiling half is built; the floor
-half waits on vertical row-scrolling.** Docked or in its own window, the
+**Its height (Jason, 2026-09-26) — built, both halves, 2026-09-26.** Docked or in its own window, the
 timeline is **only as tall as its contents** — the transport, the ruler
 and the rows — **or smaller**; it can't be dragged taller. **Smaller than
 its contents, the rows scroll up and down as normal**, docked or in a
@@ -124,18 +123,8 @@ smaller than its contents, it keeps its size and scrolls. **A new row
 lands at or near the bottom and is scrolled fully into view** (unless
 the window is shorter than the row).
 
-**Built 2026-09-26 (the ceiling half only), scoped with Jason:**
-`StorylineView` has no vertical scrolling yet — only horizontal, for the
-timeline's own clock ("Scrolling a window that's partly covered," below,
-already said so: "vertical scrolling arrives with extra rows, and so does
-this"). Without it, the pane can't actually shrink below its content
-without clipping a row invisibly, so **the floor stays at the pane's full
-content for now** — the "dragged smaller, it keeps its size and scrolls"
-half is parked until that scrolling exists. What's built is the other
-half: **it can no longer be dragged taller than its content**, which the
-old static range's `+400` of dead slack let it do, for no reason.
-
-Built as a general PaneKit mechanism, not a ShowTools-only patch
+**Built 2026-09-26, the ceiling first, the floor the same day:** the
+ceiling as a general PaneKit mechanism, not a ShowTools-only patch
 (`PaneKit/Sources/PaneKit/PaneModel.swift`, `Split.contentTracking`,
 `ContentTracking`; `PaneLayout.sizedExtent`; `PaneController
 .setContentExtent`, proven in the standalone harness's own arithmetic
@@ -147,14 +136,51 @@ available space (configurable) — or the main side's own minimum,
 whichever is more — for the main side. A stored size (a manual drag) is
 clamped into that same ceiling, so a drag can shrink into a scroll but
 never grow past the content either. `AppModel.mainPanes`'s outer
-`"window"` split carries it now; `EditShowTimelinePane.contentHeight`
-reports the pane's real content height — the transport, its divider, and
+`"window"` split carries it; `EditShowTimelinePane.contentHeight` reports
+the pane's real content height — the transport, its divider, and
 `StorylineView.fullHeight` — which is always the pane's true content,
 since `TimelineRow.normalized` keeps every show's `rows` at all four
-kinds. Checked: `swift test` (46 → 51 PaneKit tests, 336 core tests,
-unchanged), a scratch-library launch renders identically to before. Not
-confirmed by a real drag of the divider — only by the arithmetic and the
-launch.
+kinds.
+
+The floor needed vertical row-scrolling in `StorylineView` first, which
+didn't exist ("Scrolling a window that's partly covered," below, already
+said so: "vertical scrolling arrives with extra rows, and so does this")
+— built the same day: `StorylineView.rowsScrollView` wraps the existing
+rows content (`rowsZStack` — unchanged) in its own
+`ScrollViewReader`/`ScrollView(.vertical)`, sized to
+`rowsViewportHeight` (exactly `rowsHeight` — no inner scrolling engages
+at all — until the pane's given less room than that). The ruler stays
+outside this inner scroll, so it never moves; `rowHandles`, pinned
+outside the *horizontal* scroll on purpose (so it never travels sideways
+with the timeline), now follows the rows' own vertical scroll offset
+(`RowsScrollKey`, the same preference-key pattern the horizontal scroll
+already used for the frame strip) so it stays aligned with whichever
+rows are actually visible. `EditShowTimelinePane.minContentHeight` (the
+transport, its divider, the ruler, and one row) replaced
+`contentHeight` as the pane's floor in `AppModel.mainPanes`, so there's
+now real room to drag into. A row just moved by a drag scrolls into view
+(`pendingRowScroll`, mirroring `session.pendingScroll`'s own one-shot
+pattern for the horizontal scroll) — the same mechanism also covers "a
+new row lands... scrolled into view" whenever a row can be added, which
+nothing does yet (`TimelineRow.normalized` keeps every show at all four
+kinds), so that half is reasoned through, not exercised against a real
+add.
+
+Checked: `swift build` clean, `swift test` (336 core tests, PaneKit's own
+46 → 51, both unchanged by this). A scratch-library launch at the default
+(full-content) size renders identically to before. Shrunk well below
+full content (`defaults write` a 200-pt stored size directly, a scratch
+library, `showtools-testing`'s rules throughout — Jason's real
+preferences domain backed up first and restored byte-for-byte after):
+the ruler and only the rows that fit (images, slides) show, cut cleanly
+at the pane's own edge with no clipping artifact or overlap — the
+mechanism holds together. **Not confirmed:** a real drag of the divider
+down to that size (coordinate-guessing against the tiny, densely-packed
+pane proved too fragile this session — one attempt likely toggled the
+unrelated frame-strip drawer instead), the vertical scroll gesture itself
+revealing the hidden rows, `rowHandles` visibly tracking that scroll, and
+a row-reorder drag's `pendingRowScroll` actually landing. Worth a
+particular look with real hands.
 
 ## Panes that close to an edge, inside one window (Jason, 2026-09-24)
 

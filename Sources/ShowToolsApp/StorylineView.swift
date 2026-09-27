@@ -58,6 +58,23 @@ struct StorylineView: View {
     /// N: edges land on markers (plan, Phase 3). App-wide, like Final Cut's.
     @AppStorage("snapping") private var snapping = true
 
+    // MARK: Vertical row-scrolling (`spec/windows.md`, "Its height," 2026-09-26)
+
+    /// The whole pane's own height, as PaneKit's fixed host frame actually
+    /// gives it — read once, the same way `EditShowTimelinePane.visibleWidth`
+    /// already reads its given width: a background `GeometryReader` mirrors
+    /// whatever size its host view was given, which is never circular here,
+    /// since that size ultimately comes from `PaneContainerView`'s own fixed
+    /// `NSHostingView` frame, not from this view's own content.
+    @State private var paneAvailableHeight: CGFloat = 0
+    /// How far the rows have scrolled vertically, for `rowHandles` (pinned
+    /// outside this scroll, on purpose, so it stays put sideways) to follow.
+    @State private var rowsScrollOffset: CGFloat = 0
+    /// A row just moved by a drag (`rowDragGesture`): scrolled into view
+    /// once, the same one-shot pattern as `session.pendingScroll` (Go
+    /// Back/Forward) uses for the horizontal scroll.
+    @State private var pendingRowScroll: TimelineRow.Kind?
+
     /// Markers being dragged: which, and how far.
     private struct MarkerDrag {
         let ids: Set<UUID>
@@ -189,6 +206,16 @@ struct StorylineView: View {
     private var rowsHeight: CGFloat {
         displayRows.reduce(0) { $0 + Self.height(of: $1.kind) + Self.rowGap }
     }
+    /// What's actually left for the rows once the ruler and this view's own
+    /// vertical padding (`.padding(.vertical, 6)`, top and bottom) are
+    /// taken out of the pane's whole given height — never less than one
+    /// row, so there's always something to see.
+    private var roomForRows: CGFloat {
+        max(Self.height(of: .slides), paneAvailableHeight - Self.rulerHeight - 4 - 12)
+    }
+    /// The rows' own scrollable viewport: exactly `rowsHeight` — no inner
+    /// scrolling at all — until the pane's dragged smaller than that.
+    private var rowsViewportHeight: CGFloat { min(rowsHeight, roomForRows) }
     private var laneTop: CGFloat { rowTop(.transitions) }
     private var blocksTop: CGFloat { rowTop(.slides) }
 
@@ -272,6 +299,132 @@ struct StorylineView: View {
         CGFloat(max(timeline.slides.reduce(0) { $0 + length($1) }, timeline.duration) * pps) + Self.inset * 2 + 200
     }
 
+    /// The rows, vertically scrollable once they don't fit
+    /// (`spec/windows.md`, "Its height," 2026-09-26): the same content as
+    /// before, now inside its own `ScrollViewReader`/`ScrollView(.vertical)`,
+    /// sized to `rowsViewportHeight` — exactly `rowsHeight` (no inner
+    /// scrolling at all) until the pane's dragged smaller than its content.
+    /// `rowHandles`, an overlay outside this view entirely (pinned
+    /// horizontally on purpose, so it never scrolls sideways with the
+    /// timeline), follows this scroll's own offset (`rowsScrollOffset`) to
+    /// stay aligned with whichever rows are actually in view.
+    private func rowsScrollView(_ placed: [Placed], _ group: [Placed]) -> some View {
+        ScrollViewReader { rowsProxy in
+            ScrollView(.vertical, showsIndicators: rowsViewportHeight < rowsHeight) {
+                rowsZStack(placed, group)
+                    .background(GeometryReader { g in
+                        Color.clear.preference(key: RowsScrollKey.self,
+                                               value: -g.frame(in: .named("storylineRowsScroll")).minY)
+                    })
+            }
+            .coordinateSpace(name: "storylineRowsScroll")
+            .frame(width: contentWidth, height: rowsViewportHeight, alignment: .top)
+            .onPreferenceChange(RowsScrollKey.self) { rowsScrollOffset = $0 }
+            // A row just moved by a drag (`rowDragGesture`): scrolled into
+            // view once, mirroring `session.pendingScroll`'s own one-shot
+            // pattern for the horizontal scroll. The same anchor also
+            // covers "a new row lands... scrolled into view"
+            // (`spec/windows.md`, "Its height") whenever a row can be
+            // added — nothing does yet (`TimelineRow.normalized` keeps
+            // every show at all four kinds), so this is untested against
+            // a real add today.
+            .onChange(of: pendingRowScroll) { _, kind in
+                guard let kind else { return }
+                withAnimation(.easeInOut(duration: 0.3)) { rowsProxy.scrollTo(kind, anchor: nil) }
+                pendingRowScroll = nil
+            }
+        }
+    }
+
+    /// The rows themselves: unchanged from before this scrolled, except for
+    /// the row-anchors at the end, added only so `pendingRowScroll` has
+    /// somewhere to `scrollTo`.
+    private func rowsZStack(_ placed: [Placed], _ group: [Placed]) -> some View {
+        ZStack(alignment: .topLeading) {
+            // The rows' empty space (past the last slide, the transitions
+            // row between joins): a click there deselects everything
+            // (Jason, 2026-09-26).
+            Color.clear.frame(width: contentWidth, height: rowsHeight)
+                .contentShape(Rectangle())
+                .onTapGesture { deselectAll() }
+            ImagesRow(show: show, timeline: timeline, engine: engine, pps: pps, inset: Self.inset,
+                      width: contentWidth, height: Self.imagesRowHeight, snap: snap,
+                      dropTargeted: $imagesDropTargeted, selectedOverlay: $selectedOverlay,
+                      mutate: mutate,
+                      didSelect: { selection = []; selectedTransition = nil; selectedSong = nil; focused = true },
+                      didClickEmpty: deselectAll)
+                .offset(y: rowTop(.images))
+            MusicRow(show: show, timeline: timeline, pps: pps, inset: Self.inset,
+                     width: contentWidth, height: Self.musicRowHeight,
+                     selectedSong: $selectedSong, mutate: mutate,
+                     // A deliberate set-range action, like the button's
+                     // modifier-clicks (W6/W7): undoable, refuses locked.
+                     setRange: { r in
+                         guard !editor.rangeLocked else { NSSound.beep(); return }
+                         mutate("Set Range") { s in
+                             s.editor.rangeIn = r.lowerBound; s.editor.rangeOut = r.upperBound
+                             s.editor.rangeOn = true
+                         }
+                     },
+                     detectBeats: { clip in openBeatSheet(for: clip) },
+                     didSelect: { selection = []; selectedTransition = nil; selectedOverlay = nil; focused = true },
+                     didClickEmpty: deselectAll)
+                .offset(y: rowTop(.music))
+            ForEach(placed) { p in
+                let isMoving = moving?.ids.contains(p.id) == true
+                block(p)
+                    .opacity(isMoving ? 0.25 : 1)
+                    .offset(x: p.x, y: blocksTop)
+                    .id(p.id)
+            }
+            if moving == nil {
+                transitionsRow(placed)
+                cutHandles(placed)
+            }
+            if let x = dropX {
+                switch dropTarget(x, placed) {
+                case .insert(_, let ix):
+                    RoundedRectangle(cornerRadius: 1.5)
+                        .fill(Color.accentColor)
+                        .frame(width: 3, height: Self.blockHeight + 8)
+                        .offset(x: ix - 1.5, y: blocksTop - 4)
+                        .allowsHitTesting(false)
+                case .replace(_, let rx, let rw):
+                    RoundedRectangle(cornerRadius: 4)
+                        .strokeBorder(Color.accentColor, lineWidth: 3)
+                        .frame(width: rw, height: Self.blockHeight)
+                        .offset(x: rx, y: blocksTop)
+                        .allowsHitTesting(false)
+                }
+            }
+            // The group being dragged follows the pointer.
+            if let m = moving, let first = group.first {
+                let groupWidth = group.reduce(0) { $0 + $1.width }
+                HStack(spacing: 0) {
+                    ForEach(group) { p in block(p).frame(width: p.width) }
+                }
+                .frame(width: groupWidth, alignment: .leading)
+                .shadow(radius: 6)
+                .offset(x: m.pointerX - m.grab, y: blocksTop - 6)
+                .allowsHitTesting(false)
+                .id("dragging-\(first.id)")
+            }
+            // Invisible anchors, one per row kind, at each row's own top:
+            // `pendingRowScroll`'s `scrollTo` target. Not the rendered
+            // rows themselves — `ImagesRow`/`MusicRow`/the slide blocks/
+            // `transitionsRow` stay exactly as they were — just a stable
+            // place to scroll to regardless of what's drawn there.
+            ForEach(TimelineRow.Kind.allCases, id: \.self) { kind in
+                Color.clear.frame(width: 1, height: 1).offset(y: rowTop(kind)).id(kind)
+            }
+        }
+        .animation(.snappy(duration: 0.18), value: moving?.target)
+        .animation(.snappy(duration: 0.18), value: displayRows.map(\.id))
+        .onDrop(of: ItemDrag.accepted, delegate: StorylineDrop(
+            update: { dropX = $0?.x },
+            perform: { providers, location in drop(providers, at: location.x, placed) }))
+    }
+
     // MARK: Body
 
     var body: some View {
@@ -285,81 +438,7 @@ struct StorylineView: View {
                         .gesture(scrubGesture)
                         .overlay(alignment: .topLeading) { rangeOnRuler }
                         .overlay(alignment: .topLeading) { markersOnRuler }
-                    ZStack(alignment: .topLeading) {
-                        // The rows' empty space (past the last slide, the
-                        // transitions row between joins): a click there
-                        // deselects everything (Jason, 2026-09-26).
-                        Color.clear.frame(width: contentWidth, height: rowsHeight)
-                            .contentShape(Rectangle())
-                            .onTapGesture { deselectAll() }
-                        ImagesRow(show: show, timeline: timeline, engine: engine, pps: pps, inset: Self.inset,
-                                  width: contentWidth, height: Self.imagesRowHeight, snap: snap,
-                                  dropTargeted: $imagesDropTargeted, selectedOverlay: $selectedOverlay,
-                                  mutate: mutate,
-                                  didSelect: { selection = []; selectedTransition = nil; selectedSong = nil; focused = true },
-                                  didClickEmpty: deselectAll)
-                            .offset(y: rowTop(.images))
-                        MusicRow(show: show, timeline: timeline, pps: pps, inset: Self.inset,
-                                 width: contentWidth, height: Self.musicRowHeight,
-                                 selectedSong: $selectedSong, mutate: mutate,
-                                 // A deliberate set-range action, like the button's
-                                 // modifier-clicks (W6/W7): undoable, refuses locked.
-                                 setRange: { r in
-                                     guard !editor.rangeLocked else { NSSound.beep(); return }
-                                     mutate("Set Range") { s in
-                                         s.editor.rangeIn = r.lowerBound; s.editor.rangeOut = r.upperBound
-                                         s.editor.rangeOn = true
-                                     }
-                                 },
-                                 detectBeats: { clip in openBeatSheet(for: clip) },
-                                 didSelect: { selection = []; selectedTransition = nil; selectedOverlay = nil; focused = true },
-                                 didClickEmpty: deselectAll)
-                            .offset(y: rowTop(.music))
-                        ForEach(placed) { p in
-                            let isMoving = moving?.ids.contains(p.id) == true
-                            block(p)
-                                .opacity(isMoving ? 0.25 : 1)
-                                .offset(x: p.x, y: blocksTop)
-                                .id(p.id)
-                        }
-                        if moving == nil {
-                            transitionsRow(placed)
-                            cutHandles(placed)
-                        }
-                        if let x = dropX {
-                            switch dropTarget(x, placed) {
-                            case .insert(_, let ix):
-                                RoundedRectangle(cornerRadius: 1.5)
-                                    .fill(Color.accentColor)
-                                    .frame(width: 3, height: Self.blockHeight + 8)
-                                    .offset(x: ix - 1.5, y: blocksTop - 4)
-                                    .allowsHitTesting(false)
-                            case .replace(_, let rx, let rw):
-                                RoundedRectangle(cornerRadius: 4)
-                                    .strokeBorder(Color.accentColor, lineWidth: 3)
-                                    .frame(width: rw, height: Self.blockHeight)
-                                    .offset(x: rx, y: blocksTop)
-                                    .allowsHitTesting(false)
-                            }
-                        }
-                        // The group being dragged follows the pointer.
-                        if let m = moving, let first = group.first {
-                            let groupWidth = group.reduce(0) { $0 + $1.width }
-                            HStack(spacing: 0) {
-                                ForEach(group) { p in block(p).frame(width: p.width) }
-                            }
-                            .frame(width: groupWidth, alignment: .leading)
-                            .shadow(radius: 6)
-                            .offset(x: m.pointerX - m.grab, y: blocksTop - 6)
-                            .allowsHitTesting(false)
-                            .id("dragging-\(first.id)")
-                        }
-                    }
-                    .animation(.snappy(duration: 0.18), value: moving?.target)
-                    .animation(.snappy(duration: 0.18), value: displayRows.map(\.id))
-                    .onDrop(of: ItemDrag.accepted, delegate: StorylineDrop(
-                        update: { dropX = $0?.x },
-                        perform: { providers, location in drop(providers, at: location.x, placed) }))
+                    rowsScrollView(placed, group)
                 }
                 .overlay(alignment: .topLeading) { linesThroughRows }
                 .overlay(alignment: .topLeading) { Playhead(engine: engine, timeline: timeline, pps: pps, inset: Self.inset) }
@@ -402,6 +481,10 @@ struct StorylineView: View {
             }
             .onEnded { _ in magnifyBase = nil })
         .background(Color(nsColor: .underPageBackgroundColor))
+        .background(GeometryReader { g in
+            Color.clear.onAppear { paneAvailableHeight = g.size.height }
+                .onChange(of: g.size.height) { _, h in paneAvailableHeight = h }
+        })
         .focusable(!inert)
         .focusEffectDisabled()
         .focused($focused)
@@ -736,6 +819,15 @@ struct StorylineView: View {
             }
         }
         .coordinateSpace(name: "rowHandles")
+        // Follows the rows' own vertical scroll (`rowsScrollOffset`), then
+        // clips to exactly the same viewport they're shown in
+        // (`rowsViewportHeight`) — this view sits outside that scroll
+        // entirely (pinned horizontally on purpose), so without this it
+        // would draw every row's handle regardless of which are actually
+        // visible.
+        .offset(y: -rowsScrollOffset)
+        .frame(width: Self.inset, height: rowsViewportHeight, alignment: .top)
+        .clipped()
         .offset(y: Self.rowsOrigin)
         .animation(.snappy(duration: 0.18), value: displayRows.map(\.id))
         .animation(.snappy(duration: 0.15), value: openDrawers)
@@ -773,6 +865,7 @@ struct StorylineView: View {
                 rowDrag = nil
                 guard rows.map(\.id) != show.rows.map(\.id) else { return }
                 mutate("Move Row") { $0.rows = rows }
+                pendingRowScroll = row.kind
             }
     }
 
@@ -1635,6 +1728,13 @@ struct StorylineDrop: DropDelegate {
 
 /// The storyline's horizontal scroll, reported for the frame strip.
 struct StorylineScrollKey: PreferenceKey {
+    static let defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) { value = nextValue() }
+}
+
+/// The rows' own vertical scroll (`spec/windows.md`, "Its height"),
+/// reported for `rowHandles` to follow.
+struct RowsScrollKey: PreferenceKey {
     static let defaultValue: CGFloat = 0
     static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) { value = nextValue() }
 }
