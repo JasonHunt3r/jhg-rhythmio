@@ -950,6 +950,35 @@ header bar reads "Drawer Sensitivity: Set Up Triggers." "It's good."
    actually does. The New+ footer already had content scrolling behind it
    unstyled before this — `.safeAreaInset` does that for free — it just
    read as a bug because nothing there was translucent yet.
+
+   **Then Jason, having looked at it running**: "the scroll behind is
+   right, but those bars... need the transparency, like we're seeing in
+   the toolbar of the grid view" — right that `.behindWindow`'s own faint
+   desktop-sampled vibrancy doesn't read as obviously transparent the way
+   the grid's `.withinWindow` one does, sampling real, colorful scrolled
+   photos instead. Tested the actual cause rather than guess again:
+   restructured the Catalog's bars from `.safeAreaInset` to
+   `.overlay(alignment:)` plus `.contentMargins` — true siblings of the
+   `List` in the view tree, exactly how the grid's own working bar sits
+   next to its `ScrollView` — and switched back to `.withinWindow`.
+   **Still completely flat**, and the restructuring introduced its own bug
+   (the first collection landed hidden behind the bar, a `.contentMargins`
+   timing issue never chased down since the real question was blending,
+   not layout). Reverted to the working `.safeAreaInset` plus
+   `.behindWindow` version — nothing lost.
+
+   **Conclusion, not yet contradicted by any test run**: `.withinWindow`
+   blending doesn't render live content over a `List`'s own `NSTableView`
+   backing at all, independent of where the effect view sits in the
+   SwiftUI view tree — tried nested (`.safeAreaInset`) and sibling
+   (`.overlay`), identical flat result both times. This reads as a real
+   platform limitation, not a mistake in either structure. Getting the
+   grid's own dramatic look over the Catalog specifically would mean
+   either living with `.behindWindow`'s fainter, more typical Mac-sidebar
+   vibrancy, or replacing the Catalog's native `List` with hand-built
+   scrolling content (losing native row selection, animation and
+   accessibility for real `.withinWindow` compositing) — a much bigger
+   change, not attempted. Left for Jason to weigh.
 3. The "Smart View" preference (panes open and close by context — on by
    default — or keep your own choices; `spec/plan.md`, "Slides as mini
    movies") — **wants fleshing out**: today it's a one-paragraph sketch,

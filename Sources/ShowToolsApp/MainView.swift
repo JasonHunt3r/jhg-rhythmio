@@ -219,10 +219,9 @@ struct MainView: View {
             // A collection's groups and its shows sit side by side, as
             // siblings (Jason, 2026-09-24, "Groups inside collections").
             // No Section/header here any more — both it and the Library row
-            // above moved into the pinned `.safeAreaInset(edge: .top)`
-            // below (Jason, 2026-09-27: "the library and collections header
-            // should stay pinned to the top and the list should scroll
-            // behind them").
+            // above moved into the pinned bar below (Jason, 2026-09-27:
+            // "the library and collections header should stay pinned to
+            // the top and the list should scroll behind them").
             ForEach(model.collections) { c in
                 DisclosureGroup(isExpanded: foldBinding(c.id, in: $folded)) {
                     collectionChildren(c)
@@ -233,18 +232,6 @@ struct MainView: View {
             // Shows in no collection shouldn't exist after the
             // upgrade, but if one does, it still has a place.
             ForEach(orphanShows) { show in showRow(show) }
-        }
-        .safeAreaInset(edge: .top) {
-            VStack(alignment: .leading, spacing: 0) {
-                libraryRow
-                Text("Collections")
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(.secondary)
-                    .padding(.horizontal, 16)
-                    .padding(.top, 8).padding(.bottom, 4)
-                    .noMenuYet("Library pane › Collections heading")
-            }
-            .background(ScrollBarBackground.sidebar)
         }
         // Delete asks first (D1); ⌘Delete skips the question, as the
         // grid's does (spec/conventions.md §Delete/⌘Delete). This
@@ -263,6 +250,18 @@ struct MainView: View {
             case .group(let id): if let g = model.group(id) { deleteGroupAsking(g) }
             default: break
             }
+        }
+        .safeAreaInset(edge: .top) {
+            VStack(alignment: .leading, spacing: 0) {
+                libraryRow
+                Text("Collections")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(.secondary)
+                    .padding(.horizontal, 16)
+                    .padding(.top, 8).padding(.bottom, 4)
+                    .noMenuYet("Library pane › Collections heading")
+            }
+            .background(ScrollBarBackground.sidebar)
         }
         .safeAreaInset(edge: .bottom) {
             HStack {
