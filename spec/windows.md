@@ -112,9 +112,16 @@ background lets padding open above the rows, so they can slide up into
 view from under the covering window's bottom edge — all the rows at a
 glance beside a big viewer. Brought to the front, the padding **stays**,
 so the tools don't jump from where they were, until it's scrolled back
-into place, filling the window again. Open: how row drawers (which make
-the contents taller) fit in, and what "smaller" does (the rows scroll, or
-are cut off).
+into place, filling the window again. **Smaller than its contents, the
+rows scroll up and down as normal** (Jason, 2026-09-26), docked or in a
+window.
+
+**When the contents grow** (a row's drawer opens, a preference makes the
+rows taller, a row is added) — Jason: "to a point", never squashing the
+viewer. Proposed, waiting on his word: while it shows all its contents
+it grows with them, up to a ceiling (the viewer keeps about half the
+window, or its own minimum, whichever is more), then the rows scroll;
+dragged smaller than its contents, it keeps its size and scrolls.
 
 ## Panes that close to an edge, inside one window (Jason, 2026-09-24)
 
