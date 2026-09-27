@@ -823,11 +823,32 @@ header bar reads "Drawer Sensitivity: Set Up Triggers." "It's good."
    100% — proving the settings store, the region-to-channel assignment
    and all four regions' own `TranslucentBackground` all actually update
    live in the same running app, not just that the box's own sliders move.
-   Values were reset and the stray `com.jhg.showtools` preference keys the
-   test wrote were deleted afterward. Left for Jason: tuning any of it by
-   feel — nothing here has been dialed in on purpose yet — and the Custom
-   blur slider's real effect (if any, on this Mac's OS version) hasn't
-   been looked at.
+
+   **A live preview swatch, added the same day** (Jason: "no opacity is
+   changing, that's what i meant about wired up, is PaneKit able to make
+   the window translucent?"). Two real causes, neither one PaneKit (it
+   sets no opaque backgrounds of its own — checked): he'd moved the Light
+   slider while macOS was in Dark, so nothing on screen was rendering that
+   appearance to show it; and separately, `.behindWindow` blending against
+   this Mac's own plain desktop makes even a real, active-appearance
+   Opacity change nearly invisible — a known property of window vibrancy,
+   not a bug, but a bad way to judge a slider by (confirmed: Opacity
+   dropped to 2% looked pixel-identical to 100% against a plain desktop).
+   Each channel now carries a small always-visible swatch (`ChannelSwatch`,
+   `TranslucentBackground.swift`) — the same composited opacity/blur/tint
+   look, but with a colorful gradient placed directly behind it in the same
+   small view using `.withinWindow` blending instead of `.behindWindow`, so
+   it's visible regardless of system appearance, real window contents, or
+   what's on screen outside ShowTools. Checked with axtool against a
+   scratch library: the swatch visibly desaturates the gradient at full
+   opacity and lets it through vividly at 15%, live, on the same slider
+   drag. Values were reset and the stray `com.jhg.showtools` preference
+   keys each test round wrote were restored to their prior values (not
+   just deleted, since Jason's own Light-mode edit — opacity ~53% — was
+   already sitting in that same key and needed to survive). Left for
+   Jason: tuning any of it by feel, now that the preview makes the effect
+   actually visible; the Custom blur slider's real effect on this Mac's OS
+   version still hasn't been looked at.
 3. The "Smart View" preference (panes open and close by context — on by
    default — or keep your own choices; `spec/plan.md`, "Slides as mini
    movies") — **wants fleshing out**: today it's a one-paragraph sketch,

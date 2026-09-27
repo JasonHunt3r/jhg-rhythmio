@@ -60,7 +60,11 @@ struct TranslucencySettingsBox: View {
             set: { settings.setValues($0, channel: channel, appearance: editing) })
 
         VStack(alignment: .leading, spacing: 8) {
-            Text(channel.label).font(.headline)
+            HStack {
+                Text(channel.label).font(.headline)
+                Spacer()
+                LivePreview(values: values.wrappedValue)
+            }
 
             CommitSlider(title: "Opacity", value: values.wrappedValue.opacity, range: 0...1,
                          display: 100, unit: "%") { v in
@@ -93,5 +97,31 @@ struct TranslucencySettingsBox: View {
         .padding(12)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(RoundedRectangle(cornerRadius: 8).fill(Color(nsColor: .controlBackgroundColor)))
+    }
+}
+
+/// A small always-visible sample of a channel's own look — found necessary
+/// 2026-09-27 after Jason moved a slider and saw no change: he'd edited
+/// Light while macOS was in Dark (nothing in a real window was rendering
+/// that appearance to show it), and separately, `.behindWindow` blending
+/// against this Mac's own plain desktop made even a real, active-appearance
+/// Opacity change nearly invisible — a known property of vibrancy, not a
+/// bug, but a bad way to judge a slider by. This swatch sidesteps both: a
+/// colorful gradient sits directly behind the same `ChannelSwatch` used by
+/// the real windows, but with `.withinWindow` blending so it reads the
+/// gradient right behind it in this one small view instead of the desktop —
+/// visible here regardless of system appearance, real window contents, or
+/// what happens to be on screen outside ShowTools.
+private struct LivePreview: View {
+    let values: ChannelValues
+
+    var body: some View {
+        ZStack {
+            LinearGradient(colors: [.purple, .orange, .green], startPoint: .topLeading, endPoint: .bottomTrailing)
+            ChannelSwatch(values: values, blending: .withinWindow)
+        }
+        .frame(width: 84, height: 40)
+        .clipShape(RoundedRectangle(cornerRadius: 6))
+        .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(.separator))
     }
 }

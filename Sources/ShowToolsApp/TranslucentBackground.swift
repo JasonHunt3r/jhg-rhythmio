@@ -15,33 +15,50 @@ struct TranslucentBackground: View {
 
     var body: some View {
         let values = settings.values(for: region, appearance: colorScheme)
+        ChannelSwatch(values: values, blending: .behindWindow)
+            .allowsHitTesting(false)
+    }
+}
+
+/// The composited look of one `ChannelValues` — the blur, its opacity, and
+/// the tint on top — shared by `TranslucentBackground` (real windows,
+/// `.behindWindow` blending, sampling the desktop) and the settings box's
+/// own live preview swatch (`.withinWindow` blending, sampling a colorful
+/// pattern placed directly behind it in the same small view, so the effect
+/// stays visible in the box regardless of what's actually behind the real
+/// window or which appearance macOS is currently in — the gap that made
+/// Jason's own Opacity edit look like it did nothing, 2026-09-27).
+struct ChannelSwatch: View {
+    let values: ChannelValues
+    var blending: NSVisualEffectView.BlendingMode
+
+    var body: some View {
         ZStack {
-            VisualEffectView(blurMode: values.blurMode, blurRadius: values.blurRadius)
+            VisualEffectView(blurMode: values.blurMode, blurRadius: values.blurRadius, blending: blending)
                 .opacity(values.opacity)
             if values.tintAmount > 0 {
                 values.tintColor.opacity(values.tintAmount)
             }
         }
-        .allowsHitTesting(false)
     }
 }
 
-/// Wraps `NSVisualEffectView` set to `.sidebar` material, `.behindWindow`
-/// blending — the same look `NavigationSplitView`'s sidebar gave for free.
-/// `blurMode == .system` leaves the material's own fixed blur exactly
-/// alone: no private API touched. `.custom` reaches into the view's private
-/// backing `CABackdropLayer` for a continuous radius — undocumented, so
-/// this is best-effort: if a future macOS's backdrop layer doesn't answer
-/// to the same key, the slider silently does nothing and the system's own
-/// fixed blur is what shows, not a crash.
+/// Wraps `NSVisualEffectView` set to `.sidebar` material. `blurMode ==
+/// .system` leaves the material's own fixed blur exactly alone: no private
+/// API touched. `.custom` reaches into the view's private backing
+/// `CABackdropLayer` for a continuous radius — undocumented, so this is
+/// best-effort: if a future macOS's backdrop layer doesn't answer to the
+/// same key, the slider silently does nothing and the system's own fixed
+/// blur is what shows, not a crash.
 private struct VisualEffectView: NSViewRepresentable {
     var blurMode: BlurMode
     var blurRadius: Double
+    var blending: NSVisualEffectView.BlendingMode
 
     func makeNSView(context: Context) -> NSVisualEffectView {
         let v = NSVisualEffectView()
         v.material = .sidebar
-        v.blendingMode = .behindWindow
+        v.blendingMode = blending
         v.state = .active
         return v
     }

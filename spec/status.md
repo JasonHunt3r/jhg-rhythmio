@@ -290,17 +290,30 @@ Not pressing; each wants a discussion or a plan before any code.
   left at its default (opacity 100%, system blur, no tint). **Confirmed
   live**, not just wired: setting Channel 1's Tint Amount to 100% turned
   the Catalog sidebar and the Header bar solidly black together at once,
-  in the running app, not just in the box's own sliders. **Nothing has
-  been tuned by feel yet** — the whole point of the control. Also
-  unconfirmed: the Custom blur mode's real effect, since it reaches into a
-  private, undocumented `NSVisualEffectView` layer property that may or
-  may not do anything on this Mac's OS version — worth checking with the
-  switch off and on, side by side, before relying on it. Two rounds of a
-  test session's own slider changes landed briefly in the shared
-  `com.jhg.showtools` domain (`translucencyChannel.1.dark`, `.2.dark`) and
-  were deleted with `defaults delete` each time before this was written —
-  Jason's copy never had stray values to inherit, but worth knowing the
-  keys exist now.
+  in the running app, not just in the box's own sliders.
+
+  **Jason then reported Opacity doing nothing** ("is PaneKit able to make
+  the window translucent?") — two real causes, neither one PaneKit: he'd
+  edited Light while macOS was in Dark (nothing on screen was rendering
+  that appearance), and separately, `.behindWindow` blending against a
+  plain desktop makes even an active-appearance Opacity change nearly
+  invisible, confirmed by dropping it to 2% and seeing no visible change.
+  **Fixed with a live preview swatch** on every channel: the same
+  composited look, but `.withinWindow` blending against a colorful
+  gradient placed directly behind it in the same small view, so it's
+  visible regardless of system appearance or what's actually on screen.
+  Confirmed with axtool: the swatch visibly desaturates the gradient at
+  100% opacity and lets it through vividly at 15%, live, on the same
+  slider drag. **Tuning by feel is next** — the preview now makes the
+  effect something to actually judge. Also unconfirmed: the Custom blur
+  mode's real effect, since it reaches into a private, undocumented
+  `NSVisualEffectView` layer property that may or may not do anything on
+  this Mac's OS version — worth checking with the switch off and on, side
+  by side, before relying on it. Three rounds of a test session's own
+  slider changes landed briefly in the shared `com.jhg.showtools` domain
+  (`translucencyChannel.1.dark`, `.2.dark`) — restored to their prior
+  values each time, not just deleted, once Jason's own Light-mode edit
+  (opacity ~53%) was sitting in that same key and needed to survive.
 - **The Set Up Triggers box, and the Responsiveness slider** (built,
   reversed twice, and floating by the end of 2026-09-27, `spec/windows.md`,
   "A reusable modal box"): confirmed with axtool against a scratch
