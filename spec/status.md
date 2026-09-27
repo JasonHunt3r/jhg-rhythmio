@@ -144,6 +144,17 @@ Not pressing; each wants a discussion or a plan before any code.
   wording (`LibraryOrderNotice`) stays in ShowTools; the package only
   reports that a drag was refused where it was let go. Design, terms and
   dials: `spec/plan.md`, "Reordering".
+- **Double-click inside a multi-selection** (Jason, 2026-09-26: "it's
+  fine" as is — only if the wish comes up). Today the first click
+  collapses the selection, so `quickLook(startingAt:)`, written to page
+  through the whole selection, only ever gets one file from a
+  double-click (true before the `dc7f620` fix too). The solution already
+  imagined: delay the collapse only for a plain click on a tile that's
+  already selected among others — a second click Quick Looks the whole
+  selection, no second click collapses it once the double-click
+  interval passes. Clicks on unselected tiles stay instant; the wait
+  only shows as the *other* borders clearing late. (Finder is thought to
+  open every selected file on such a double-click — unchecked.)
 - **A shared type for "explainer" notices.** Two now: `CustomOrderNotice`
   and `LibraryOrderNotice` (`CollectionAdd.swift`) — after-the-fact
   explanations, one OK button, "Don't show this again". Worth one type
