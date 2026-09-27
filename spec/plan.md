@@ -1355,6 +1355,59 @@ SwiftUI's text took the clicks, so a double-click on it did nothing
 **Open:** the cap of 12 (proposed); whether a click in the viewer should
 do anything later.
 
+### Slides as mini movies: Edit Slides' Slide viewer and live timeline (Jason, 2026-09-26) — Planned
+
+Came out of item 33 (the greyed timeline). Jason: a slide is **a length
+of time in a show**, and inside it more can happen — so a slide is a mini
+movie worth watching on its own, and Edit Slides becomes the place to
+watch and work on slides one (or a few) at a time.
+
+**Edit Slides' timeline is fully live** — the same as Edit Show's: play,
+scrub, select, reorder, trim, drops, markers, keys. It's the same show, so
+an edit on the timeline shows in the slide list too. (Step 1 of item 33,
+`279680b`, drew it dimmed and inert; that state now only matters for a
+timeline left open with no show — the "Smart View" preference below.)
+
+**Pick a slide from the list or on the timeline** — they already share
+one selection.
+
+**The Slide viewer** — a drawer over the slide list, **like the viewer
+drawer** over the grids (above): the selected slide(s), playing. **The
+Slide Editor window is its pop-out** (Jason: "the pop out version of the
+Slide viewer drawer"). The Slide Editor also carries the inspector; in
+the main window the drawer does **not** — Edit Slides' own inspector
+column is already there, so it isn't shown twice.
+
+**Play in Edit Slides loops the selection, not the show.** One slide
+selected: that slide, round and round. Several: **all of them, in order**,
+looped. Edit Show's Play still plays the show.
+
+**Maybe (Jason):** drag and drop among the selected slides *in the
+viewer*, with the list below following — reordering by eye.
+
+**The bigger idea behind it — slides with more inside (new, not
+designed):** Jason shoots many portrait photos, and wants to quickly pick
+a group of them to sit side by side and fill a landscape frame. Inside the
+slide's length, each image can have its own entrance and timing: reveal
+the first in the left third, then the second, then the third; or slide
+them across for a "groovy 60's montage"; or simply enough images to fill
+the screen. That's a timeline *inside* a slide — a new feature, and the
+framework for it doesn't exist yet. It's the "multi-panel slides" idea
+under the collage maker (Later, below) grown up; the Slide viewer and the
+looping Play are the place it would be watched and worked on.
+
+**Left as it is for now:** the Slide Editor — Jason expects to revamp it,
+so whether it gets the looping Play waits for that.
+
+**Also from this conversation — "Smart View" (working name, a
+preference):** on (the default), panes open and close by context, as
+today (the timeline pane closes when no show is open); off, each place
+remembers your own open/closed choices instead.
+
+**Open:** what exactly one slide's loop covers — its own time cut to
+cut, or its transitions in and out too (Jason: depends on the framework
+above, not decided); the build order.
+
 ### Later
 - **The library grid's right side as an info drawer, not a floating
   panel** (Jason, 2026-09-24, while building the library panel:
@@ -1477,6 +1530,9 @@ do anything later.
     gradient reaches, and a further handle on that pull-out to set the
     gradient's midpoint weight
   - Multi-panel slides (2 or 3 images arranged "1 2 3" across one slide)
+    — grown on 2026-09-26 into slides with a timeline of their own (each
+    image its own entrance and timing, portrait shots filling a frame):
+    "Slides as mini movies," above.
 
 ---
 

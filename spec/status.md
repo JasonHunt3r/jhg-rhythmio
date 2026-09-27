@@ -75,14 +75,16 @@ chosen yet. In the order they came up:
    `NSApp.currentEvent.clickCount` — the fix (`MainView.swift`, the
    tile's tap). Checked on a test copy: click selects, double-click
    opens Quick Look, ⌘-click adds. Installed at `dc7f620`.
-2. **Item 33, first step: grey out the tools, not the timeline.** Jason
-   meant that the transport's *tools* grey out while the rows stay
-   visible, whenever no show is selected to play through it. Today's
-   `TimelinePanePlaceholder` swaps the whole pane for an inert copy with a
-   message — rework it to the real rows, tools dimmed. Then the drop:
-   start the hands-on with option (b) — switch to Edit Show and open the
-   show creator (pick or make the collection it goes in). Which view you
-   land on after the show is made is decided by hand, later.
+2. **Item 33 — grown into "Slides as mini movies"** (`spec/plan.md`).
+   Step 1 built 2026-09-26 (`279680b`): the show's engine lives in both
+   modes (`ShowView`), and Edit Slides draws the real rows, dimmed and
+   inert (tools greyed, zoom and scroll live). Jason then changed course:
+   **Edit Slides' timeline is fully live**, Edit Slides gets a **Slide
+   viewer drawer** (the Slide Editor is its pop-out), and **Play there
+   loops the selected slides in order**. The dimmed state stays for a
+   timeline open with no show (the "Smart View" preference, off). The
+   drop onto a showless timeline (option (b): the show creator) waits
+   for that. Build order not chosen yet.
 3. **Item 2, grown into a windows pass:** make every panel's behaviour
    consistent and define each window by its purpose; the written layer
    hierarchy in `spec/windows.md`; a **settings vs preferences** pass
