@@ -92,6 +92,18 @@ ShowTools.app                            (Xcode target, com.jhg.showtools)
 - **Signing order.** Three nested pieces, ad hoc: the extension and the
   nested app must be signed before the outer app. XcodeGen did this in
   the probe, but ShowTools is bigger.
+  **Since 2026-09-26 all three are signed "Apple Development", team
+  `P82S39V2KJ`** (Jason's free Personal Team; `project.yml`'s base
+  settings), so a permission granted to ShowTools survives rebuilds.
+  Two traps met on the way: the keychain had only the WWDR intermediate
+  that expired in 2023, so the new certificate showed as "0 valid
+  identities" until Apple's G3 intermediate (apple.com/certificateauthority,
+  checked against the system's Apple Root CA) was added to the login
+  keychain; and the first build failed "Embedded binary is not signed
+  with the same certificate as the parent app" because unchanged
+  embedded targets kept their old ad-hoc signatures — `rm -rf
+  build/xcode/Build` and build again. The extension re-registered on
+  install (`pluginkit -m -v`).
 - **Tiles need an installed copy.** Testing them means `install.sh`, not
   `build/ShowTools.app`. The library rule doesn't change: test launches
   still set `SHOWTOOLS_LIBRARY` to a scratch library, and BGTools still

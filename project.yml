@@ -25,9 +25,15 @@ packages:
     path: PaneKit
 settings:
   base:
-    CODE_SIGN_IDENTITY: "-"
+    # Signed as Jason's own Apple Development identity (a free Personal
+    # Team, 2026-09-26), not ad hoc: a permission granted to an ad-hoc app
+    # (Accessibility, for ending tap-to-drag's hold) is lost at every
+    # rebuild, since it's tied to that exact build. No provisioning
+    # profile is needed — the only entitlements are the tile's sandbox
+    # and a read-only path.
+    CODE_SIGN_IDENTITY: "Apple Development"
     CODE_SIGN_STYLE: Manual
-    DEVELOPMENT_TEAM: ""
+    DEVELOPMENT_TEAM: P82S39V2KJ
     SWIFT_VERSION: "6.0"
     ENABLE_HARDENED_RUNTIME: NO
     # Bump when a tile is added or renamed: Control Center caches them

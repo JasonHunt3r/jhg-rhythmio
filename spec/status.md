@@ -149,7 +149,12 @@ chosen yet. In the order they came up:
    the settings pass. Later still: **a slow drag only repositions** (down
    to the minimum, never shut — the flick, swipe and double-click shut),
    and **every divider and handle shows the resize cursor** (it didn't
-   inside SwiftUI-hosted areas).
+   inside SwiftUI-hosted areas). **ShowTools is now signed Apple
+   Development** (team `P82S39V2KJ`, `spec/xcode-port.md`), so granting
+   it Accessibility lasts — and with it, drawers end tap-to-drag's hold.
+   Installed at the signing change; the extension re-registered. **For
+   Jason's hands:** grant Accessibility, check the Control Center tile
+   and BGTools' login item still work under the new signature.
 5. **Item 34: light mode is "awful"** (Jason tried it). Light mode needs
    more translucency than dark, and the window background has no
    transparency at all today — Jason wants a setting (a slider) for it.
