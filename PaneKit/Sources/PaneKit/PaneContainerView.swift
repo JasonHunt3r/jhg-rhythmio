@@ -339,13 +339,17 @@ func trackResize(_ split: Split, in container: PaneContainerView, from event: NS
     /// Added to the pointer's reading once a pulled drawer has engaged, so
     /// the drag carries on from its opened size without a jump.
     var shift: CGFloat = 0
-    var lastFromEdge = startExtent
+    /// Where a pull from closed is measured from: the drag's start, or —
+    /// once the same drag has pushed the drawer shut — the pointer where it
+    /// went shut, so moving back pulls it open again (Jason, 2026-09-26).
+    var pullBase: CGFloat = 0
+    var lastRaw = startExtent
 
-    func fromEdge(_ p: CGPoint) -> CGFloat {
-        let raw = keepGrabOffset || startedClosed
+    /// The pointer's distance from the edge, as the sized side would have it.
+    func raw(_ p: CGPoint) -> CGFloat {
+        keepGrabOffset || startedClosed
             ? handleDragExtent(startExtent: startExtent, grabbedAt: distance(start), pointerAt: distance(p))
             : distance(p)
-        return raw + shift
     }
 
     while let e = window.nextEvent(matching: [.leftMouseDragged, .leftMouseUp]) {
@@ -353,22 +357,24 @@ func trackResize(_ split: Split, in container: PaneContainerView, from event: NS
         let p = container.convert(e.locationInWindow, from: nil)
         if !moved, hypot(p.x - start.x, p.y - start.y) < 3 { continue }
         moved = true
-        let at = fromEdge(p)
-        lastFromEdge = at
+        let r = raw(p)
+        lastRaw = r
+        let at = r + shift
         switch phase {
         case .pulling:
-            if at >= PaneClutch.engageDistance(opensTo: target) {
+            let pull = r - pullBase
+            if pull >= PaneClutch.engageDistance(opensTo: target) {
                 // Engaged: slide open; the drag resizes from there.
                 phase = .engaging
                 controller.slide(split.id, to: target, target: target, duration: PaneClutch.slideDuration) {
                     controller.setOpen(split.id, true)
                     dragStart = controller.state
-                    shift = target - (lastFromEdge - shift)
+                    shift = target - lastRaw
                     phase = .resizing
                 }
             } else {
                 controller.peekTarget[split.id] = target
-                controller.peek[split.id] = PaneClutch.opening(pull: at)
+                controller.peek[split.id] = PaneClutch.opening(pull: pull)
                 container.needsLayout = true
             }
         case .engaging, .shutting:
@@ -381,6 +387,12 @@ func trackResize(_ split: Split, in container: PaneContainerView, from event: NS
                     controller.slide(split.id, to: 0, target: max(target, minimum),
                                      duration: PaneClutch.slideDuration) {
                         controller.setOpen(split.id, false)
+                        // Still held: the same drag now pulls from closed,
+                        // measured from here — moving back opens it again.
+                        dragStart = controller.state
+                        pullBase = lastRaw
+                        shift = 0
+                        phase = .pulling
                     }
                 } else {
                     phase = .resisting

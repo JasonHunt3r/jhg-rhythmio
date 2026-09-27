@@ -436,7 +436,8 @@ public final class PlaybackEngine {
         let key = ObjectIdentifier(view)
         let size = view.drawableSize
         let settling = CACurrentMediaTime() - lastChange < 0.6
-        guard clock.playing || waitingToStart || settling || drawnSize[key] != size else { return }
+        let resized = drawnSize[key] != size
+        guard clock.playing || waitingToStart || settling || resized else { return }
         drawnSize[key] = size
 
         keepInLoop()
@@ -444,9 +445,13 @@ public final class PlaybackEngine {
         let t = clock.now
         let state = timeline.frame(at: t)
         let overlay = timeline.overlay(at: t)
-        // Nothing moving, nothing new to draw: skip this frame.
+        // Nothing moving, nothing new to draw: skip this frame. Never when
+        // the view has changed size: the still drawn at the old size would
+        // be stretched to the new one, and stay so — a Pan-and-Zoom-off
+        // slide squashed in Edit Slides' Slide viewer as its drawer was
+        // resized (Jason, 2026-09-26; reproduced and fixed the same day).
         let motionless = state.isMotionless && overlay == nil && (view as? ShowCanvas)?.stage == nil
-        if motionless, !settling, let i = state.currentIndex, drawnStill[key] == i {
+        if motionless, !settling, !resized, let i = state.currentIndex, drawnStill[key] == i {
             return
         }
         drawnStill[key] = motionless ? state.currentIndex : nil
