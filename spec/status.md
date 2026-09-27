@@ -180,11 +180,11 @@ untouched.
 ## What's next
 
 **Chosen, in order (Jason, 2026-09-27):** adjust the drawer-sensitivity
-module (his own hands, by feel — see "Still needs Jason's hands"). Light
-mode's translucency and a background-transparency setting is now built
-too (below) — left is his own tuning of it. Then flesh out the "Smart
-View" preference. The rest below is open, not next, roughly in the order
-Jason raised them:
+module (his own hands, by feel — see "Still needs Jason's hands"). The
+transparency setting was built, then reworked same-day into a much
+smaller thing scoped to the filter bar (below) — one open glitch there
+before it's really done. Then flesh out the "Smart View" preference. The
+rest below is open, not next, roughly in the order Jason raised them:
 
 1. ~~**The timeline's height**~~ (`spec/windows.md`, "Its height") —
    **built 2026-09-26, both halves**, including vertical row-scrolling in
@@ -200,13 +200,20 @@ Jason raised them:
    pro-style tabbed Settings window, and the drawers' sensitivity setting
    with its practice drawer. The settings-vs-preferences split turned out
    moot. **Light mode's translucency and a background-transparency
-   setting** (item 34) is also now built (`spec/windows.md`, "The windows
-   pass"): three numbered Opacity Channels (opacity, tint, blur), kept
-   separately for Dark and Light, each app region's channel itself a
-   picker. Left, in the order Jason chose to take them: his own tuning of
-   the drawer-sensitivity dials by feel; his own tuning of the
-   transparency channels; then fleshing out the **"Smart View"**
-   preference.
+   setting** (item 34) went through a full build-then-rework the same day
+   (`spec/windows.md`, "The windows pass," has the whole story): the first
+   cut (three Opacity Channels, four assignable regions, a secondary
+   settings box) was over-scoped — Jason, after looking at native apps:
+   translucency only reads as intentional on a bar that scrolled content
+   passes under, nowhere else. Reworked to one slider per appearance
+   (native ↔ opaque), scoped to the Library grid's filter bar, no secondary
+   window. The three-channel engine is kept, unwired, as the seed for a
+   future Slide Editor tool. **One known glitch, unresolved**: a thin
+   sliver of content still peeks through at 100% opacity, right at the
+   bar/grid seam. Left, in the order Jason chose to take them: his own
+   tuning of the drawer-sensitivity dials by feel; the filter-bar seam
+   glitch and his own tuning of that slider; then fleshing out the
+   **"Smart View"** preference.
 3. **Slides as mini movies, the rest** (`spec/plan.md`): the Slide Editor
    as the Slide viewer's pop-out, maybe reordering in the viewer, and the
    framework for slides with more inside (portrait shots filling a
@@ -279,41 +286,36 @@ Not pressing; each wants a discussion or a plan before any code.
 
 ## Still needs Jason's hands
 
-- **The transparency settings module** (built 2026-09-27, `spec/windows.md`
-  item 34, `TranslucencySetting.swift`): the "Adjust Transparency…" box
-  opens from the Windows tab with all three Opacity Channels' Opacity,
-  Blur (System/Custom) and Tint controls and all **four** region pickers
-  (Catalog, Inspector, Panels, Header bar), checked with axtool against a
-  scratch library — Done closes it, reopening shows the same values back,
-  the Library window's title bar still shows its traffic lights and title
-  correctly, and the window's own look is unchanged with every channel
-  left at its default (opacity 100%, system blur, no tint). **Confirmed
-  live**, not just wired: setting Channel 1's Tint Amount to 100% turned
-  the Catalog sidebar and the Header bar solidly black together at once,
-  in the running app, not just in the box's own sliders.
-
-  **Jason then reported Opacity doing nothing** ("is PaneKit able to make
-  the window translucent?") — two real causes, neither one PaneKit: he'd
-  edited Light while macOS was in Dark (nothing on screen was rendering
-  that appearance), and separately, `.behindWindow` blending against a
-  plain desktop makes even an active-appearance Opacity change nearly
-  invisible, confirmed by dropping it to 2% and seeing no visible change.
-  **Fixed with a live preview swatch** on every channel: the same
-  composited look, but `.withinWindow` blending against a colorful
-  gradient placed directly behind it in the same small view, so it's
-  visible regardless of system appearance or what's actually on screen.
-  Confirmed with axtool: the swatch visibly desaturates the gradient at
-  100% opacity and lets it through vividly at 15%, live, on the same
-  slider drag. **Tuning by feel is next** — the preview now makes the
-  effect something to actually judge. Also unconfirmed: the Custom blur
-  mode's real effect, since it reaches into a private, undocumented
-  `NSVisualEffectView` layer property that may or may not do anything on
-  this Mac's OS version — worth checking with the switch off and on, side
-  by side, before relying on it. Three rounds of a test session's own
-  slider changes landed briefly in the shared `com.jhg.showtools` domain
-  (`translucencyChannel.1.dark`, `.2.dark`) — restored to their prior
-  values each time, not just deleted, once Jason's own Light-mode edit
-  (opacity ~53%) was sitting in that same key and needed to survive.
+- **The filter bar's translucency slider** (rework, 2026-09-27,
+  `spec/windows.md` item 34 has the whole story — the three-channel,
+  four-region version it replaced, and why). Now: one slider per
+  appearance on the Windows tab directly (no secondary window), 0 (native
+  material) to 1 (fully opaque), with a live preview swatch next to each.
+  Confirmed with a scratch library: real Library-grid tiles genuinely
+  scroll up and pass under the bar, sampled live (`.withinWindow`
+  blending) — a colorful tile's top edge visibly bleeds through as it
+  scrolls by. **Not yet right**: at 100% opacity, which should be fully
+  solid, a thin sliver of the row above still shows through at the exact
+  seam between the bar and the grid — not explained by `sortStatusBar`'s
+  own separate opaque background (checked, unrelated). Needs a fresh look
+  with screenshots at a few scroll positions and opacity values before
+  the code is touched again, rather than more guessing. Also unconfirmed:
+  the two Dark/Light sliders' values, by feel, once the seam is sorted.
+  Reverted cleanly: Catalog, Inspector and Panels are back to their exact
+  original rendering (no `TranslucentBackground` anywhere on them);
+  `TranslucencySettingsBox.swift` (the old region-picker UI) is deleted;
+  `TranslucencySetting.swift`/`TranslucentBackground.swift` (the
+  three-channel engine) are kept, explicitly marked unwired, reserved for
+  a future Slide Editor tool. `HeaderBarBackground.swift` stays installed
+  but dormant. A `fullSizeContentView` + `.ignoresSafeArea` attempt at
+  giving the header bar real scrolled content underneath it was tried and
+  reverted — zero visible effect on a scratch copy either way; PaneKit's
+  own layout math would need to learn about a title-bar inset for that to
+  work, which is its own harness-tested task, not attempted this session.
+  **Also found**: Jason's own real, running app still had the *old* build
+  during this whole rework — his earlier tint experiment (red, ~89%) was
+  still live on the Inspector panel in his session, since nothing had been
+  reinstalled yet. Resolves itself once the new build installs.
 - **The Set Up Triggers box, and the Responsiveness slider** (built,
   reversed twice, and floating by the end of 2026-09-27, `spec/windows.md`,
   "A reusable modal box"): confirmed with axtool against a scratch

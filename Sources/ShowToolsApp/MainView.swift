@@ -37,8 +37,8 @@ struct MainView: View {
         // Split from the alerts/dialogs below: one expression this size is
         // over the type checker's budget (measured, 2026-09-24).
         layout
-        // spec/windows.md, item 34: the Header Bar's own tunable Opacity
-        // Channel — installed once the main window exists, not touched again.
+        // spec/windows.md, item 34: the Header Bar's own tunable setting —
+        // installed once the main window exists, not touched again.
         .background(WindowAccessor { HeaderBarBackground.install(on: $0) })
         .alert(renamingTitle, isPresented: Binding(get: { renaming != nil }, set: { if !$0 { renaming = nil } })) {
             TextField("Name", text: $draftName)
@@ -288,11 +288,6 @@ struct MainView: View {
             }
             .padding(8)
         }
-        // spec/windows.md, item 34: lets the tunable background (Main
-        // window's own Opacity Channel) show through the List's own
-        // otherwise-opaque background.
-        .scrollContentBackground(.hidden)
-        .background(TranslucentBackground(region: .catalog))
     }
 
     /// The detail pane's content: PaneKit's "detail" pane. A fresh detail
@@ -749,6 +744,12 @@ struct LibraryGridView: View {
     /// The scroll area's height, so the drop area reaches its bottom even
     /// when there are only a few tiles.
     @State private var viewportHeight: CGFloat = 0
+    /// The bar's own measured height (it's two rows in a narrow window, one
+    /// otherwise — `bar`'s own `ViewThatFits`), so the grid's first row sits
+    /// just below it rather than hidden underneath, while later rows scroll
+    /// up under the bar's translucent background (item 34's rework,
+    /// 2026-09-27: scoped to bars with scrolled content passing under them).
+    @State private var barHeight: CGFloat = 0
     /// Why a drag over this grid can't reorder it, shown while it's there.
     @State private var reorderBlockedReason: String?
     /// The grid takes the keyboard on a click, so Delete and ⌘Delete reach
@@ -1422,12 +1423,19 @@ struct LibraryGridView: View {
                     "viewer": AnyView(SelectionViewer(
                         items: orderedSelection.compactMap { model.itemsByID[$0] },
                         primary: cursor, mode: $viewerMode, model: model)),
-                    "grid": AnyView(VStack(spacing: 0) {
-                        bar
-                        Divider()
-                        sortStatusBar
-                        Divider()
+                    "grid": AnyView(ZStack(alignment: .top) {
                         grid
+                        VStack(spacing: 0) {
+                            bar
+                            Divider()
+                            sortStatusBar
+                            Divider()
+                        }
+                        .background(ScrollBarBackground())
+                        .background(GeometryReader { g in
+                            Color.clear.onAppear { barHeight = g.size.height }
+                                .onChange(of: g.size.height) { _, h in barHeight = h }
+                        })
                     }
                     .environment(model)),
                 ])
@@ -1661,6 +1669,7 @@ struct LibraryGridView: View {
             // layouts: a Find Similar tile still drags onto a collection
             // or a show.
             VStack(spacing: 0) { gridContent(columns: columns) }
+                .padding(.top, barHeight)
                 .coordinateSpace(name: Self.gridSpace)
                 .background(StackDragAnchor(source: dragSource))
                 .overlay(alignment: .topLeading) { flyerLayer }

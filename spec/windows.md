@@ -776,79 +776,102 @@ header bar reads "Drawer Sensitivity: Set Up Triggers." "It's good."
    the story and what's left: Jason's own tuning by feel — next). Its
    fine controls moved into the new modal box the same day (above).
 2. ~~Light mode's translucency and a window-background transparency
-   setting~~ (item 34, Jason: light mode "is awful") — **built
-   2026-09-27**, after the discussion this line asked for. Three numbered,
-   reusable **Opacity Channels** (`TranslucencySetting.swift`), not one
-   setting per named region: Jason, "Main window is class 1... panes that
-   sit on it can share class 1 values, or be assigned class 2 or 3." Each
-   channel carries its own Opacity, Tint (color + amount) and Blur, kept
-   **separately for Dark and Light** ("a switch inside the secondary
-   window that allows for fine tuning... different slider values
-   depending on the Dark Mode/Light Mode setting"), and which of three
-   regions (Main window, Inspector, Panels — Info and Rhythm) uses which
-   channel is itself a picker in the box, not fixed. Blur has two modes:
-   **System** (the material's own fixed blur, no private API, on by
-   default) and **Custom**, a continuous slider that reaches into
-   `NSVisualEffectView`'s private `CABackdropLayer` for a radius —
-   undocumented, could stop doing anything on a future macOS update, kept
-   as an explicit opt-in per channel rather than the only way to get a
-   blur (Jason: "include it, but also have an on/off switch that would use
-   the system without having to be a workaround"). Opened from the Windows
-   tab's **"Adjust Transparency…"** button, the same `SettingsBox` case
-   built for Drawer Sensitivity's "Set Up Triggers…". Defaults reproduce
-   today's plain opaque look exactly (opacity 100%, system blur, no tint)
-   so nothing changes on screen until a slider actually moves.
+   setting~~ (item 34, Jason: light mode "is awful"). **Built, then
+   reworked, 2026-09-27** — the first cut (three numbered Opacity Channels,
+   four assignable regions, a secondary settings box) is kept only as
+   dormant, reusable code (below); it's no longer what's wired into the app.
 
-   **Four assignable regions**, not three (Jason, same session, after
-   seeing the first cut): **Catalog** — "the library bar, the file
-   navigator on the left hand side... you make new collections or shows
-   from the new + button in it," renamed from an initial guess,
-   "Main window," to match his own name for the same view exactly — and
-   **Header bar**, "the main window's title bar" (the traffic lights and
-   window title), added the same way Panels and Inspector already were.
-   The header bar is the one surface that isn't a plain SwiftUI
-   `.background()`: AppKit draws the title bar's own chrome in a
-   dedicated `NSTitlebarContainerView`, a sibling of the content view, not
-   part of the SwiftUI tree at all, so `HeaderBarBackground.swift` sets
-   `titlebarAppearsTransparent` and inserts a hosted `TranslucentBackground`
-   directly behind that container — found from a standard window button so
-   the traffic lights and title text always stay on top, regardless of
-   subview order. Confirmed with axtool: the traffic lights and title
-   text still render and the window layout is unchanged with defaults
-   left alone.
+   **First cut, for the record:** three channels (`TranslucencySetting
+   .swift`), each with Opacity, Tint and Blur, kept separately for Dark and
+   Light, assignable to four regions (Catalog, Inspector, Panels, Header
+   bar) from a secondary "Adjust Transparency…" box (the same `SettingsBox`
+   case as Drawer Sensitivity's "Set Up Triggers…"). Confirmed live and
+   wired correctly — Channel 1's Tint Amount at 100% turned Catalog and
+   Header bar solidly black together. Then Jason reported Opacity doing
+   nothing and asked whether PaneKit blocks translucency: two real causes,
+   neither one PaneKit — he'd edited Light while macOS was in Dark, and
+   separately, `.behindWindow` blending against a plain desktop makes even
+   an active-appearance Opacity change nearly invisible (confirmed: 2%
+   looked identical to 100%). Fixed with a live preview swatch per channel,
+   a colorful gradient behind `.withinWindow` blending instead of
+   `.behindWindow` so the effect reads regardless of system appearance or
+   desktop content.
 
-   **Confirmed live, not just wired**: with a scratch library, both
-   Catalog and Header bar (which share Channel 1 by default) turned
-   solidly black together the instant Channel 1's Tint Amount was set to
-   100% — proving the settings store, the region-to-channel assignment
-   and all four regions' own `TranslucentBackground` all actually update
-   live in the same running app, not just that the box's own sliders move.
+   **Reworked the same day, after Jason looked at how native apps actually
+   use translucency**: "I've over scoped this feature as an app setting...
+   real macOS translucency only shows up noticeably on toolbars or header
+   bars that scrolled content passes under — everywhere else it's too
+   subtle to matter." Confirmed by the testing above: Opacity on Catalog,
+   Inspector and Panels was nearly invisible against a plain desktop — not
+   a bug, just the wrong scope. Jason's instructions: kill the
+   region-assignment sub-UI; keep one slider, now meaning "the OS's own
+   native look" at one end sliding to "fully opaque" at the other, not
+   0%-invisible to 100%-opaque; scope it to bars with scrolled content
+   passing under them; don't delete the three-channel engine — reserve it
+   as the basis for a future Slide Editor tool applying the same kind of
+   effect to slide images; and keep the per-pane identification hooks
+   (`WindowAccessor`, the region-finding pattern) since they're reusable
+   for whatever a pane needs assigned to it next.
 
-   **A live preview swatch, added the same day** (Jason: "no opacity is
-   changing, that's what i meant about wired up, is PaneKit able to make
-   the window translucent?"). Two real causes, neither one PaneKit (it
-   sets no opaque backgrounds of its own — checked): he'd moved the Light
-   slider while macOS was in Dark, so nothing on screen was rendering that
-   appearance to show it; and separately, `.behindWindow` blending against
-   this Mac's own plain desktop makes even a real, active-appearance
-   Opacity change nearly invisible — a known property of window vibrancy,
-   not a bug, but a bad way to judge a slider by (confirmed: Opacity
-   dropped to 2% looked pixel-identical to 100% against a plain desktop).
-   Each channel now carries a small always-visible swatch (`ChannelSwatch`,
-   `TranslucentBackground.swift`) — the same composited opacity/blur/tint
-   look, but with a colorful gradient placed directly behind it in the same
-   small view using `.withinWindow` blending instead of `.behindWindow`, so
-   it's visible regardless of system appearance, real window contents, or
-   what's on screen outside ShowTools. Checked with axtool against a
-   scratch library: the swatch visibly desaturates the gradient at full
-   opacity and lets it through vividly at 15%, live, on the same slider
-   drag. Values were reset and the stray `com.jhg.showtools` preference
-   keys each test round wrote were restored to their prior values (not
-   just deleted, since Jason's own Light-mode edit — opacity ~53% — was
-   already sitting in that same key and needed to survive). Left for
-   Jason: tuning any of it by feel, now that the preview makes the effect
-   actually visible; the Custom blur slider's real effect on this Mac's OS
-   version still hasn't been looked at.
+   **What changed:** Catalog, Inspector and Panels were reverted to their
+   exact original rendering (`TranslucentBackground` removed from
+   `MainView.swift`, `SlideInspector.swift`, `InfoPanel.swift`,
+   `RhythmPanel.swift`). `TranslucencySettingsBox.swift` (the region-picker
+   UI) was deleted. `TranslucencySetting.swift` and `TranslucentBackground
+   .swift` (the channel engine and its `ChannelSwatch`/live-preview
+   mechanism) are kept, explicitly marked unwired in their own doc comment,
+   for the Slide Editor tool. `HeaderBarBackground.swift` is left installed
+   but dormant — nothing sets its channel away from the neutral default, so
+   it renders as if untouched; the hook (finding `NSTitlebarContainerView`
+   from a standard window button) stays for later.
+
+   **The new, simpler model** (`ScrollBarTranslucency.swift`): one Double
+   per appearance, 0 (native `.headerView` material, untouched) to 1
+   (fully opaque), no blur toggle, no tint, no region picker. Live on the
+   Windows tab directly as two labeled sliders (Dark Mode, Light Mode)
+   inside a "Filter Bar" section — no secondary window, since there's
+   nothing left to assign. Each slider keeps its own live preview swatch
+   (`ScrollBarPreview`), for the same reason the first cut needed one: a
+   slider is unjudgeable against the wrong system appearance or a plain
+   desktop.
+
+   **First target: the Library grid's filter bar**, chosen over the header
+   bar (Jason's initial pick) once a scratch test showed the header bar
+   doesn't actually have content passing under it — nothing extends behind
+   the title bar today (no `fullSizeContentView`), so it was only ever a
+   tinted empty strip. Fixing that needs PaneKit's own layout math taught
+   about a title-bar inset, itself a harness-tested task (CLAUDE.md: check
+   AppKit layout in a standalone harness before changing it), not a quick
+   `NSWindow` flag flip — tried and reverted (`window.styleMask.insert
+   (.fullSizeContentView)` plus `.ignoresSafeArea`, zero visible effect
+   either way, confirmed on a scratch copy). The filter bar needed no such
+   surgery: `LibraryGridView`'s grid is a plain SwiftUI `ScrollView`, so its
+   bar (`bar`, `sortStatusBar`) now sits in a `ZStack` on top of the grid
+   instead of a `VStack` pushing it down, with the grid's own tile content
+   padded by the bar's measured height so the first row rests just below it
+   at rest and scrolls up underneath as you scroll. Correctly uses
+   `.withinWindow` blending (not `.behindWindow`) — the whole point is
+   sampling the grid's own scrolled tiles directly behind it in the same
+   window, not the desktop, which is also why it doesn't share the first
+   cut's "nearly invisible" problem.
+
+   **Confirmed with a scratch library**: real tiles genuinely scroll up
+   into view behind the bar, sampled live (a colorful tile's top edge
+   visibly bleeds through the bar as it passes). **A known, unresolved
+   glitch**: at Opacity 100% (should be fully solid), a thin sliver of the
+   row above still shows through right at the seam between the bar and the
+   grid, even though `sortStatusBar` has its own separate opaque
+   background (`.background(Color(nsColor: .controlBackgroundColor))`,
+   unrelated to this feature) that should rule out that exact strip. Not
+   resolved this session — worth a fresh look with a screenshot at several
+   scroll positions and opacity values before touching the code further,
+   rather than more guessing.
+   Also found mid-session: `HeaderBarBackground`'s old channel-based tint
+   (Jason's own experiment, red at ~89%, from the first cut) was still
+   live in his **installed, running app** during this rework, since the
+   Inspector's own reverted code hadn't been reinstalled yet — explains a
+   red Inspector panel he'd have seen; resolved once the new build
+   installs, since Inspector no longer reads that channel at all.
 3. The "Smart View" preference (panes open and close by context — on by
    default — or keep your own choices; `spec/plan.md`, "Slides as mini
    movies") — **wants fleshing out**: today it's a one-paragraph sketch,

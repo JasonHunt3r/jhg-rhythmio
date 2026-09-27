@@ -1,6 +1,20 @@
 import SwiftUI
 import AppKit
 
+/// **Unwired as of 2026-09-27** — kept deliberately, not deleted. Item 34
+/// was reworked (`ScrollBarTranslucency.swift`) once testing showed
+/// per-pane translucency is nearly invisible against a plain desktop and
+/// over-scoped as an app setting; nothing currently reads a
+/// `TranslucentRegion`'s channel to render anything except `.headerBar`
+/// (`HeaderBarBackground.swift`, itself dormant — no UI sets its channel
+/// away from the neutral default, so it renders as if untouched). Jason,
+/// 2026-09-27: keep this whole engine — three numbered channels, each with
+/// opacity, blur and tint, kept separately for Dark and Light — as the
+/// basis for a future Slide Editor tool applying the same kind of effect to
+/// slide images, not window chrome; and keep the per-pane identification
+/// hooks (`TranslucentRegion`, `WindowAccessor` install points) since
+/// they're reusable for whatever a pane needs assigned to it next.
+///
 /// One of three tunable window-background looks (`spec/windows.md`, item
 /// 34: "light mode's translucency and a window-background transparency
 /// setting"). Jason, 2026-09-27: "Main window is class 1... panes that sit

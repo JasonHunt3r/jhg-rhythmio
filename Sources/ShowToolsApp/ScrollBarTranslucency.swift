@@ -1,0 +1,106 @@
+import SwiftUI
+import AppKit
+
+/// The rework of item 34 (`spec/windows.md`), 2026-09-27: the earlier
+/// three-channel, four-region system was over-scoped. Jason, after looking
+/// at how native apps actually use translucency: it only reads as
+/// intentional on a bar that scrolled content passes under — everywhere
+/// else (a sidebar, an inspector, a panel) it's too subtle to be worth a
+/// setting, which is exactly what testing showed (Opacity on the Catalog
+/// was nearly invisible against a plain desktop). Those three regions were
+/// reverted to their original rendering.
+///
+/// Kept instead, unwired: `TranslucencySetting.swift` and
+/// `TranslucentBackground.swift` — the three-channel opacity/blur/tint
+/// engine that version built is the seed for a future Slide Editor tool
+/// that applies the same kind of effect to slide images, not window chrome.
+///
+/// This is the replacement: one dial per appearance. At 0, a bar looks
+/// exactly like the OS's own native material, untouched. At 1, it's fully
+/// opaque. No blur toggle, no tint, no region picker — there's only one
+/// kind of surface this applies to now (`ScrollBarBackground`, used by the
+/// Library grid's filter bar today; the header bar is a candidate too, once
+/// PaneKit can give it real scrolled content to pass under it).
+@MainActor
+final class ScrollBarTranslucency: ObservableObject {
+    static let shared = ScrollBarTranslucency()
+
+    @Published private var amount: [String: Double] = [:]
+
+    private func key(_ scheme: ColorScheme) -> String {
+        scheme == .dark ? "scrollBarOpacity.dark" : "scrollBarOpacity.light"
+    }
+
+    private init() {
+        for scheme: ColorScheme in [ColorScheme.light, .dark] {
+            let k = key(scheme)
+            if UserDefaults.standard.object(forKey: k) != nil {
+                amount[k] = UserDefaults.standard.double(forKey: k)
+            }
+        }
+    }
+
+    func value(for scheme: ColorScheme) -> Double {
+        amount[key(scheme)] ?? 0
+    }
+
+    func setValue(_ v: Double, for scheme: ColorScheme) {
+        amount[key(scheme)] = v
+        UserDefaults.standard.set(v, forKey: key(scheme))
+    }
+}
+
+/// A bar's own tunable background: the native `.headerView` material at
+/// amount 0, crossfading to a flat, fully opaque backing at 1.
+/// `.withinWindow` blending — not `.behindWindow`, the header bar
+/// experiment's choice — because this bar's whole point is to sample the
+/// *grid's own scrolled content* directly behind it in the same window,
+/// not the desktop.
+struct ScrollBarBackground: View {
+    @Environment(\.colorScheme) private var colorScheme
+    @ObservedObject private var setting = ScrollBarTranslucency.shared
+
+    var body: some View {
+        let amount = setting.value(for: colorScheme)
+        ZStack {
+            NativeBarMaterial()
+            Color(nsColor: .windowBackgroundColor).opacity(amount)
+        }
+        .allowsHitTesting(false)
+    }
+}
+
+/// A small always-visible sample of the bar's own look at a given amount,
+/// next to its slider on the Windows tab — the same lesson as the earlier
+/// three-channel version's live preview: judging a translucency slider
+/// against whatever happens to be behind the real window (or the wrong
+/// system appearance) isn't reliable. Here the backdrop is a colorful
+/// gradient placed directly behind the bar in the same small view, which
+/// `.withinWindow` blending (the real mechanism, not a stand-in) samples
+/// exactly the way it would sample real scrolled grid content.
+struct ScrollBarPreview: View {
+    let amount: Double
+
+    var body: some View {
+        ZStack {
+            LinearGradient(colors: [.purple, .orange, .green], startPoint: .topLeading, endPoint: .bottomTrailing)
+            NativeBarMaterial()
+            Color(nsColor: .windowBackgroundColor).opacity(amount)
+        }
+        .frame(width: 84, height: 32)
+        .clipShape(RoundedRectangle(cornerRadius: 6))
+        .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(.separator))
+    }
+}
+
+private struct NativeBarMaterial: NSViewRepresentable {
+    func makeNSView(context: Context) -> NSVisualEffectView {
+        let v = NSVisualEffectView()
+        v.material = .headerView
+        v.blendingMode = .withinWindow
+        v.state = .active
+        return v
+    }
+
+    func updateNSView(_ view: NSVisualEffectView, context: Context) {}
+}

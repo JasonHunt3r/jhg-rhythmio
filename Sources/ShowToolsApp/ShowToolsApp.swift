@@ -649,6 +649,7 @@ private struct WindowsSettingsTab: View {
     @AppStorage(PanelHidingSetting.key) private var panelsHideWhenInactive = true
     @AppStorage(DrawerSensitivitySetting.engageKey) private var engageDistance = DrawerSensitivitySetting.defaultEngage
     @AppStorage(DrawerSensitivitySetting.slideKey) private var slideSpeed = DrawerSensitivitySetting.defaultSlide
+    @ObservedObject private var scrollBarSetting = ScrollBarTranslucency.shared
 
     /// One knob standing in for both of `DrawerSensitivitySetting`'s
     /// dials at once: reads back as their average normalized position (so
@@ -700,18 +701,30 @@ private struct WindowsSettingsTab: View {
                     }
                 }
             }
-            // spec/windows.md, item 34: "light mode's translucency and a
-            // window-background transparency setting."
-            Section("Transparency") {
-                Button("Adjust Transparency…") {
-                    SettingsBox.present(section: "Transparency", title: "Adjust") { dismiss in
-                        TranslucencySettingsBox(dismiss: dismiss)
-                    }
-                }
-                Text("Three tunable backgrounds (“Opacity Channels”), each with its own opacity, blur and tint, kept separately for Dark and Light. Which part of the app uses which channel is set inside.")
+            // spec/windows.md, item 34, reworked 2026-09-27: scoped to bars
+            // that scrolled content passes under (the Library grid's filter
+            // bar) — no sub-window, no region picker, one slider per
+            // appearance, right here.
+            Section("Filter Bar") {
+                scrollBarRow(scheme: .dark, label: "Dark Mode")
+                scrollBarRow(scheme: .light, label: "Light Mode")
+                Text("How opaque the grid's filter bar is where photos scroll underneath it — at the low end, the OS's own native look; at the high end, fully solid.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
             }
+        }
+    }
+
+    @ViewBuilder
+    private func scrollBarRow(scheme: ColorScheme, label: String) -> some View {
+        let value = Binding<Double>(
+            get: { scrollBarSetting.value(for: scheme) },
+            set: { scrollBarSetting.setValue($0, for: scheme) })
+        HStack(spacing: 10) {
+            CommitSlider(title: label, value: value.wrappedValue, range: 0...1, display: 100, unit: "%") { v in
+                value.wrappedValue = v
+            }
+            ScrollBarPreview(amount: value.wrappedValue)
         }
     }
 }

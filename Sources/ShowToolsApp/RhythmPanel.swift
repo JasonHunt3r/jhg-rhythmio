@@ -204,8 +204,6 @@ struct RhythmPanelContent: View {
             }
         }
         .frame(width: 380)
-        // spec/windows.md, item 34: the panels' own tunable Opacity Channel.
-        .background(TranslucentBackground(region: .panels))
     }
 
     /// For Detect Beats: the pattern alone, and Done.
