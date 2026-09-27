@@ -15,6 +15,14 @@ enum DrawerSensitivitySetting {
     static let defaultEngage: Double = 64
     static let defaultSlide: Double = 0.18
 
+    /// Shared with the Windows tab's single "Responsiveness" slider (its
+    /// own normalized 0...1 position maps onto both these ranges at once)
+    /// and with `EngageDistanceControl`'s box, so neither the combined
+    /// control nor the box's own fine controls can drift out of sync
+    /// about what range they're each working within.
+    static let engageRange: ClosedRange<Double> = 8...120
+    static let slideRange: ClosedRange<Double> = 0.06...0.4
+
     /// `settleDuration`'s own ratio to `slideDuration` in the original
     /// dials (0.14 / 0.18, both Jason's own feel) — kept constant as
     /// `slideDuration` changes, rather than picked separately: nothing
@@ -43,7 +51,7 @@ enum DrawerSensitivitySetting {
 /// and drags freely along it.
 struct EngageDistanceControl: View {
     @Binding var engage: Double
-    var range: ClosedRange<Double> = 8...120
+    var range: ClosedRange<Double> = DrawerSensitivitySetting.engageRange
 
     var body: some View {
         GeometryReader { geo in
@@ -88,6 +96,51 @@ struct PracticeDrawer: NSViewRepresentable {
     }
 
     func updateNSView(_ nsView: PaneContainerView, context: Context) {}
+}
+
+/// The `SettingsBox` opened by the Windows tab's "Set Up Triggers…"
+/// button: the fine controls that used to sit directly on the tab (the
+/// engage-distance line, the Quick ↔ Smooth slider, and the practice
+/// drawer), moved here once the tab itself got a single combined
+/// "Responsiveness" slider instead. A fresh practice drawer each time the
+/// box opens, reset closed, same as before.
+struct TriggerBoundariesBox: View {
+    @AppStorage(DrawerSensitivitySetting.engageKey) private var engageDistance = DrawerSensitivitySetting.defaultEngage
+    @AppStorage(DrawerSensitivitySetting.slideKey) private var slideSpeed = DrawerSensitivitySetting.defaultSlide
+    @State private var practiceController = PaneController.settingsPracticeDrawer()
+    let dismiss: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Text("How far a closed drawer must be pulled before it engages and springs open on its own. Drag the line.")
+                .font(.callout)
+                .foregroundStyle(.secondary)
+            EngageDistanceControl(engage: $engageDistance)
+                .onChange(of: engageDistance) { DrawerSensitivitySetting.apply() }
+            HStack(spacing: 10) {
+                Text("Quick").font(.callout).foregroundStyle(.secondary)
+                Slider(value: $slideSpeed, in: DrawerSensitivitySetting.slideRange)
+                Text("Smooth").font(.callout).foregroundStyle(.secondary)
+            }
+            .onChange(of: slideSpeed) { DrawerSensitivitySetting.apply() }
+            Text("How quickly a drawer slides once it engages.")
+                .font(.callout)
+                .foregroundStyle(.secondary)
+            PracticeDrawer(controller: practiceController)
+                .frame(height: 140)
+                .clipShape(RoundedRectangle(cornerRadius: 6))
+            Text("Pull the handle on the right edge to feel it.")
+                .font(.callout)
+                .foregroundStyle(.secondary)
+            HStack {
+                Spacer()
+                Button("Done", action: dismiss)
+                    .keyboardShortcut(.defaultAction)
+            }
+        }
+        .padding(20)
+        .frame(width: 420)
+    }
 }
 
 extension PaneController {

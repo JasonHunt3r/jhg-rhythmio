@@ -566,11 +566,209 @@ preferences distinction, if one turns out to matter later, and today
 nothing in it is document-specific (a show's own settings stay in its
 inspector, a library's in its Info, same as always).
 
+## A reusable modal box (built 2026-09-27)
+
+Jason, looking at the drawer-sensitivity section on the Windows tab: it
+wanted a **button** ("Set Up Triggers…") that opens the fine controls
+(the engage-distance line, the Quick ↔ Smooth slider, the practice
+drawer) "into a top level box, the kind that must be dismissed before you
+can change focus to other windows" — his words for a true app-modal
+dialog, not a `.sheet()` (which only blocks the one window it's attached
+to). Framed as "kind of a new class of reusable case that will apply to
+other items in the tabbed windows," not a one-off for this setting alone.
+
+Built `ModalSettingsBox.present(title:content:)`: a plain `NSWindow`
+(`.titled, .closable`), its content an `NSHostingController` wrapping
+whatever SwiftUI view the caller hands it, shown with `NSApp.runModal(for:)`
+— every ShowTools window blocked, confirmed with axtool (a click on the
+Library window's title bar while the box was open left it un-key;
+`focused` still read the box).
+
+**A real bug, found by testing, not assumed fixed on a clean build**: the
+first version called `runModal` synchronously inside the same button-tap
+that opened the box. It looked right — rendered correctly, did block
+every other window — but **no input reached the box's own content**:
+Done, the close button and Return all did nothing (dragging its title bar
+did move it, but that's the window server's own doing, not proof the app
+was receiving anything). Wrapping the `runModal` call in
+`DispatchQueue.main.async` — starting the modal session only after the
+tap that opened it has fully finished dispatching, not mid-dispatch —
+fixed it; retested the identical scenario and both Done and the close
+button worked. `spec/panekit.md`, "The clutch," has the fuller story,
+including a second, false alarm (`axtool drag` not moving either fine
+control after the fix, where a plain click did — `showtools-testing`'s
+own "synthetic drag isn't proof," not a bug).
+
+**Reversed the same day, once Jason tried it: "I was wrong about making
+it demand the window."** Not app-modal after all. Renamed
+`ModalSettingsBox` → **`SettingsBox`** (`SettingsBox.swift`) — an ordinary
+window, tied to the *Settings* window's own lifecycle instead of blocking
+every other one: closing Settings closed the box along with it, unless
+the box reported unsaved changes, in which case it came to the front
+instead of closing quietly out of sight with them.
+
+**Reversed again, the same day, once Jason actually hit the gap this was
+meant to cover.** He closed Settings while the box sat open but hidden
+*behind* it — "I was able to close the whole shebang while the secondary
+window was still in an unconfirmed state" — and asked for the alert-and-
+bring-forward behavior above to catch that. Talking it through, he
+proposed something simpler instead: "maybe it should persist above all —
+most — windows until you click done. So you could keep it on top while
+you try it on the real windows, then click done when you're satisfied."
+That sidesteps the whole problem rather than reacting to it: if the box
+can never end up hidden behind Settings (or anything else in the app) in
+the first place, there's nothing for an alert to catch. Dropped the
+Settings-lifecycle tie entirely — `SettingsWindowCoordinator`'s
+`willCloseNotification` hook and `SettingsBox.settingsDidClose()`, both
+built minutes earlier, came back out unused rather than left as dead
+paths for a design that didn't ship.
+
+`SettingsBox` is now an `NSPanel`, `.floating`, exactly the pattern this
+app's own hand-built panels already use (Info, Rhythm, the Slide Editor)
+— sits above every ShowTools window including Settings, so it's never
+hidden behind anything; closes only on its own Done or close button,
+untouched by closing Settings or clicking through to a real drawer behind
+it. `floatOnlyWhileActive` (`FloatingPanelActivation.swift`) keeps it
+from floating over *other apps'* windows too — the same fix those panels
+needed 2026-09-27 earlier the same day, reused rather than re-solved.
+
+**A real bug found by testing, not assumed fixed on a clean build**: the
+first cut set `panel.isFloatingPanel = true` and `panel.level = .floating`
+*before* assigning `contentViewController` and calling `center()` — built
+clean, and looked right (title bar, correct size, correct position), but
+`CGWindowListCopyWindowInfo`'s own `kCGWindowLayer` read back `0` (an
+ordinary window), not `3` (floating): stacked *behind* the Library window
+the moment they overlapped on screen, confirmed by screenshot, not just
+inferred from the number. Moving `isFloatingPanel`/`level` to *after*
+`contentViewController` and `center()` fixed it — both apparently touch
+the window's own attributes while laying it out, and the level has to be
+set after whatever they do, not before. Retested the identical overlap
+and the layer read back `3`.
+
+The drawer-sensitivity section itself split in two: the Windows tab now
+shows one combined **Responsiveness** slider (both dials' normalized
+position moved together), and "Set Up Triggers…" opens
+`TriggerBoundariesBox` — the line, the Quick ↔ Smooth slider and the
+practice drawer, unchanged, just moved off the tab and into the box.
+
+**Checked with axtool against a scratch library, carefully — Jason had
+the real app open with an identical Settings window and box on screen at
+the same default coordinates while this was being tested**, so every
+check first read window positions by pid (`CGWindowListCopyWindowInfo`,
+filtered to the scratch copy's own process) and dragged the scratch
+copy's windows to a screen region proven not to overlap his, before any
+click: reopening the box brings the existing one forward rather than a
+second copy; the layer bug and its fix, above; the box stays layer-3
+(floating) after clicking the Library window, and visually stays on top
+of it, confirmed by screenshot; **closing Settings while the box is open
+leaves the box open, untouched** — the whole point of this design; the
+box's own Done button still closes it normally. Nothing in Jason's live
+session was touched or seen.
+
+## Where these windows open (built 2026-09-27, later still)
+
+Jason: Settings should "always open centered in the triggering monitor
+window," not restoring whatever position it was last left at across
+launches — the default macOS `Settings` scene autosaves its frame
+(`NSWindow Frame com_apple_SwiftUI_Settings_window`) and would otherwise
+reopen wherever it was last dragged to, even on a monitor that might not
+even be attached anymore. Mid-conversation, refined to "centered top
+under main window bar" — horizontally centered, its top pinned just
+below a main window's own title-bar-plus-toolbar height, not the screen's
+vertical middle. Then, once the secondary box entered the picture: "the
+launch of the secondary window needs to be relative to the current
+position of the settings window" — it should follow Settings wherever
+it's currently sitting, not recenter on the monitor independently.
+
+Built `TriggeringScreen.swift`: `TriggeringScreen.current` (the screen
+under the pointer right now, since that's where whatever just triggered
+the window happened — falling back to the key window's screen, then
+`NSScreen.main`) and `TriggeringScreen.barHeight` (88 pt, this app's own
+title-bar-plus-toolbar height, measured from an axtool dump). Two
+`NSWindow` methods hang off it: `positionUnderTriggeringMonitorBar()`
+(Settings — centered on the triggering screen, top pinned under its bar)
+and `positionUnderBar(of:)` (`SettingsBox` — the same idea, anchored to
+*Settings' own current frame* instead of a screen, so it follows Settings
+if it's been dragged). Neither restores a saved position — the doc
+comment spells out the one-line way to add that back (`setFrameAutosaveName`)
+if it's ever wanted.
+
+**Two real bugs, both found by testing, not assumed fixed on a clean
+build — both the same class of "too early" ordering bug this pass had
+already hit once with the layer fix above:**
+1. **Positioning Settings from the become-key observer alone did
+   nothing** — the window kept opening at its old autosaved spot no
+   matter what `barHeight` was set to (tried an absurd `400` as a canary;
+   the position didn't move a pixel, proving the code wasn't running at
+   all, not just computing wrong). Cause: `WindowAccessor` hands the
+   window to `SettingsWindowCoordinator.captured` via `DispatchQueue.main
+   .async`, so by the time it runs and installs the become-key observer,
+   the window's *own first* `didBecomeKeyNotification` had already fired
+   with nothing listening. Fixed by positioning directly inside
+   `captured()` for the window's first-ever capture, not only from the
+   observer (which still handles every later close-then-reopen, since by
+   then it's already installed).
+2. **The box centered on the screen's raw midpoint, not its own size** —
+   positioning it right after `contentViewController` (or even right
+   after `makeKeyAndOrderFront`) read `frame.size` as still `.zero`, the
+   panel's own initial `contentRect`: assigning `.contentViewController`
+   after creation, rather than through `NSWindow(contentViewController:)`,
+   doesn't resize the window to fit it synchronously. Fixed the same way
+   `captured()` already needed to be: deferred one run-loop turn with
+   `DispatchQueue.main.async`, after `makeKeyAndOrderFront`, giving that
+   resize time to actually happen first.
+
+**Checked with axtool against a scratch library** (Jason's own app wasn't
+running by this point, so no overlap risk this time): Settings opens at
+the screen's horizontal center, top pinned under the monitor's bar,
+matching the math exactly; dragging it to an arbitrary spot and then
+opening the box from its Windows tab lands the box centered under
+*Settings'* new position, not the screen's — also matching the math
+exactly (worked through by hand: `rf.midX - width/2`, `rf.maxY - barHeight
+- height`, converted between AppKit's bottom-left screen coordinates and
+`CGWindowListCopyWindowInfo`'s top-left ones to compare against what
+actually showed up on screen); closing Settings still leaves an already-
+open box alone; the box's own Done button still closes it. Never opened
+by a real hand.
+
+**The header bar's title, same session**: Jason: "the header bar should
+say: ShowTools Settings: XXXX," not just the tab's own name — the HIG's
+"title naming the pane" reads as "Library," full stop, indistinguishable
+at a glance from the main window's own title (`spec/windows.md`'s own
+history, above, flagged this exact collision as one reason title-matching
+couldn't identify the window — this doesn't change that; the window's
+still found by identity, never by title). `SettingsWindowCoordinator
+.applyTitleFormat` prefixes it with `"ShowTools Settings: "` — applied
+once immediately on capture, and kept up through every tab switch after
+that with a KVO observation on the window's own `title` (there's no
+"tab changed" notification to hook instead), a plain prefix check making
+the observer's own re-entrant call (setting the title again inside its
+own KVO callback) a harmless no-op. Checked with axtool against a scratch
+library: opens as "ShowTools Settings: Windows," reads "ShowTools
+Settings: Library" after clicking that tab, "ShowTools Settings:
+Playback" after that one — the collision is gone too, cosmetically,
+though nothing here depends on that.
+
+**`SettingsBox` titles itself after the tab it came from, same session**:
+Jason: "for the secondary windows use the tab name. eg: Windows: Set Up
+Triggers" — not just "Set Up Triggers" on its own.
+`SettingsWindowCoordinator.currentTabName` reads the tab name back out of
+Settings' own already-formatted title (stripping `"ShowTools Settings: "`
+rather than tracking the selected tab separately — one source of truth,
+not two that could drift); `SettingsBox.present` prefixes whatever title
+it's given with `"<tab>: "` when that's available, falling back to the
+plain title otherwise. Checked with axtool against a scratch library,
+again alongside Jason's own live session (both windows landing at the
+exact same deterministic spot confirmed the earlier positioning fix is
+working for him too) — opening the box from the Windows tab titles it
+"Windows: Set Up Triggers," read directly off the box's own window title.
+
 **Goes in the same pass, in the order Jason chose to take them
 (2026-09-27):**
 1. ~~The drawers' sensitivity setting with its practice drawer~~ — **built
    2026-09-27**, in the Windows tab (`spec/panekit.md`, "The clutch," has
-   the story and what's left: Jason's own tuning by feel — next).
+   the story and what's left: Jason's own tuning by feel — next). Its
+   fine controls moved into the new modal box the same day (above).
 2. Light mode's translucency and a window-background transparency setting
    (item 34, Jason: light mode "is awful") — **a discussion, not yet
    had**, on how to build it.

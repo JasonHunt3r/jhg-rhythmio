@@ -24,6 +24,9 @@ import SwiftUI
 ///    title now names whichever *pane* is selected ("Library," "Editing"…
 ///    — the HIG's own "title naming the pane"), and "Library" collides
 ///    with the main window's own title when no collection is selected.
+///    (`applyTitleFormat`, below, fixes that same collision cosmetically
+///    — "ShowTools Settings: Library" — but this file still identifies
+///    the window by object identity, never by title.)
 ///
 /// Both found the same way: a real Info panel dragged to overlap a
 /// reopened Settings window, watched with screenshots, not just checked
@@ -39,6 +42,43 @@ enum SettingsWindowCoordinator {
     private static weak var settingsWindow: NSWindow?
     private static var panels: [Weak] = []
     private static var observers: [NSObjectProtocol] = []
+    /// Reset on every close, so the next open re-centers — see
+    /// `TriggeringScreen.swift`: Settings always opens under the
+    /// triggering monitor's own bar, never restoring where it was left,
+    /// but shouldn't jump back there just from a tab switch or from
+    /// clicking away to another app and back while it's still open.
+    private static var hasPositionedSinceOpen = false
+    private static var titleObservation: NSKeyValueObservation?
+
+    private static let titlePrefix = "ShowTools Settings: "
+
+    /// The real Settings `NSWindow`, for anything that needs to follow its
+    /// current position — `SettingsBox`, whose own launch position is
+    /// relative to wherever Settings currently sits, not the monitor.
+    static var window: NSWindow? { settingsWindow }
+
+    /// The selected tab's own name ("Windows," "Library"…), read back out
+    /// of the window's own formatted title rather than tracked separately
+    /// — `SettingsBox` uses it to title itself "Windows: Set Up Triggers"
+    /// (Jason, 2026-09-27), so a box always says which tab it came from.
+    static var currentTabName: String? {
+        guard let title = settingsWindow?.title, title.hasPrefix(titlePrefix) else { return nil }
+        return String(title.dropFirst(titlePrefix.count))
+    }
+
+    /// "ShowTools Settings: Windows," not just "Windows" (Jason,
+    /// 2026-09-27) — the tabbed `Settings` scene titles its window after
+    /// whichever pane is selected, on its own, with no modifier to change
+    /// that format; this also happens to be the exact "Library" collision
+    /// with the main window's own title this file's history already
+    /// flagged as a reason title-matching couldn't identify the window.
+    /// Kept as a plain prefix check (not a KVO-only formatter) so it's
+    /// applied once immediately on capture, not only from the next tab
+    /// switch onward.
+    private static func applyTitleFormat(to window: NSWindow) {
+        guard !window.title.hasPrefix(titlePrefix) else { return }
+        window.title = titlePrefix + window.title
+    }
 
     /// Called from `SettingsView`'s own `WindowAccessor`, which reads the
     /// real `NSWindow` a hosted view sits in — correct regardless of
@@ -47,6 +87,33 @@ enum SettingsWindowCoordinator {
         guard settingsWindow !== window else { return }
         settingsWindow = window
         installObserversIfNeeded()
+        applyTitleFormat(to: window)
+        // SwiftUI resets the title to the plain pane name on every tab
+        // switch, so this has to be ongoing, not a one-time fix — KVO on
+        // `title` itself rather than another notification, since there's
+        // no "tab changed" notification to hook. Setting the title again
+        // inside its own KVO callback re-enters once, harmlessly:
+        // `applyTitleFormat`'s own prefix check makes the second call a
+        // no-op.
+        titleObservation = window.observe(\.title, options: [.new]) { window, _ in
+            MainActor.assumeIsolated {
+                SettingsWindowCoordinator.applyTitleFormat(to: window)
+            }
+        }
+        // `WindowAccessor` hands the window over via `DispatchQueue.main
+        // .async`, so this — the very first time this window is ever
+        // seen — runs *after* its own first `didBecomeKeyNotification`
+        // already fired with no observer installed yet to hear it: found
+        // by testing, the become-key-only version below never actually
+        // positioned anything on a fresh launch. Position it right here
+        // instead, once, for exactly that first open; every later
+        // close-then-reopen goes through the become-key observer, which
+        // by then is already installed.
+        if !hasPositionedSinceOpen {
+            hasPositionedSinceOpen = true
+            UserDefaults.standard.removeObject(forKey: "NSWindow Frame com_apple_SwiftUI_Settings_window")
+            window.positionUnderTriggeringMonitorBar()
+        }
     }
 
     /// Called from each panel's `init`, so it steps aside while Settings
@@ -70,6 +137,20 @@ enum SettingsWindowCoordinator {
                 MainActor.assumeIsolated {
                     guard let id, let settingsWindow, id == ObjectIdentifier(settingsWindow) else { return }
                     for p in panels { p.value?.level = .normal }
+                    if !hasPositionedSinceOpen {
+                        hasPositionedSinceOpen = true
+                        // SwiftUI's `Settings` scene keeps its own
+                        // autosaved frame under this fixed key and
+                        // restores it around this same moment, winning
+                        // over a plain reposition here or even one
+                        // deferred a run-loop turn — found by testing,
+                        // both landed the window right back where the
+                        // saved key put it. Clearing the key first, so
+                        // there's nothing left for it to restore *from*,
+                        // is what actually sticks.
+                        UserDefaults.standard.removeObject(forKey: "NSWindow Frame com_apple_SwiftUI_Settings_window")
+                        settingsWindow.positionUnderTriggeringMonitorBar()
+                    }
                 }
             },
             nc.addObserver(forName: NSWindow.didResignKeyNotification, object: nil, queue: .main) { note in
@@ -77,6 +158,16 @@ enum SettingsWindowCoordinator {
                 MainActor.assumeIsolated {
                     guard let id, let settingsWindow, id == ObjectIdentifier(settingsWindow) else { return }
                     for p in panels { p.value?.level = NSApp.isActive ? .floating : .normal }
+                }
+            },
+            // So the *next* open re-centers instead of keeping wherever
+            // this one ended up (a tab switch resizes the window without
+            // resigning key, so this alone — not resignKey — is "closed").
+            nc.addObserver(forName: NSWindow.willCloseNotification, object: nil, queue: .main) { note in
+                let id = (note.object as AnyObject as? NSObject).map(ObjectIdentifier.init)
+                MainActor.assumeIsolated {
+                    guard let id, let settingsWindow, id == ObjectIdentifier(settingsWindow) else { return }
+                    hasPositionedSinceOpen = false
                 }
             },
         ]

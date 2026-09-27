@@ -1377,6 +1377,19 @@ double-click toggles); a harness check with a header-bar-shaped view.
    list's focus, now inside the drawer's own hosting view, still works.
    **The viewer drawer is built, all four steps.**
 
+**The switch's own strip, reversed (Jason, 2026-09-27).** Step 3 above
+gave the Side by Side / Stack switch its own reserved row so it would
+never sit over a picture's corner — but that row shrinks every picture in
+the drawer to keep space clear for it, all the time, for a switch that's
+rarely even looked at. Jason: it doesn't need to be a hard bar; the icons
+can just float where they are and cover a picture if it reaches that far.
+`SelectionViewer.body` dropped the outer `VStack` (the reserved strip)
+for a `ZStack(alignment: .topTrailing)`: the switch floats over the
+content instead of pushing it down, and `box` (the frame `Viewer.sideBySide`
+and the stack lay out into) now gets the drawer's *full* height, not the
+height left over after the strip. Covering a picture's corner is accepted
+now, not a bug to fix.
+
 **The bar carries the grid's tools** (Jason, 2026-09-26, after the drawer
 was built): the tile-size slider, then Import, Add to Show and Get Info,
 moved down from the toolbar into the bar under the drawer — the Library

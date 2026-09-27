@@ -649,7 +649,30 @@ private struct WindowsSettingsTab: View {
     @AppStorage(PanelHidingSetting.key) private var panelsHideWhenInactive = true
     @AppStorage(DrawerSensitivitySetting.engageKey) private var engageDistance = DrawerSensitivitySetting.defaultEngage
     @AppStorage(DrawerSensitivitySetting.slideKey) private var slideSpeed = DrawerSensitivitySetting.defaultSlide
-    @State private var practiceController = PaneController.settingsPracticeDrawer()
+
+    /// One knob standing in for both of `DrawerSensitivitySetting`'s
+    /// dials at once: reads back as their average normalized position (so
+    /// a value set from the box, `TriggerBoundariesBox`, still shows up
+    /// here as roughly the right spot), and moving it sets both dials to
+    /// that same normalized position together. The box itself is where
+    /// the two are pulled apart again, for tuning either one on its own.
+    private var responsiveness: Binding<Double> {
+        Binding(
+            get: {
+                let er = DrawerSensitivitySetting.engageRange
+                let sr = DrawerSensitivitySetting.slideRange
+                let te = (engageDistance - er.lowerBound) / (er.upperBound - er.lowerBound)
+                let ts = (slideSpeed - sr.lowerBound) / (sr.upperBound - sr.lowerBound)
+                return (te + ts) / 2
+            },
+            set: { t in
+                let er = DrawerSensitivitySetting.engageRange
+                let sr = DrawerSensitivitySetting.slideRange
+                engageDistance = er.lowerBound + t * (er.upperBound - er.lowerBound)
+                slideSpeed = sr.lowerBound + t * (sr.upperBound - sr.lowerBound)
+                DrawerSensitivitySetting.apply()
+            })
+    }
 
     var body: some View {
         SettingsPage {
@@ -661,26 +684,21 @@ private struct WindowsSettingsTab: View {
             }
             // spec/panekit.md, "The clutch," "A sensitivity setting."
             Section("Drawer Sensitivity") {
-                Text("How far a closed drawer must be pulled before it engages and springs open on its own. Drag the line.")
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
-                EngageDistanceControl(engage: $engageDistance)
-                    .onChange(of: engageDistance) { DrawerSensitivitySetting.apply() }
-                HStack(spacing: 10) {
-                    Text("Quick").font(.callout).foregroundStyle(.secondary)
-                    Slider(value: $slideSpeed, in: 0.06...0.4)
-                    Text("Smooth").font(.callout).foregroundStyle(.secondary)
+                Slider(value: responsiveness, in: 0...1) {
+                    Text("Responsiveness")
+                } minimumValueLabel: {
+                    Text("Sensitive").font(.callout).foregroundStyle(.secondary)
+                } maximumValueLabel: {
+                    Text("Relaxed").font(.callout).foregroundStyle(.secondary)
                 }
-                .onChange(of: slideSpeed) { DrawerSensitivitySetting.apply() }
-                Text("How quickly a drawer slides once it engages.")
+                Text("How far a drawer must be pulled before it engages, and how quickly it slides once it does.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
-                PracticeDrawer(controller: practiceController)
-                    .frame(height: 140)
-                    .clipShape(RoundedRectangle(cornerRadius: 6))
-                Text("Pull the handle on the right edge to feel it.")
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
+                Button("Set Up Triggers…") {
+                    SettingsBox.present(title: "Set Up Triggers") { dismiss in
+                        TriggerBoundariesBox(dismiss: dismiss)
+                    }
+                }
             }
         }
     }

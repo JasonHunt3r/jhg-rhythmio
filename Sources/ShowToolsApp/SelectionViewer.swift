@@ -38,26 +38,17 @@ struct SelectionViewer: View {
     }
 
     var body: some View {
-        VStack(spacing: 0) {
-            // Its own strip, so no picture ever sits under the switch.
-            HStack {
-                Spacer()
-                Picker("View", selection: $mode) {
-                    ForEach(ViewerMode.allCases, id: \.self) { m in
-                        Image(systemName: m.symbol).help(m.title).tag(m)
-                    }
-                }
-                .pickerStyle(.segmented)
-                .labelsHidden()
-                .fixedSize()
-                .help("Side by Side or Stack (⇧Y)")
-            }
-            .padding(.horizontal, 8)
-            .padding(.top, 6)
-            GeometryReader { geo in
-                let box = CGSize(width: max(0, geo.size.width - 2 * Self.inset),
-                                 height: max(0, geo.size.height - 2 * Self.inset))
-                ZStack {
+        GeometryReader { geo in
+            let box = CGSize(width: max(0, geo.size.width - 2 * Self.inset),
+                             height: max(0, geo.size.height - 2 * Self.inset))
+            // No reserved bar (Jason, 2026-09-27): the switch floats over
+            // the picture in its own corner instead of pushing it down to
+            // make room. It can cover part of a picture that reaches that
+            // far up and to the right — accepted, rather than shrinking
+            // every picture in the drawer to keep a strip permanently
+            // clear for it.
+            ZStack(alignment: .topTrailing) {
+                Group {
                     if items.isEmpty {
                         Text("No selection")
                             .font(.title3)
@@ -69,6 +60,18 @@ struct SelectionViewer: View {
                     }
                 }
                 .frame(width: geo.size.width, height: geo.size.height)
+
+                Picker("View", selection: $mode) {
+                    ForEach(ViewerMode.allCases, id: \.self) { m in
+                        Image(systemName: m.symbol).help(m.title).tag(m)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .labelsHidden()
+                .fixedSize()
+                .help("Side by Side or Stack (⇧Y)")
+                .padding(.horizontal, 8)
+                .padding(.top, 6)
             }
         }
         .background(Color(nsColor: .underPageBackgroundColor))

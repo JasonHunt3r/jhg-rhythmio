@@ -35,8 +35,75 @@ patterns, 12 their note length, 13 groups, 14 a drag order for a
 collection's/group's files). Before an upgrade the database is copied
 to `Library.sqlite.v<N>.bak`.
 
-**Built most recently (2026-09-27)** — details in `spec/windows.md`, "The
-windows pass," and `spec/panekit.md`, "The clutch"; the story in
+**Built most recently (2026-09-27, later still)** — `spec/windows.md`, "A
+reusable modal box"; `spec/panekit.md`, "The clutch": the drawer-sensitivity
+section split in two — the Windows tab now shows one combined
+**Responsiveness** slider, and a **"Set Up Triggers…" button** opens the
+line, the Quick ↔ Smooth slider and the practice drawer in a new
+**`SettingsBox`** — a reusable case meant for other settings items too,
+not just this one. Went through three shapes the same day: **app-modal**
+first (`NSApp.runModal`, every ShowTools window blocked) — found and
+fixed a real bug (blocked every other window correctly but took no input
+itself, until the modal session started on the next run-loop turn
+instead of synchronously inside the button tap that opened it) — then
+**tied to Settings' own lifecycle** once Jason said "I was wrong about
+making it demand the window" — then, once he found that could hide the
+box *behind* Settings unconfirmed, **a floating panel** instead, his own
+idea: "persist above all — most — windows until you click done," so
+nothing can ever hide it, sidestepping the problem rather than reacting
+to it. Found and fixed a second real bug the same way: `isFloatingPanel`/
+`level` set *before* `contentViewController` and `center()` silently
+didn't stick (`kCGWindowLayer` read back `0`, not `3`) — moving them
+*after* fixed it. Checked with axtool against a scratch library,
+carefully: Jason had the real app open with an identical Settings window
+and box on screen at the same default coordinates, so every check first
+read window positions by pid and moved the scratch copy's windows to a
+region proven not to overlap his, before any click. Confirmed: the box
+stays open and untouched when Settings closes (the point of the whole
+redesign); it stays layer-3 after clicking through to another window; its
+own Done button still closes it normally; reopening it brings the
+existing one forward rather than a second copy. Nothing in Jason's live
+session was touched.
+
+**Then, once Jason was done using it and had closed his own copy**:
+where these two windows open (`spec/windows.md`, "Where these windows
+open"). Settings now always opens centered under the triggering
+monitor's own bar (`TriggeringScreen.swift`) rather than restoring its
+autosaved position across launches — refined mid-conversation from
+"centered in the triggering monitor" to "centered top under main window
+bar," then again once the box came up: "the launch of the secondary
+window needs to be relative to the current position of the settings
+window," not the monitor — so `SettingsBox` now follows wherever Settings
+currently sits (`positionUnderBar(of:)`), including if it's been dragged.
+Two more real bugs found by testing, the same class as the layer bug
+above — something set too early, before the window was actually sized or
+shown: Settings' own positioning silently did nothing at all (proven with
+an absurd canary value that changed nothing) because the observer that
+was meant to apply it wasn't even installed yet when the window's first
+`didBecomeKeyNotification` fired — fixed by positioning directly on
+first capture instead of only from that observer; the box centered on
+the screen's raw midpoint, not its own size, because `frame.size` still
+read `.zero` immediately after creation — fixed by deferring a run-loop
+turn, the same fix `captured()` already needed. Also: **the header bar
+now reads "ShowTools Settings: Windows"** (or whichever tab), not just
+the tab's own name — a KVO observation on the window's `title` reapplies
+the prefix after every tab switch, since there's no "tab changed"
+notification to hook instead. All four confirmed with axtool against a
+scratch library, no overlap risk this time (Jason's own app wasn't
+running).
+
+**One more, right after**: `SettingsBox` now titles itself after the tab
+it opened from — "Windows: Set Up Triggers," not just "Set Up Triggers."
+`SettingsWindowCoordinator.currentTabName` reads it back out of Settings'
+own formatted title rather than tracking it twice. Confirmed with axtool
+against a scratch library, this time alongside Jason's own live session
+again (both landed at the exact same deterministic spot, confirming the
+earlier positioning fix holds for him too) — moved the scratch copy far
+enough right that its own controls cleared his window's edge before
+clicking anything.
+
+**Built earlier the same day (2026-09-27)** — details in `spec/windows.md`,
+"The windows pass," and `spec/panekit.md`, "The clutch"; the story in
 `spec/history/2026-09-27-windows-pass.md`: **panel-hiding as a setting**
 (`PanelHidingSetting`, a new "Windows" tab; the library panel's own
 exception now explicit, not an accident of `NSPanel`'s default) — **plus
@@ -205,6 +272,23 @@ Not pressing; each wants a discussion or a plan before any code.
 
 ## Still needs Jason's hands
 
+- **The Set Up Triggers box, and the Responsiveness slider** (built,
+  reversed twice, and floating by the end of 2026-09-27, `spec/windows.md`,
+  "A reusable modal box"): confirmed with axtool against a scratch
+  library — carefully, since Jason had the real app open with an
+  identical Settings window and box on screen at the same coordinates:
+  both fine controls respond to a plain click (not a drag — `axtool drag`
+  doesn't move either one, and isn't proof either way); reopening the box
+  brings the existing one forward instead of a second copy; the box
+  stays layer-3 (floating, above the Library window) after clicking
+  through to it; **closing Settings leaves the box open, untouched** —
+  the point of the redesign; the box's own Done button still closes it
+  normally. Never opened, dragged or dismissed by a real hand. Worth a
+  look: whether floating above everything (rather than the alert Jason
+  first asked about) feels right in practice, once there's more than one
+  item using `SettingsBox` to compare against; whether the combined
+  Responsiveness slider on the tab reads sensibly next to the box's own
+  separate line and slider.
 - **The windows pass's three settled pieces, and the tabbed Settings
   redesign** (built 2026-09-27, `spec/windows.md`, "The windows pass"):
   the panel-hiding setting and the Settings-covering fix were both
@@ -294,6 +378,14 @@ Not pressing; each wants a discussion or a plan before any code.
   doesn't; Tab did). The strip was checked in the grid (double-clicks,
   text included, and drags) and in the browser (double-click, drag), and
   the bar in both was checked to do nothing on a double-click or drag.
+  **The Side by Side / Stack switch's own reserved strip was removed
+  2026-09-27** (`spec/plan.md`, "The switch's own strip, reversed"): it
+  now floats over the drawer's top-right corner instead, and the picture
+  underneath gets the full height back. Built and compiles clean, but
+  **not checked at all this time** — your real app had its own Library
+  window open at the same size and position while this was built, so
+  opening the drawer in a scratch copy to look at it risked a stray click
+  landing in your live session; left entirely for you to look at.
 - **The inspector's stars after a rating key in the browser** (seen
   2026-09-26 while checking the viewer): "4" rated both picked files (the
   library says 4), but the inspector's Rating row for the selected slide's

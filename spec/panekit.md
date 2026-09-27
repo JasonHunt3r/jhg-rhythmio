@@ -335,13 +335,68 @@ that opens it") from the line's own position, and `slideDuration` (with
 `settleDuration` kept at its original 0.14⁄0.18 ratio) from the slider —
 applied at launch and live as either control moves, so the practice
 drawer (and every real drawer in the app) feels a change at once.
-Checked with axtool: dragging the practice drawer's own edge handle opens
-it exactly like the app's real drawers do (`PaneClutch`'s dials are
-shared, not copied); dragging the engage line updates its saved value
-live (`drawerEngageDistance`), confirmed in `UserDefaults` mid-drag.
 **Not yet tuned by Jason's own hand** — that's the whole reason this
 control exists rather than a single silently-chosen number, per "the
 dials want Jason's hand" below.
+
+**Moved into its own modal box, later the same day** (Jason: a button on
+the tab should open the fine controls "in a top-level box, the kind that
+must be dismissed before you can change focus to other windows" — see
+`spec/windows.md`, "A reusable modal box"). The tab itself now shows one
+combined **Responsiveness** slider (a single normalized 0...1 position
+mapped onto both `engageRange` and `slideRange` at once); the line, the
+Quick ↔ Smooth slider and the practice drawer moved into
+`TriggerBoundariesBox`, opened by "Set Up Triggers…" through
+`ModalSettingsBox.present`, a true app-modal window (`NSApp.runModal`),
+not a `.sheet()` — every ShowTools window blocked, not just the one that
+opened it.
+
+**A real bug found by testing, not assumed fixed**: the first version
+called `NSApp.runModal(for:)` synchronously, inside the same button-tap
+handler that opened the box. Built clean, opened visually correct, and
+did block every other window (confirmed with axtool: clicking the Library
+window's title bar while the box was open left it un-key, un-focused) —
+but **no input reached the box itself**: clicking Done, clicking its own
+close button, and pressing Return all did nothing, even though dragging
+its title bar moved it (the window server's own doing, needing nothing
+from the app — proved nothing about real interactivity). Starting the
+modal session with `DispatchQueue.main.async` instead — after the tap
+that opened it has fully finished dispatching, not mid-dispatch — fixed
+it: retested the identical scenario, Done and the close button both
+closed it, and focus returned to the window clicked earlier. (A second,
+false alarm along the way: `axtool drag`'s synthetic multi-step drag
+didn't move either the engage line or the Quick ↔ Smooth slider even
+after the fix — but a plain click on each *did* move it, matching
+`showtools-testing`'s own note that a synthetic drag isn't proof of
+anything; not a bug.)
+
+**Reversed, once Jason tried it, the same day**: "I was wrong about
+making it demand the window." Not app-modal after all — renamed
+`ModalSettingsBox` → `SettingsBox`, an ordinary window tied to the
+*Settings* window's own lifecycle instead of blocking every other one:
+closed automatically when Settings closed, or came to the front instead
+if it reported unsaved changes.
+
+**Reversed a second time, the same day, once Jason actually hit the gap
+this was meant to cover**: he closed Settings while the box sat open but
+hidden *behind* it — "I was able to close the whole shebang while the
+secondary window was still in an unconfirmed state" — and, talking
+through the alert-and-bring-forward fix, proposed something simpler:
+"persist above all — most — windows until you click done. So you could
+keep it on top while you try it on the real windows, then click done
+when you're satisfied." `SettingsBox` is now an `NSPanel`, `.floating`,
+the same pattern this app's own hand-built panels already use, with
+`floatOnlyWhileActive` (`FloatingPanelActivation.swift`) reused rather
+than re-solved. The Settings-lifecycle tie came back out entirely — no
+alert, no "unsaved changes" concept — since a box that can never end up
+hidden has nothing for an alert to catch. A second real bug found by
+testing, not assumed fixed: setting `isFloatingPanel`/`level` *before*
+assigning `contentViewController` and calling `center()` silently didn't
+stick (`kCGWindowLayer` read back `0`, not `3`) — moving them *after*
+fixed it. `spec/windows.md`, "A reusable modal box," has the fuller
+story, including what's confirmed (closing Settings really does leave the
+box open, checked carefully around Jason's own live session) and what's
+still only reasoned through.
 
 **Left:**
 - **The dials want Jason's hand.** He called the first snap "a little on
