@@ -221,6 +221,12 @@ struct MainView: View {
                       ? "lock.rectangle.stack" : "photo.on.rectangle.angled")
                 .badge(model.items.count)
                 .tag(SidebarItem.library)
+                // Jason, 2026-09-27, looking at the seeded scroll test: the
+                // catalog's own bars want the filter bar's treatment too,
+                // now that a long collection list actually scrolls under
+                // them. `.listRowBackground` is the row-level equivalent of
+                // `.background` a plain List row needs.
+                .listRowBackground(ScrollBarBackground())
                 .contextMenu {
                     Button("Import…") { runImportPanel(model) }
                     Button("New Collection…") { startCreatingCollection() }
@@ -256,6 +262,7 @@ struct MainView: View {
             } header: {
                 Text("Collections")
                     .noMenuYet("Library pane › Collections heading")
+                    .background(ScrollBarBackground())
             }
         }
         // Delete asks first (D1); ⌘Delete skips the question, as the
@@ -291,6 +298,7 @@ struct MainView: View {
                 Spacer()
             }
             .padding(8)
+            .background(ScrollBarBackground())
         }
     }
 

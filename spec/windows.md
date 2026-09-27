@@ -890,6 +890,37 @@ header bar reads "Drawer Sensitivity: Set Up Triggers." "It's good."
    (not marked) sits exactly where it always did. The filter bar's own
    100%-opacity seam glitch (above) hasn't been re-checked against this
    taller region specifically — same open item, not investigated twice.
+
+   **The Catalog's own bars, the same day**: a test case (25 seeded
+   collections, 50 groups, 51 shows, straight into a scratch library's
+   SQLite) forced the sidebar to actually scroll, which Jason then watched
+   — "the New+ button [needs] to be a bar with the transparency since
+   things will be scrolling under it... the collections header... should
+   also be scrolled under, maybe the box containing the Library button as
+   well." All three now carry `ScrollBarBackground`: the "+ New" footer
+   (already a `.safeAreaInset`, so content already scrolled under it
+   unstyled — that's what made it hard to read), the "Collections" section
+   header, and the "Library" row itself (`.listRowBackground`, the
+   row-level equivalent of `.background` a plain `List` row needs, since
+   this is a real `NSTableView`, not a `ScrollView`). Not yet checked
+   against a real hand's scroll — only that nothing regressed structurally.
+
+   **A separate, real finding from that same test case**: some
+   `DisclosureGroup`s in the Catalog render collapsed on a fresh launch —
+   no scrolling needed — despite `folded` (`MainView.swift`) defaulting to
+   empty, which should read every collection as expanded. Confirmed twice,
+   independently: once as a run of 7 consecutive collections after a
+   scroll, once as 2 different ones on a plain fresh launch at rest, both
+   times stable across a second screenshot and a further scroll (not a
+   single-frame flicker) — pinned by reading the actual accessibility tree
+   (no child rows between one collection heading and the next), not by
+   eye. Which collections it hits varies between launches; a same-scroll
+   retry on a third fresh launch showed none collapsed at all. Not
+   diagnosed — the pattern (some subset, varies run to run, present with
+   zero interaction) points at a `List`/`DisclosureGroup` rendering race
+   with many rows rather than a logic bug in `foldBinding` itself, but
+   that's a guess, not a finding. Worth a real look before touching
+   `foldBinding` or the Collections `ForEach`.
 3. The "Smart View" preference (panes open and close by context — on by
    default — or keep your own choices; `spec/plan.md`, "Slides as mini
    movies") — **wants fleshing out**: today it's a one-paragraph sketch,
