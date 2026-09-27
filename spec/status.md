@@ -65,10 +65,15 @@ Library.noindex`, is in use (12 files and one collection on 2026-09-26).
 are folded into "The 2026-09-25 feedback worklist" below). No next task is
 chosen yet. In the order they came up:
 
-1. **Grid selection is slow** (new, 2026-09-26, pressing) — clicking a
-   tile in the Library grid takes about half a second to draw its
-   selection border, even in Jason's own tiny library. It should feel
-   instant. Probably new, not a large-library cost. Measure first.
+1. **Grid selection lag — fixed 2026-09-26, needs Jason's hand.** A tile
+   click took ~half a second to draw its border. Cause: item 9's
+   double-click (`4bb2dde`, 2026-09-25) stacked `.onTapGesture(count: 2)`
+   over the single tap, so SwiftUI held every click in case a second came.
+   Measured in a harness: 356 ms stacked, 353 ms with the double as a
+   `.simultaneousGesture` (no better), **2 ms** with one tap reading
+   `NSApp.currentEvent.clickCount` — the fix (`MainView.swift`, the
+   tile's tap). Checked on a test copy: click selects, double-click
+   opens Quick Look, ⌘-click adds. Not yet in `~/Applications`.
 2. **Item 33, first step: grey out the tools, not the timeline.** Jason
    meant that the transport's *tools* grey out while the rows stay
    visible, whenever no show is selected to play through it. Today's
@@ -91,8 +96,12 @@ chosen yet. In the order they came up:
    clutch": the drawer starts to follow at once (you're onto
    something), then resists and lags the pointer until a threshold, then
    pops open with a quick slide instead of today's instant jump; let go
-   before the threshold and the edge slides back shut. Being clarified
-   with Jason before any code.
+   before the threshold and the edge slides back shut. Jason confirmed
+   this reading (bite, slip, engage, release early) 2026-09-26. **Closing
+   gets the same pressure feel**, but not necessarily the same animation
+   — the visual logic of closing differs from opening. Still to ask:
+   double-click, open-to-saved-width vs keep sizing, the threshold's
+   measure, and which drawers.
 5. **Item 34: light mode is "awful"** (Jason tried it). Light mode needs
    more translucency than dark, and the window background has no
    transparency at all today — Jason wants a setting (a slider) for it.

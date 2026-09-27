@@ -1891,8 +1891,19 @@ struct LibraryGridView: View {
         .offset(landingOffsets[item.id] ?? .zero)
         // Double-click: "go into it" (conventions.md), settled as Quick
         // Look for a Library tile (B5, B6) now that Space is play/pause.
-        .onTapGesture(count: 2) { click(item.id); quickLook(startingAt: item.id) }
-        .onTapGesture { click(item.id) }
+        // One tap gesture reading the click count, as Finder does: the
+        // first click selects at once, the second opens Quick Look. A
+        // `count: 2` tap alongside it — stacked or simultaneous — makes
+        // SwiftUI hold every single click ~350 ms in case a second comes
+        // (measured in a harness, 2026-09-26; Jason felt it as half a
+        // second before the selection border drew).
+        .onTapGesture {
+            if (NSApp.currentEvent?.clickCount ?? 1) >= 2 {
+                quickLook(startingAt: item.id)
+            } else {
+                click(item.id)
+            }
+        }
         // A selected tile drags the whole selection, as a stack; any other,
         // just itself (`startDrag(from:)`). Not `.onDrag`: it carries one
         // picture, so several files couldn't gather into a stack.

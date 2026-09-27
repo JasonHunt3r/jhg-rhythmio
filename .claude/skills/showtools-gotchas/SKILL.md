@@ -92,6 +92,14 @@ never have guessed it. `VideoSlideTiming` now holds it for both — asked by
   Edit Show's columns use `ColumnHost`, which takes the mouse only inside
   its frame — or content wider than its column steals the next column's
   clicks and scrolling.
+- **Never pair a `count: 2` tap with a single tap on one view.** Stacked
+  (`.onTapGesture(count: 2)` then `.onTapGesture`) *or* as a
+  `.simultaneousGesture`, SwiftUI holds every single click ~350 ms in
+  case a second comes — measured in a harness 2026-09-26 (356 / 353 ms
+  vs 2 ms), and Jason felt it as a slow selection border in the grid.
+  Use one `.onTapGesture` and branch on
+  `NSApp.currentEvent?.clickCount`: the first click acts at once, the
+  second "goes into it", as Finder does.
 - **Harnesses first for AppKit questions.**
 - **A right-click on a SwiftUI `List`'s empty space throws** on macOS 27
   ("Row index -1 out of row range", from `OutlineListCoordinator`'s
