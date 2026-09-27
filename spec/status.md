@@ -47,7 +47,8 @@ Composer app icon. **Reinstalled at `f22a58f`**: the viewer drawer (all three
 places), the second app icon, and the grids' tools in the bar. **Reinstalled at
 `f2175dd`**: the sort strip as the drawer's second handle, with its pill
 (since changed: the strip is the only handle — see the viewer drawer below). **Reinstalled at `56f7c63`**: the dark strip as the drawer's only
-handle (a grip strip in the browser), and the v3 app icon.
+handle (a grip strip in the browser), and the v3 app icon. **Reinstalled
+2026-09-26 18:22 at `dc7f620`**: the grid selects on the first click.
 Reinstalling stops the real BGTools instance (`install.sh`'s own quit
 sequence); BGTools wasn't restarted after the 20:28 install. BGTools'
 desktop extension (`BGToolsControls.appex`) was also killed before that
@@ -73,7 +74,7 @@ chosen yet. In the order they came up:
    `.simultaneousGesture` (no better), **2 ms** with one tap reading
    `NSApp.currentEvent.clickCount` — the fix (`MainView.swift`, the
    tile's tap). Checked on a test copy: click selects, double-click
-   opens Quick Look, ⌘-click adds. Not yet in `~/Applications`.
+   opens Quick Look, ⌘-click adds. Installed at `dc7f620`.
 2. **Item 33, first step: grey out the tools, not the timeline.** Jason
    meant that the transport's *tools* grey out while the rows stay
    visible, whenever no show is selected to play through it. Today's
