@@ -103,6 +103,19 @@ thing that could be a tool window of its own, the Timeline window. The
 transport goes with it, since zoom, snapping and the range belong with
 the rows wherever they are.
 
+**Its height (Jason, 2026-09-26) — not built.** Docked or in its own
+window, the timeline is **only as tall as its contents** — the transport,
+the ruler and the rows — **or smaller**; it can't be dragged taller.
+**One exception, the Timeline window behind another window** (the main
+window, say, with a large viewer): scrolling it while it's in the
+background lets padding open above the rows, so they can slide up into
+view from under the covering window's bottom edge — all the rows at a
+glance beside a big viewer. Brought to the front, the padding **stays**,
+so the tools don't jump from where they were, until it's scrolled back
+into place, filling the window again. Open: how row drawers (which make
+the contents taller) fit in, and what "smaller" does (the rows scroll, or
+are cut off).
+
 ## Panes that close to an edge, inside one window (Jason, 2026-09-24)
 
 The same flexibility, before any pane leaves the window: every pane can

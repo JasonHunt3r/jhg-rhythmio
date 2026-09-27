@@ -222,15 +222,19 @@ the instant jump it had. Every closable split has it, whatever its handle
   `bite`, 14 pt), then **slips** (takes `slip`, 0.35, of the pointer's
   further travel), until the pull reaches about half the size it opens to
   (`engageFraction`, within `engageRange` 48…110 pt): then it **engages**,
-  sliding open to its saved size in `slideDuration` (0.18 s, easing out).
-  A drag that carries on resizes it from there, without a jump. Let go
-  before it engaged: it slides back shut (`settleDuration`, 0.14 s),
-  nothing saved.
+  sliding open to its own size in `slideDuration` (0.18 s, easing out) —
+  **and the drag is over** (Jason: "like pulling back a bow and then it
+  releases at the threshold"): the cursor is the arrow again and the rest
+  of that press is ignored, by the drawer and everything under it, until
+  the button comes up. Its own size: a default per drawer, then the last
+  size it was left at. Let go before it engaged: it slides back shut
+  (`settleDuration`, 0.14 s), nothing saved.
 - **Pushed shut** (Jason: the same pressure, but closing's visual logic
   is its own): it resizes as always down to its minimum, then **resists**
   (the same `slip`), and slides shut once pushed `closeEngage` (48 pt)
-  past the minimum. Let go before: it springs back to its minimum, open.
-  Reopening goes back to the size it had when the push began.
+  past the minimum — the drag over, the same way. Let go before: it
+  springs back to its minimum, open. Reopening is a new pull, back to the
+  size it had when the push began.
 - **Double-click** (a divider, an edge handle, an app's handle) and an
   app's own `setOpen(_:_:animated: true)` / `toggle(_:animated:)` slide
   rather than jump. Plain `setOpen` is unchanged (instant), for state
@@ -243,13 +247,16 @@ the instant jump it had. Every closable split has it, whatever its handle
   loop's common modes, so it keeps going inside a drag.
 - **Reduce Motion** (System Settings ▸ Accessibility) turns the slides
   off.
-- **One drag can go both ways** (Jason, 2026-09-26, after the first
-  build: once shut, the pointer stayed grabbed and moving back did
-  nothing). Pushed shut and still held, the drag becomes a pull from
-  closed, measured from where it went shut: moving back bites, slips and
-  re-opens it to the size it had when the drag began. Measured: 212 →
-  resisted to 105 → shut → back: bit to 15, slipped to 46, engaged,
-  slid to 212, resized on to 249.
+- **Why the drag ends at the threshold** (Jason, 2026-09-26, after the
+  first build, where the pointer stayed grabbed once it shut and moving
+  back did nothing): one gesture, one outcome, nothing left half-attached
+  to the hand. An interim build let the same drag pull it open again
+  (`3afa4f6`); Jason preferred the release — "if one wants to regrab the
+  handle, one simply can." Measured on a test copy: pushed from 290, it
+  resisted to 105 and slid shut, then stayed shut for the rest of a press
+  dragged back down over the slide list (the list didn't react); pulled
+  220 pt from closed, it slipped to 47, engaged, slid to exactly 290 and
+  stayed there while the pointer went on.
 
 Tests: `PaneClutchTests` (5: the bite and slip, where it engages, the
 resistance and where it shuts, a peek drawn below the minimum, a peek

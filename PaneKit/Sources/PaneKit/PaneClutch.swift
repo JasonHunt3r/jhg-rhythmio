@@ -3,11 +3,15 @@ import AppKit
 /// How a drawer feels under the pointer (Jason, 2026-09-26: "a cantilevered
 /// clutch"). Pulled from closed, it **bites** — follows the pointer at once,
 /// so you know you're onto something — then **slips**, lagging the pointer
-/// while it's pulled further, until it's sure: then it **engages** and slides
-/// quickly open to its size. Let go before that and it slides back shut.
+/// while it's pulled further, until it's sure: then it **engages** — like a
+/// bow loosed at full draw (Jason) — and slides quickly open to its own size
+/// (its default, then the last size it was left at), the drag over: the
+/// pointer is an arrow again and the rest of the press is ignored until the
+/// button comes up. Let go before that and it slides back shut.
 /// Pushed shut, the same pressure the other way: it resizes as usual down to
-/// its minimum, resists past it, and slides shut once pushed far enough;
-/// let go before and it springs back to its minimum. A double-click (and an
+/// its minimum, resists past it, and once pushed far enough slides shut, the
+/// drag over the same way (reopening is a new pull); let go before and it
+/// springs back to its minimum. A double-click (and an
 /// app's own toggle, `animated: true`) slides rather than jumping.
 ///
 /// The dials, tuned by feel. All distances are points. Main-actor, like
