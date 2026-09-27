@@ -96,7 +96,7 @@ public final class PaneContainerView: NSView {
     public override func layout() {
         super.layout()
         let result = PaneLayout.layout(controller.root, in: bounds, state: controller.displayState,
-                                       peek: controller.peek)
+                                       peek: controller.peek, contentExtent: controller.contentExtent)
         lastLayout = result
         // A drawer sliding (`PaneClutch`): its pane's content keeps the
         // size it's heading for and slides, flush with the divider.
@@ -379,7 +379,8 @@ func trackResize(_ split: Split, in container: PaneContainerView, from event: NS
         }
     }
     let startedClosed = dragStart.isCollapsed(split.id) && split.collapsible
-    let startExtent = startedClosed ? drawnAtStart : PaneLayout.sizedExtent(for: split, available: total, state: dragStart)
+    let startExtent = startedClosed ? drawnAtStart
+        : PaneLayout.sizedExtent(for: split, available: total, state: dragStart, contentExtent: controller.contentExtent)
     let minimum = split.range.lowerBound
     let target = controller.openExtent(split.id)
 

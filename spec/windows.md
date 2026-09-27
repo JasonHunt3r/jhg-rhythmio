@@ -104,16 +104,16 @@ thing that could be a tool window of its own, the Timeline window. The
 transport goes with it, since zoom, snapping and the range belong with
 the rows wherever they are.
 
-**Its height (Jason, 2026-09-26) — agreed, not built.** Docked or in its
-own window, the timeline is **only as tall as its contents** — the
-transport, the ruler and the rows — **or smaller**; it can't be dragged
-taller. **Smaller than its contents, the rows scroll up and down as
-normal**, docked or in a window. **The one exception** is the Timeline
-window behind another window, whose padding lets it grow past its
-contents while covered: "Scrolling a window that's partly covered",
-below (Jason restated it 2026-09-26: the padding stays when the window
-comes to the front, "so as not to make the tools jump", until it's
-scrolled back into place).
+**Its height (Jason, 2026-09-26) — the ceiling half is built; the floor
+half waits on vertical row-scrolling.** Docked or in its own window, the
+timeline is **only as tall as its contents** — the transport, the ruler
+and the rows — **or smaller**; it can't be dragged taller. **Smaller than
+its contents, the rows scroll up and down as normal**, docked or in a
+window. **The one exception** is the Timeline window behind another
+window, whose padding lets it grow past its contents while covered:
+"Scrolling a window that's partly covered", below (Jason restated it
+2026-09-26: the padding stays when the window comes to the front, "so as
+not to make the tools jump", until it's scrolled back into place).
 
 **When the contents grow** (a row's drawer opens, a preference makes the
 rows taller, a row is added) — Jason: "to a point", never squashing the
@@ -123,6 +123,38 @@ its own minimum, whichever is more — then the rows scroll; dragged
 smaller than its contents, it keeps its size and scrolls. **A new row
 lands at or near the bottom and is scrolled fully into view** (unless
 the window is shorter than the row).
+
+**Built 2026-09-26 (the ceiling half only), scoped with Jason:**
+`StorylineView` has no vertical scrolling yet — only horizontal, for the
+timeline's own clock ("Scrolling a window that's partly covered," below,
+already said so: "vertical scrolling arrives with extra rows, and so does
+this"). Without it, the pane can't actually shrink below its content
+without clipping a row invisibly, so **the floor stays at the pane's full
+content for now** — the "dragged smaller, it keeps its size and scrolls"
+half is parked until that scrolling exists. What's built is the other
+half: **it can no longer be dragged taller than its content**, which the
+old static range's `+400` of dead slack let it do, for no reason.
+
+Built as a general PaneKit mechanism, not a ShowTools-only patch
+(`PaneKit/Sources/PaneKit/PaneModel.swift`, `Split.contentTracking`,
+`ContentTracking`; `PaneLayout.sizedExtent`; `PaneController
+.setContentExtent`, proven in the standalone harness's own arithmetic
+tests first — `PaneLayoutTests`, 5 new cases): a split's sized side can
+auto-fit a live, unclamped **content extent** the app reports
+(`PaneController.setContentExtent(_:for:)`), instead of a fixed
+`defaultSize`, with a ceiling that always reserves at least half the
+available space (configurable) — or the main side's own minimum,
+whichever is more — for the main side. A stored size (a manual drag) is
+clamped into that same ceiling, so a drag can shrink into a scroll but
+never grow past the content either. `AppModel.mainPanes`'s outer
+`"window"` split carries it now; `EditShowTimelinePane.contentHeight`
+reports the pane's real content height — the transport, its divider, and
+`StorylineView.fullHeight` — which is always the pane's true content,
+since `TimelineRow.normalized` keeps every show's `rows` at all four
+kinds. Checked: `swift test` (46 → 51 PaneKit tests, 336 core tests,
+unchanged), a scratch-library launch renders identically to before. Not
+confirmed by a real drag of the divider — only by the arithmetic and the
+launch.
 
 ## Panes that close to an edge, inside one window (Jason, 2026-09-24)
 

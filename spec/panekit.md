@@ -216,6 +216,22 @@ Assistant). Not needed for our fix.
   a 200-pt drawer (±1, no jump); dragging up closes it; double-clicks
   toggle; the search field types and the button's double-click doesn't
   toggle.
+- **A split that auto-fits its own content — built 2026-09-26**
+  (`spec/windows.md`, "The timeline pane," "Its height"): `Split
+  .contentTracking` (`ContentTracking`) replaces a fixed `defaultSize`
+  with the app's own live, unclamped content measurement
+  (`PaneController.setContentExtent(_:for:)`, never saved). With no
+  stored size, the sized side is exactly that content — never bigger,
+  regardless of how much window there is — up to a ceiling that always
+  reserves at least `mainReserveFraction` of the available space (default
+  half), or the main side's own `minSize`, whichever is more. A stored
+  size (a manual drag) is clamped into that same ceiling too, so it can
+  only ever shrink the content into a scroll, never grow past it.
+  `PaneLayout.sizedExtent`; `PaneLayoutTests`, 5 cases. ShowTools' own use
+  (`AppModel.mainPanes`'s `"window"` split, `EditShowTimelinePane
+  .contentHeight`) only exercises the ceiling half so far — the timeline
+  pane's floor still has nowhere to shrink to, since `StorylineView` has
+  no vertical row-scrolling yet (`spec/windows.md` has the rest).
 
 ### The clutch: how a drawer feels (Jason, 2026-09-26) — built
 

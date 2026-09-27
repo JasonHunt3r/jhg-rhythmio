@@ -31,16 +31,20 @@ public enum PaneLayout {
 
     /// `peek`: a split's sized side drawn at exactly this extent, open or
     /// closed, whatever its range — the clutch and the slide in and out
-    /// (`PaneClutch`) draw with it. Never saved.
+    /// (`PaneClutch`) draw with it. Never saved. `contentExtent`: a
+    /// content-tracking split's live, unclamped content height, keyed by
+    /// split id (`PaneController.setContentExtent`). Never saved.
     public static func layout(_ node: PaneNode, in rect: CGRect, state: PaneKitState,
-                              peek: [String: CGFloat] = [:]) -> PaneLayoutResult {
+                              peek: [String: CGFloat] = [:],
+                              contentExtent: [String: CGFloat] = [:]) -> PaneLayoutResult {
         var result = PaneLayoutResult()
-        place(node, in: rect, state: state, peek: peek, into: &result)
+        place(node, in: rect, state: state, peek: peek, contentExtent: contentExtent, into: &result)
         return result
     }
 
     private static func place(_ node: PaneNode, in rect: CGRect, state: PaneKitState,
-                              peek: [String: CGFloat] = [:], into result: inout PaneLayoutResult) {
+                              peek: [String: CGFloat] = [:], contentExtent: [String: CGFloat] = [:],
+                              into result: inout PaneLayoutResult) {
         switch node {
         case .leaf(let pane):
             if !state.isPoppedOut(pane.id) { result.panes[pane.id] = rect }
@@ -50,8 +54,14 @@ public enum PaneLayout {
             let sizedEmpty = isEmpty(split.sizedNode, state: state)
             let mainEmpty = isEmpty(split.mainNode, state: state)
             if sizedEmpty && mainEmpty { return }
-            if sizedEmpty { place(split.mainNode, in: rect, state: state, peek: peek, into: &result); return }
-            if mainEmpty { place(split.sizedNode, in: rect, state: state, peek: peek, into: &result); return }
+            if sizedEmpty {
+                place(split.mainNode, in: rect, state: state, peek: peek, contentExtent: contentExtent, into: &result)
+                return
+            }
+            if mainEmpty {
+                place(split.sizedNode, in: rect, state: state, peek: peek, contentExtent: contentExtent, into: &result)
+                return
+            }
 
             result.splits[split.id] = rect
             let total = extent(of: rect, along: split.axis)
@@ -67,18 +77,18 @@ public enum PaneLayout {
                 extentSized = 0
                 gap = min(closedThickness(split), total)
             } else {
-                extentSized = sizedExtent(for: split, available: total, state: state)
+                extentSized = sizedExtent(for: split, available: total, state: state, contentExtent: contentExtent)
                 gap = dividerThickness
             }
             let (sizedRect, gapRect, mainRect) = carve(rect, axis: split.axis, sizedFirst: split.sizedFirst(in: state),
                                                        sized: extentSized, gap: gap)
             if extentSized > 0 {
-                place(split.sizedNode, in: sizedRect, state: state, peek: peek, into: &result)
+                place(split.sizedNode, in: sizedRect, state: state, peek: peek, contentExtent: contentExtent, into: &result)
                 result.dividers[split.id] = gapRect
             } else if !(closed && split.handle == .external) {
                 result.handles[split.id] = gapRect
             }
-            place(split.mainNode, in: mainRect, state: state, peek: peek, into: &result)
+            place(split.mainNode, in: mainRect, state: state, peek: peek, contentExtent: contentExtent, into: &result)
         }
     }
 
@@ -86,10 +96,30 @@ public enum PaneLayout {
     /// range, and never so big that the main side drops below its minimum.
     /// A squeeze from a small window shrinks it here without touching the
     /// stored size, so the window growing again gives it back.
-    public static func sizedExtent(for split: Split, available: CGFloat, state: PaneKitState) -> CGFloat {
-        let wanted = state.splits[split.id]?.size ?? split.defaultSize
-        let inRange = min(max(wanted, split.range.lowerBound), split.range.upperBound)
-        let room = available - dividerThickness - minExtent(split.mainNode, along: split.axis, state: state)
+    ///
+    /// A content-tracking split (`Split.contentTracking`) replaces the
+    /// static `range.upperBound` with a live ceiling: `available`, minus the
+    /// main side's own minimum or `mainReserveFraction` of `available`,
+    /// whichever reserves more for it. With no stored size, `wanted` is the
+    /// live content extent itself (`contentExtent[split.id]`), not
+    /// `defaultSize` — so it tracks the content exactly until a manual drag
+    /// stores a size, which this same ceiling still bounds.
+    public static func sizedExtent(for split: Split, available: CGFloat, state: PaneKitState,
+                                   contentExtent: [String: CGFloat] = [:]) -> CGFloat {
+        let mainMin = minExtent(split.mainNode, along: split.axis, state: state)
+        let upperBound: CGFloat
+        let defaultWanted: CGFloat
+        if let tracking = split.contentTracking {
+            let reserve = max(mainMin, available * tracking.mainReserveFraction)
+            upperBound = min(split.range.upperBound, max(split.range.lowerBound, available - dividerThickness - reserve))
+            defaultWanted = contentExtent[split.id] ?? split.defaultSize
+        } else {
+            upperBound = split.range.upperBound
+            defaultWanted = split.defaultSize
+        }
+        let wanted = state.splits[split.id]?.size ?? defaultWanted
+        let inRange = min(max(wanted, split.range.lowerBound), upperBound)
+        let room = available - dividerThickness - mainMin
         return max(0, min(inRange, room))
     }
 

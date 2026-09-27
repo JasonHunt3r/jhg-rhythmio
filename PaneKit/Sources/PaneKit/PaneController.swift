@@ -36,6 +36,11 @@ public final class PaneController {
     @ObservationIgnored var peek: [String: CGFloat] = [:]
     @ObservationIgnored var peekTarget: [String: CGFloat] = [:]
     @ObservationIgnored var slides: [String: PaneSlide] = [:]
+    /// A content-tracking split's live, unclamped content extent
+    /// (`Split.contentTracking`, `spec/windows.md`, "Its height"). Never
+    /// saved — the app remeasures it whenever its content's natural size
+    /// changes and calls `setContentExtent`.
+    @ObservationIgnored private(set) var contentExtent: [String: CGFloat] = [:]
     @ObservationIgnored private let store: UserDefaults
     private var storeKey: String { "PaneKit.\(id)" }
 
@@ -121,6 +126,17 @@ public final class PaneController {
 
     /// Every pane back to its default size, open, and in the window.
     public func restoreDefaults() { perform { $0 = PaneKitState() } }
+
+    /// A content-tracking split's own content just measured this natural
+    /// extent (its transport, ruler and rows, unscrolled and unclamped).
+    /// Not a transaction: it never touches saved state, only what
+    /// `sizedExtent` computes a content-tracking split's ceiling and
+    /// unstored size from.
+    public func setContentExtent(_ value: CGFloat, for splitID: String) {
+        guard contentExtent[splitID] != value else { return }
+        contentExtent[splitID] = value
+        container?.needsLayout = true
+    }
 
     /// A preset is a state; applying it is one transaction. Window frames
     /// already known are kept, so a pane popping out lands where it was.

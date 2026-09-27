@@ -13,7 +13,7 @@ Repo: `~/Projects/ShowTools`, pushed to **github.com/JasonHunt3r/jhg-showtools**
 
 **Everything planned is built**, and more has come from Jason's use of it.
 Phases 1–5, Phase 3b, Phase 4 and video export. **349 tests** (336 core +
-13 BGTools; PaneKit has its own 46). **Library schema 14.**
+13 BGTools; PaneKit has its own 51). **Library schema 14.**
 
 | Phase | State |
 |---|---|
@@ -36,7 +36,14 @@ collection's/group's files). Before an upgrade the database is copied
 to `Library.sqlite.v<N>.bak`.
 
 **Built most recently (2026-09-26)** — details in the specs, the story in
-`spec/history/2026-09-26-slides-and-the-clutch.md`:
+`spec/history/2026-09-26-slides-and-the-clutch.md` and
+`spec/history/2026-09-26-timeline-height.md`:
+- **The timeline pane can no longer be dragged taller than its content**
+  (`spec/windows.md`, "Its height"; `spec/panekit.md`, a new general
+  PaneKit mechanism, `Split.contentTracking`). The other half — shrinking
+  below its content, with the rows scrolling — waits on vertical
+  row-scrolling in `StorylineView`, which doesn't exist yet; scoped with
+  Jason to ship the ceiling half now.
 - **Edit Slides plays** (`spec/plan.md`, "Slides as mini movies", steps
   1–3): its timeline is live, Play loops the selected slides cut to cut,
   and the **Slide viewer** drawer (Y) shows the picture. A click in the
@@ -64,10 +71,12 @@ untouched.
 
 No next task is chosen. Open, roughly in the order Jason raised them:
 
-1. **The timeline's height** — agreed, not built (`spec/windows.md`, "Its
-   height"): only as tall as its contents or smaller, rows scrolling;
-   growing with its contents up to a ceiling (the viewer keeps about half
-   the window); a new row scrolled fully into view.
+1. **The timeline's height, the rest** (`spec/windows.md`, "Its height"):
+   the ceiling half is built 2026-09-26 (can't be dragged taller than its
+   content). Left: **vertical row-scrolling in `StorylineView`**, which
+   doesn't exist yet (only horizontal, for the clock) — needed before the
+   pane can actually shrink below its content; then a new row scrolled
+   fully into view.
 2. **The windows pass** — planned (`spec/windows.md`, "The windows pass"):
    consistent panels, the layer hierarchy (panels cover Settings today),
    the settings-vs-preferences split, About ShowTools; with it the drawers'
@@ -145,6 +154,13 @@ Not pressing; each wants a discussion or a plan before any code.
 
 ## Still needs Jason's hands
 
+- **The timeline pane's new ceiling** (built 2026-09-26, `spec/windows.md`
+  "Its height," `spec/panekit.md`'s new `contentTracking` mechanism):
+  pinned by 5 new PaneKit arithmetic tests and a scratch-library launch
+  that renders identically to before, but never confirmed by a real drag
+  of the divider — try dragging it taller; it should stop dead at the
+  content's own height instead of leaving ~400 pt of dead space below the
+  rows, as it did before.
 - **The clutch's feel and dials** (`spec/panekit.md`): pulling, braking,
   flicking and swiping drawers, on every kind of handle; whether 64 pt and
   the slide's 0.18 s feel right; **a swipe's direction with natural

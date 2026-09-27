@@ -22,6 +22,15 @@ import ShowToolsPlayback
 /// engine's own lifecycle (`.task(id: show.id)`, `.onDisappear`) — this
 /// view just reads `session.engine`.
 struct EditShowTimelinePane: View {
+    /// The pane's own whole natural height: the transport bar (56, its
+    /// padding included), its divider, and every row of the storyline with
+    /// nothing scrolled off (`StorylineView.fullHeight` — always the real
+    /// content, since `TimelineRow.normalized` keeps every show's `rows`
+    /// at all four kinds). `spec/windows.md`, "Its height," 2026-09-26:
+    /// what a content-tracking split reports as the pane's content extent,
+    /// via `PaneController.setContentExtent` (`AppModel.mainPanes`).
+    static let contentHeight = StorylineView.fullHeight + 56 + 1
+
     let show: Show
     let timeline: ShowTimeline
     let session: ShowSession
@@ -78,6 +87,7 @@ struct EditShowTimelinePane: View {
                 TimelinePanePlaceholder()
             }
         }
+        .onAppear { model.mainPanes.setContentExtent(Self.contentHeight, for: "window") }
         .onDisappear {
             // Matches the old FocusedValue's own absence outside Edit
             // Show (spec/hig-audit.md, "G"): leaving this view — by

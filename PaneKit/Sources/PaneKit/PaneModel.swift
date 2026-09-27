@@ -65,6 +65,20 @@ public struct Pane: Sendable, Identifiable, Equatable {
     }
 }
 
+/// A split's sized side that auto-fits its own content instead of a fixed
+/// default (`spec/windows.md`, "The timeline pane," "Its height," 2026-09-26:
+/// "only as tall as its contents, or smaller; it can't be dragged taller").
+/// With no stored size, the sized side shows exactly its live content
+/// extent (`PaneController.setContentExtent`), up to a ceiling that always
+/// leaves at least `mainReserveFraction` of the available space — or the
+/// main side's own `minSize`, whichever is more — for the main side. A
+/// stored size (a manual drag) is clamped into that same ceiling, so it can
+/// shrink the content into a scroll but never grow past it either.
+public struct ContentTracking: Sendable, Equatable {
+    public var mainReserveFraction: CGFloat
+    public init(mainReserveFraction: CGFloat = 0.5) { self.mainReserveFraction = mainReserveFraction }
+}
+
 /// The primitive: two children and one divider. One child is **sized**: it
 /// keeps its size, can close against its edge, and is what a divider drag
 /// changes. The other is **main**: it takes whatever is left, so a window
@@ -97,13 +111,17 @@ public struct Split: Sendable, Identifiable, Equatable {
     public var canSwitchSides: Bool
     /// What it leaves when closed, and what drags it (`PaneHandleStyle`).
     public var handle: PaneHandleStyle
+    /// Nil: the ordinary fixed `range`/`defaultSize` behaviour. Set: the
+    /// sized side auto-fits its live content instead (`ContentTracking`).
+    public var contentTracking: ContentTracking?
     public var first: PaneNode
     public var second: PaneNode
 
     public init(_ id: String, _ axis: PaneAxis, sized: PaneSide, size: CGFloat,
                 range: ClosedRange<CGFloat>, collapsible: Bool = true, title: String? = nil,
                 linkedAncestor: String? = nil, canSwitchSides: Bool = true,
-                handle: PaneHandleStyle = .edge, first: PaneNode, second: PaneNode) {
+                handle: PaneHandleStyle = .edge, contentTracking: ContentTracking? = nil,
+                first: PaneNode, second: PaneNode) {
         self.id = id
         self.axis = axis
         self.sized = sized
@@ -114,6 +132,7 @@ public struct Split: Sendable, Identifiable, Equatable {
         self.linkedAncestor = linkedAncestor
         self.canSwitchSides = canSwitchSides && handle == .edge
         self.handle = handle
+        self.contentTracking = contentTracking
         self.first = first
         self.second = second
     }
@@ -165,11 +184,11 @@ public indirect enum PaneNode: Sendable, Equatable {
     public static func split(_ id: String, _ axis: PaneAxis, sized: PaneSide, size: CGFloat,
                              range: ClosedRange<CGFloat>, collapsible: Bool = true, title: String? = nil,
                              linkedAncestor: String? = nil, canSwitchSides: Bool = true,
-                             handle: PaneHandleStyle = .edge,
+                             handle: PaneHandleStyle = .edge, contentTracking: ContentTracking? = nil,
                              _ first: PaneNode, _ second: PaneNode) -> PaneNode {
         .branch(Split(id, axis, sized: sized, size: size, range: range, collapsible: collapsible,
                       title: title, linkedAncestor: linkedAncestor, canSwitchSides: canSwitchSides,
-                      handle: handle, first: first, second: second))
+                      handle: handle, contentTracking: contentTracking, first: first, second: second))
     }
 
     /// A row of three: `main`, which absorbs a window resize, and two more

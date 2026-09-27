@@ -292,4 +292,57 @@ final class PaneLayoutTests: XCTestCase {
         XCTAssertEqual(r.panes["near"]?.width, 260)
         XCTAssertEqual(r.panes["far"]?.width, 200)
     }
+
+    // MARK: Content tracking (`spec/windows.md`, "Its height," 2026-09-26)
+
+    /// A vertical split, "main" on top (the viewer), "bottom" tracking its
+    /// own content underneath (the timeline pane): floor 60, no static
+    /// ceiling worth mentioning (900), main's own minimum 100.
+    let tracked: PaneNode = .split("window", .vertical, sized: .second, size: 60, range: 60...900,
+                                   contentTracking: ContentTracking(mainReserveFraction: 0.5),
+                                   .pane("main", title: "Main", minSize: 100),
+                                   .pane("bottom", title: "Bottom", minSize: 60))
+
+    /// With no stored size, the tracked side is exactly its own content,
+    /// nowhere near the ceiling.
+    func testContentTrackingWithNoStoredSizeIsExactlyItsContent() {
+        let r = PaneLayout.layout(tracked, in: rect, state: PaneKitState(), contentExtent: ["window": 220])
+        XCTAssertEqual(r.panes["bottom"]?.height, 220)
+        XCTAssertEqual(r.panes["main"]?.height, 600 - 1 - 220)
+    }
+
+    /// Content taller than the ceiling (rect is 600 tall; half of that,
+    /// 300, beats main's own 100 minimum, so the ceiling is 600 - 1 - 300 =
+    /// 299): the tracked side stops there, main keeps its half.
+    func testContentTrackingStopsAtTheCeilingWhenContentIsTaller() {
+        let r = PaneLayout.layout(tracked, in: rect, state: PaneKitState(), contentExtent: ["window": 5000])
+        XCTAssertEqual(r.panes["bottom"]?.height, 299)
+        XCTAssertEqual(r.panes["main"]?.height, 300)
+    }
+
+    /// A stored size (a manual drag) is a real floor/ceiling clamp, exactly
+    /// like an ordinary split's — content growing past it doesn't move it.
+    func testContentTrackingWithAStoredSizeIgnoresContent() {
+        var s = PaneKitState()
+        s.splits["window"] = SplitState(size: 150)
+        let r = PaneLayout.layout(tracked, in: rect, state: s, contentExtent: ["window": 5000])
+        XCTAssertEqual(r.panes["bottom"]?.height, 150)
+    }
+
+    /// A stored size above the live ceiling (content shrank after a manual
+    /// drag, or the window did) is clamped down to it too — "only as tall
+    /// as its contents, or smaller."
+    func testContentTrackingClampsAStoredSizeAboveTheCeiling() {
+        var s = PaneKitState()
+        s.splits["window"] = SplitState(size: 400)
+        let r = PaneLayout.layout(tracked, in: rect, state: s, contentExtent: ["window": 5000])
+        XCTAssertEqual(r.panes["bottom"]?.height, 299)
+    }
+
+    /// No content extent supplied yet (first layout pass, before the app's
+    /// measured its view): falls back to `defaultSize`, not zero.
+    func testContentTrackingFallsBackToDefaultSizeWithNoMeasurementYet() {
+        let r = PaneLayout.layout(tracked, in: rect, state: PaneKitState())
+        XCTAssertEqual(r.panes["bottom"]?.height, 60)
+    }
 }
