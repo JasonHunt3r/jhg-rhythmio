@@ -109,9 +109,11 @@ enum ViewerLayout {
     }
 }
 
-/// The three places with a viewer drawer (Jason: all three).
+/// The places with a viewer drawer (Jason: all three), and Edit Slides'
+/// Slide viewer (plan, "Slides as mini movies"), the same drawer showing
+/// the show's own engine rather than files.
 enum ViewerPlace: String {
-    case library, libraryPanel, browser
+    case library, libraryPanel, browser, slides
 
     /// Where its Side by Side / Stack choice is kept.
     var modeKey: String { "viewerMode.\(rawValue)" }

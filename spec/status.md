@@ -94,8 +94,8 @@ chosen yet. In the order they came up:
    stretch; photo_02 + photo_04 alternate; timeline and list selections
    stay in sync. Fixed on the way: Play waited forever with no picture
    on screen (the wait for the first slide's media only ended in
-   `render`; `tick` ends it too now). **Next: step 3, the Slide viewer
-   drawer.**
+   `render`; `tick` ends it too now). **Step 3 built the same day: the
+   Slide viewer drawer** (Y; see the plan).
    **Fixed the same day:** a click on a row in Edit Slides' slide list
    never gave the list the keyboard (true before this work too, on
    `dc7f620`) — the row went grey and ↑/↓ went to the sidebar or the

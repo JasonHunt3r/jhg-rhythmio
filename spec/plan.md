@@ -1357,10 +1357,22 @@ do anything later.
 
 ### Slides as mini movies: Edit Slides' Slide viewer and live timeline (Jason, 2026-09-26) — Building
 
-**Status:** steps 1 (live timeline) and 2 (looping Play of the
-selection, cut to cut) built 2026-09-26. Left: 3, the Slide viewer
-drawer; 4 (maybe), reordering in the viewer; the framework for slides
-with more inside.
+**Status:** steps 1 (live timeline), 2 (looping Play of the selection,
+cut to cut) and 3 (the Slide viewer drawer) built 2026-09-26. Left: 4
+(maybe), reordering in the viewer; the Slide Editor as the drawer's
+pop-out (today it's still its own window, opened by double-click); the
+framework for slides with more inside.
+
+**Step 3 as built:** `ViewerPlace.slides`, its own `PaneController`
+(`AppModel.slidesViewer`), the drawer above the defaults bar with a
+`DrawerGripStrip` under the bar as its handle; **Y** opens and closes it,
+View ▸ Show Viewer acts on it in Edit Slides (Side by Side / Stack are
+off there: it's one picture). It draws the show's own engine
+(`SlideViewer`, a plain `ShowCanvasView`), so it shows exactly what the
+timeline plays; picking a slide while paused puts the playhead on it.
+Checked on a test copy: Y opens it over photo_02, Space plays it
+(Pan and Zoom moving between two screenshots, the clock inside the
+slide's stretch).
 
 Came out of item 33 (the greyed timeline). Jason: a slide is **a length
 of time in a show**, and inside it more can happen — so a slide is a mini

@@ -1,4 +1,5 @@
 import SwiftUI
+import PaneKit
 import ShowToolsCore
 import ShowToolsPlayback
 
@@ -44,7 +45,7 @@ struct ShowView: View {
                 TwoColumns(
                     inspectorShown: $inspectorShown, model: model, panes: model.editSlidesColumns,
                     main: EditSlidesView(show: show, timeline: timeline, selection: selection, mutate: mutate,
-                                         inspectorShown: $inspectorShown),
+                                         inspectorShown: $inspectorShown, engine: session.engine),
                     inspector: SlideInspector(show: show, timeline: timeline, selection: session.selection,
                                               mutate: mutate, close: { inspectorShown = false }))
             case .show:
@@ -114,6 +115,13 @@ struct ShowView: View {
             } else {
                 Player.closeWindows(for: engine)
             }
+        }
+        // Edit Slides, paused: picking a slide puts the playhead on it, so
+        // the Slide viewer shows it. (Playing, the selection loop moves it.)
+        .onChange(of: session.selection) {
+            guard mode == .slides, let engine = session.engine, !engine.isPlaying,
+                  let first = firstSelectedIndex else { return }
+            engine.go(to: first)
         }
         .onDisappear { model.closeShowSession() }
     }
@@ -239,13 +247,31 @@ struct EditSlidesView: View {
     @State private var addingFromCollection = false
     /// Replace Image… (item 8, work order), by the slide it's for.
     @State private var replacingImage: Int64?
+    /// The show's engine (`ShowView` owns it), drawn by the Slide viewer.
+    var engine: PlaybackEngine?
 
     var body: some View {
-        VStack(spacing: 0) {
-            DefaultsBar(show: show, mutate: mutate)
-            Divider()
-            list
-        }
+        // The Slide viewer drawer above the defaults bar, its handle the
+        // grip strip under it — the same drawer as the grids' and the
+        // browser's (`spec/plan.md`, "Slides as mini movies", step 3).
+        let viewer = model.slidesViewer
+        PaneLayoutView(controller: viewer, content: [
+            "viewer": AnyView(SlideViewer(engine: engine)),
+            "grid": AnyView(VStack(spacing: 0) {
+                DefaultsBar(show: show, mutate: mutate)
+                Divider()
+                DrawerGripStrip(controller: viewer, split: ViewerLayout.split)
+                Divider()
+                list
+            }
+            .environment(model)),
+        ])
+        // Y opens and closes it, as in the grids (text fields keep their "y").
+        .background(SingleKeys { event in
+            guard event.charactersIgnoringModifiers?.lowercased() == "y", event.plainModifiers == [] else { return false }
+            viewer.toggle(ViewerLayout.split)
+            return true
+        }.opacity(0).allowsHitTesting(false))
     }
 
     private var list: some View {
@@ -698,6 +724,22 @@ struct TransitionPicker: View {
                 }
                 .labelsHidden().fixedSize()
             }
+        }
+    }
+}
+
+/// Edit Slides' Slide viewer (plan, "Slides as mini movies"): the show's
+/// own engine, drawn plain — what the timeline plays, so Play there loops
+/// the selected slides here. The Slide Editor window is its pop-out, and
+/// carries the inspector; this doesn't, since Edit Slides' inspector
+/// column is already beside it.
+struct SlideViewer: View {
+    let engine: PlaybackEngine?
+
+    var body: some View {
+        ZStack {
+            Color.black
+            if let engine { ShowCanvasView(engine: engine) }
         }
     }
 }

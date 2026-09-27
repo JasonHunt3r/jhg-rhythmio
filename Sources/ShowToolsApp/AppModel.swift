@@ -80,12 +80,14 @@ final class AppModel {
     let libraryViewer = ViewerLayout.controller(.library)
     let libraryPanelViewer = ViewerLayout.controller(.libraryPanel)
     let browserViewer = ViewerLayout.controller(.browser)
+    let slidesViewer = ViewerLayout.controller(.slides)
 
     func viewer(_ place: ViewerPlace) -> PaneController {
         switch place {
         case .library: libraryViewer
         case .libraryPanel: libraryPanelViewer
         case .browser: browserViewer
+        case .slides: slidesViewer
         }
     }
 
@@ -94,7 +96,9 @@ final class AppModel {
     /// up, the Library grid otherwise.
     var activeViewerPlace: ViewerPlace {
         if NSApp.keyWindow is LibraryPanelWindow { return .libraryPanel }
-        return editShowCommands != nil ? .browser : .library
+        guard editShowCommands != nil else { return .library }
+        // The timeline is live in both modes, so its commands don't say which.
+        return UserDefaults.standard.string(forKey: "editMode") == EditMode.slides.rawValue ? .slides : .browser
     }
 
     /// The open show's editing state (`spec/windows.md`, `ShowSession`).

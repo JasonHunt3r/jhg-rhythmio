@@ -150,6 +150,8 @@ struct AppCommands: Commands {
         case .library: $libraryViewerMode
         case .libraryPanel: $panelViewerMode
         case .browser: $browserViewerMode
+        // One picture, the show's own: nothing to switch (the items are off).
+        case .slides: .constant(.sideBySide)
         }
     }
 
@@ -266,6 +268,7 @@ struct AppCommands: Commands {
                     Text("Stack  (⇧Y)").tag(ViewerMode.stack)
                 }
                 .pickerStyle(.inline)
+                .disabled(model.activeViewerPlace == .slides)
             }
             // Item 13: Edit Show's Browser is a drawer now, closing to its
             // own edge handle beside the inspector's (`EditColumnsLayout`).
