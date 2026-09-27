@@ -27,15 +27,22 @@ import AppKit
 /// centered under the *Settings* window's own current bar**
 /// (`TriggeringScreen.swift`, `positionUnderBar(of:)`) — follows Settings
 /// if it's been dragged, rather than recentering on the monitor — never
-/// restoring a previous position of its own.
+/// restoring a previous position of its own. **Titled after the module
+/// it came from** ("Drawer Sensitivity: Set Up Triggers"), passed in by
+/// the caller as `section`.
 @MainActor
 enum SettingsBox {
     private static var open: (panel: NSPanel, delegate: NSWindowDelegate, tokens: [NSObjectProtocol])?
 
-    /// `content` is handed a `dismiss` closure — call it from a Done
-    /// button, or anywhere else inside, to close the box the same way its
-    /// own close button does.
+    /// `section` names the module the box came out of ("Drawer
+    /// Sensitivity," not the tab it happens to sit on) — the window reads
+    /// "Drawer Sensitivity: Set Up Triggers" (Jason, 2026-09-27: "it
+    /// should be the module it came out of," correcting an earlier guess
+    /// that used the tab's own name instead). `content` is handed a
+    /// `dismiss` closure — call it from a Done button, or anywhere else
+    /// inside, to close the box the same way its own close button does.
     static func present<Content: View>(
+        section: String,
         title: String,
         @ViewBuilder content: @escaping (_ dismiss: @escaping () -> Void) -> Content
     ) {
@@ -49,12 +56,7 @@ enum SettingsBox {
             styleMask: [.titled, .closable, .utilityWindow],
             backing: .buffered,
             defer: false)
-        // "Windows: Set Up Triggers," not just "Set Up Triggers" (Jason,
-        // 2026-09-27) — says which tab it came from. Falls back to the
-        // plain title if Settings' own tab name somehow isn't available
-        // (shouldn't happen: this box only ever opens from a button
-        // inside Settings).
-        panel.title = SettingsWindowCoordinator.currentTabName.map { "\($0): \(title)" } ?? title
+        panel.title = "\(section): \(title)"
         panel.isReleasedWhenClosed = false
 
         let dismiss: () -> Void = { panel.close() }

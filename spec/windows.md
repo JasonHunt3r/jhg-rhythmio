@@ -749,19 +749,25 @@ Settings: Library" after clicking that tab, "ShowTools Settings:
 Playback" after that one — the collision is gone too, cosmetically,
 though nothing here depends on that.
 
-**`SettingsBox` titles itself after the tab it came from, same session**:
-Jason: "for the secondary windows use the tab name. eg: Windows: Set Up
-Triggers" — not just "Set Up Triggers" on its own.
-`SettingsWindowCoordinator.currentTabName` reads the tab name back out of
-Settings' own already-formatted title (stripping `"ShowTools Settings: "`
-rather than tracking the selected tab separately — one source of truth,
-not two that could drift); `SettingsBox.present` prefixes whatever title
-it's given with `"<tab>: "` when that's available, falling back to the
-plain title otherwise. Checked with axtool against a scratch library,
-again alongside Jason's own live session (both windows landing at the
-exact same deterministic spot confirmed the earlier positioning fix is
-working for him too) — opening the box from the Windows tab titles it
-"Windows: Set Up Triggers," read directly off the box's own window title.
+**`SettingsBox` titles itself after the tab it came from, same
+session** — first cut: Jason: "for the secondary windows use the tab
+name. eg: Windows: Set Up Triggers." `SettingsWindowCoordinator
+.currentTabName` read the tab name back out of Settings' own
+already-formatted title; `SettingsBox.present` prefixed whatever title
+it's given with `"<tab>: "`. Checked with axtool against a scratch
+library, again alongside Jason's own live session — opened the box from
+the Windows tab, titled "Windows: Set Up Triggers."
+
+**Corrected minutes later**: "it should be the module it came out of, in
+this case Drawer Sensitivity" — the tab (Windows) isn't the same thing as
+the section within it the box actually belongs to (Drawer Sensitivity),
+and nothing about the window it's launched from can name that
+automatically. `currentTabName` came back out; `SettingsBox.present`
+takes an explicit `section` parameter instead, supplied by whoever calls
+it — the Windows tab's "Set Up Triggers…" button passes `"Drawer
+Sensitivity"`. Left open in a scratch test copy (not installed) for
+Jason to check directly rather than described back to him: confirmed the
+header bar reads "Drawer Sensitivity: Set Up Triggers." "It's good."
 
 **Goes in the same pass, in the order Jason chose to take them
 (2026-09-27):**

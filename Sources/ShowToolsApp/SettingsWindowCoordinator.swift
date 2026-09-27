@@ -57,15 +57,6 @@ enum SettingsWindowCoordinator {
     /// relative to wherever Settings currently sits, not the monitor.
     static var window: NSWindow? { settingsWindow }
 
-    /// The selected tab's own name ("Windows," "Library"…), read back out
-    /// of the window's own formatted title rather than tracked separately
-    /// — `SettingsBox` uses it to title itself "Windows: Set Up Triggers"
-    /// (Jason, 2026-09-27), so a box always says which tab it came from.
-    static var currentTabName: String? {
-        guard let title = settingsWindow?.title, title.hasPrefix(titlePrefix) else { return nil }
-        return String(title.dropFirst(titlePrefix.count))
-    }
-
     /// "ShowTools Settings: Windows," not just "Windows" (Jason,
     /// 2026-09-27) — the tabbed `Settings` scene titles its window after
     /// whichever pane is selected, on its own, with no modifier to change

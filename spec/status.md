@@ -92,15 +92,18 @@ notification to hook instead. All four confirmed with axtool against a
 scratch library, no overlap risk this time (Jason's own app wasn't
 running).
 
-**One more, right after**: `SettingsBox` now titles itself after the tab
-it opened from — "Windows: Set Up Triggers," not just "Set Up Triggers."
-`SettingsWindowCoordinator.currentTabName` reads it back out of Settings'
-own formatted title rather than tracking it twice. Confirmed with axtool
-against a scratch library, this time alongside Jason's own live session
+**One more, right after**: `SettingsBox` titles itself — first cut, after
+the tab it opened from ("Windows: Set Up Triggers"), confirmed with
+axtool against a scratch library alongside Jason's own live session
 again (both landed at the exact same deterministic spot, confirming the
-earlier positioning fix holds for him too) — moved the scratch copy far
-enough right that its own controls cleared his window's edge before
-clicking anything.
+earlier positioning fix holds for him too). **Corrected minutes later**:
+"it should be the module it came out of, in this case Drawer
+Sensitivity" — the tab isn't the section. `SettingsBox.present` now takes
+an explicit `section` parameter instead of reading the tab name back out
+of Settings' own title; the Windows tab's button passes `"Drawer
+Sensitivity"`. Left open in a scratch test copy for Jason to check
+directly rather than described back to him: "it's good" — header bar
+reads "Drawer Sensitivity: Set Up Triggers."
 
 **Built earlier the same day (2026-09-27)** — details in `spec/windows.md`,
 "The windows pass," and `spec/panekit.md`, "The clutch"; the story in

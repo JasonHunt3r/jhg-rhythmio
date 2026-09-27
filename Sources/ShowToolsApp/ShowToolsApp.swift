@@ -695,7 +695,7 @@ private struct WindowsSettingsTab: View {
                     .font(.callout)
                     .foregroundStyle(.secondary)
                 Button("Set Up Triggers…") {
-                    SettingsBox.present(title: "Set Up Triggers") { dismiss in
+                    SettingsBox.present(section: "Drawer Sensitivity", title: "Set Up Triggers") { dismiss in
                         TriggerBoundariesBox(dismiss: dismiss)
                     }
                 }

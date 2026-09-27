@@ -112,12 +112,24 @@ kept up across every tab switch by a KVO observation on the window's own
 
 Then, right after: "for the secondary windows use the tab name. eg:
 Windows: Set Up Triggers." `SettingsWindowCoordinator.currentTabName`
-reads the tab name back out of Settings' own already-formatted title
-(stripping the prefix, rather than tracking the selected tab a second
-time, separately), and `SettingsBox.present` prefixes whatever title it's
-given with it. Checked with axtool, again alongside Jason's own live
-session — both landed at the exact same deterministic spot, itself a
-confirmation the positioning fix above holds for his copy too.
+read the tab name back out of Settings' own already-formatted title, and
+`SettingsBox.present` prefixed whatever title it's given with it. Checked
+with axtool, again alongside Jason's own live session — both landed at
+the exact same deterministic spot, itself a confirmation the positioning
+fix above holds for his copy too.
+
+**Corrected minutes later**: "it should be the module it came out of, in
+this case Drawer Sensitivity, sorry!" — the tab (Windows) isn't the
+section the box actually belongs to (Drawer Sensitivity), and nothing
+about which window it's launched from can name that automatically.
+`currentTabName` came back out of `SettingsWindowCoordinator` entirely;
+`SettingsBox.present` takes an explicit `section` parameter instead,
+supplied by the caller — the Windows tab's "Set Up Triggers…" button
+passes `"Drawer Sensitivity"`. Jason: "just make the quick change in a
+test app and leave it open for me to check real quick" — built, launched
+against a scratch library, the box opened and left on screen rather than
+described back to him. "It's good": the header bar reads "Drawer
+Sensitivity: Set Up Triggers."
 
 ## The viewer drawer's own bar, dropped
 
