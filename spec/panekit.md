@@ -257,6 +257,15 @@ the instant jump it had. Every closable split has it, whatever its handle
   dragged back down over the slide list (the list didn't react); pulled
   220 pt from closed, it slipped to 47, engaged, slid to exactly 290 and
   stayed there while the pointer went on.
+- **Next: a sensitivity setting** (Jason, 2026-09-26: "the snapping of
+  the bowstring is a little on the slow side"). From almost instant to
+  today's as the slowest. His idea for the control: something visual to
+  drag — a line inside a box marking the trigger distance. Proposed: a
+  working practice drawer in Settings, the line dragged to set the pull,
+  its handle pulled right there to feel it; a Quick ↔ Smooth slider if
+  the slide's speed wants its own. Belongs in the settings-and-preferences
+  pass. Open: which felt slow — the pull's distance, the slide's speed,
+  or both.
 
 Tests: `PaneClutchTests` (5: the bite and slip, where it engages, the
 resistance and where it shuts, a peek drawn below the minimum, a peek
