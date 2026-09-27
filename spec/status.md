@@ -48,7 +48,9 @@ places), the second app icon, and the grids' tools in the bar. **Reinstalled at
 `f2175dd`**: the sort strip as the drawer's second handle, with its pill
 (since changed: the strip is the only handle — see the viewer drawer below). **Reinstalled at `56f7c63`**: the dark strip as the drawer's only
 handle (a grip strip in the browser), and the v3 app icon. **Reinstalled
-2026-09-26 18:22 at `dc7f620`**: the grid selects on the first click.
+2026-09-26 18:22 at `dc7f620`**: the grid selects on the first click. **Reinstalled
+2026-09-26 19:12 at `66d4982`**: Edit Slides' live timeline, Play looping the
+selected slides, and the slide list taking the keyboard on a click.
 Reinstalling stops the real BGTools instance (`install.sh`'s own quit
 sequence); BGTools wasn't restarted after the 20:28 install. BGTools'
 desktop extension (`BGToolsControls.appex`) was also killed before that
