@@ -110,6 +110,66 @@ never trusting a result-only check. `com.jhg.showtools` backed up with
 import` after; `runningTestLaunches` checked and cleared where a prior
 `pkill` had left a stale entry.
 
+## A pro-style, tabbed Settings window (later the same day)
+
+Jason, looking at the result: "we have a settings default suitable for a
+simple app, but we need to implement a pro style window instead" — tabs
+across the top tried first (a left-side category list is the fallback),
+grouping related settings onto pages, a wider footprint, and probably not
+user-resizable, "unless there's a case for it that I'm not thinking of
+yet." No case came to mind either.
+
+SwiftUI's `Settings` scene recognizes a top-level `TabView` and renders
+it exactly the way System Settings, Mail and Xcode all do — icon tabs in
+a toolbar, the window's title naming the selected pane, reopening on the
+last one used — entirely for free, via a preference key SwiftUI writes
+itself (`com_apple_SwiftUI_Settings_selectedTabIndex`). No custom chrome
+needed building.
+
+Regrouped the eight old sections into six tabs: Library (unchanged),
+Editing (Tags + Collections + Alerts — everyday behaviors), Playback,
+Export, Windows (this pass's own section, and where its remaining pieces
+will land as they're built), BGTools (its own tab — a whole companion
+app, not one setting). Each page shares one container (`SettingsPage`)
+for consistent width, scrolling and the screen-height cap. Width went
+640 (from 520); `.windowResizability(.contentSize)` on the `Settings`
+scene makes it resize itself per tab rather than being dragged by hand.
+
+**This broke the same-day Settings-covering fix, immediately.** The
+title-matching version of `SettingsWindowCoordinator` (built a few hours
+earlier, in this same file) depended on the window's title always
+reading `"ShowTools Settings"` — once tabs exist, the title names
+whichever pane is selected instead (`"Library"`, `"Editing"`…), the
+exact behavior the HIG asks for and the thing making it useful. Retested
+the identical Info-panel-overlap check right after the redesign, out of
+habit rather than assuming the earlier fix still held — it didn't:
+Settings stayed hidden behind Info again, and "Library" as a title now
+also collides with the main window's own title when nothing's selected,
+which would have made the old approach actively wrong, not just stale.
+
+Fixed by dropping window identification by title or timing entirely:
+`WindowAccessor`, an `NSViewRepresentable` whose `updateNSView` reads the
+real `NSWindow` its own hosted `NSView` sits in — a fact about the
+current AppKit view hierarchy, not a snapshot of `NSApp.keyWindow` at
+some SwiftUI lifecycle moment that may or may not align with the actual
+window state. Captured once (the same `NSWindow` persists across tab
+switches; only its title changes) and compared by `ObjectIdentifier`
+from then on, same as the coordinator's very first draft — the fix that
+was actually needed the whole time, once the title turned out to be the
+wrong thing to depend on twice over.
+
+Retested again: Info panel dragged to overlap a reopened Settings
+window — Settings drew on top, confirmed by screenshot. Also checked:
+tab-switching resizes the window (640×450 for Library's longer content,
+narrower for Playback's one toggle), the toolbar icons and labels render
+correctly, and clicking each tab via axtool actually lands on it (one
+practical snag along the way: clicking a coordinate inside the Settings
+window's bounds sometimes hit the *Library* window instead, when Library
+had more recently been made key/frontmost by a previous test step and
+so was topmost there — fixed by reopening Settings from the menu before
+each click rather than trusting `axtool front`, which raises the app,
+not any particular one of its windows).
+
 ## What's left of the windows pass
 
 Four pieces, each flagged in `spec/windows.md` as needing its own

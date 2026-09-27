@@ -25,6 +25,10 @@ struct ShowToolsApp: App {
             SettingsView()
                 .environment(model)
         }
+        // Not user-resizable (Jason, 2026-09-27): every native Mac
+        // preferences window sizes itself to the selected pane instead —
+        // switching tabs changes the window's size on its own.
+        .windowResizability(.contentSize)
 
         // Help ▸ Keyboard Shortcuts (F3): SwiftUI's default Help menu item
         // says help isn't available, which is worse than nothing.
@@ -467,35 +471,73 @@ enum PanelHidingSetting {
     static var isOn: Bool { (UserDefaults.standard.object(forKey: key) as? Bool) ?? true }
 }
 
+/// A tabbed, toolbar-switched window — the "pro" style every other
+/// Mac app's preferences use (System Settings, Mail, Xcode) — rather than
+/// one long scrolling form. Settled with Jason 2026-09-27: tabs across
+/// the top first (a left-side category list is the fallback if a tab row
+/// ever gets too crowded), grouping related settings onto each page.
+/// SwiftUI's `Settings` scene recognizes a top-level `TabView` and renders
+/// it exactly this way natively: icon tabs in the window's toolbar, the
+/// title naming the selected pane, reopening on the last one used — all
+/// for free, matching the HIG's own description of Settings that Claude
+/// read out for the layer-fix discussion a day earlier.
 struct SettingsView: View {
-    @Environment(AppModel.self) private var model
-    @AppStorage(SlideRemovalNotice.suppressKey) private var suppressRemovalNotice = false
-    @AppStorage(PanelHidingSetting.key) private var panelsHideWhenInactive = true
-    @AppStorage(CollectionAddNotice.autoAddKey) private var autoAddToCollection = false
-    @AppStorage(FinderTagsSetting.key) private var writeFinderTags = false
-    @AppStorage(ExportSettings.stripKey) private var stripOnExport = true
-    @AppStorage("showSlideProgress") private var showSlideProgress = true
-    @AppStorage(BGToolsHelper.launchWithShowToolsKey) private var launchBGToolsWithShowTools = false
+    var body: some View {
+        TabView {
+            LibrarySettingsTab()
+                .tabItem { Label("Library", systemImage: "internaldrive") }
+            EditingSettingsTab()
+                .tabItem { Label("Editing", systemImage: "pencil") }
+            PlaybackSettingsTab()
+                .tabItem { Label("Playback", systemImage: "play.rectangle") }
+            ExportSettingsTab()
+                .tabItem { Label("Export", systemImage: "square.and.arrow.up") }
+            WindowsSettingsTab()
+                .tabItem { Label("Windows", systemImage: "macwindow") }
+            BGToolsSettingsTab()
+                .tabItem { Label("BGTools", systemImage: "display") }
+        }
+        .background(WindowAccessor { SettingsWindowCoordinator.captured($0) })
+    }
+}
+
+/// Shared layout for every tab's page: a wider footprint than the old
+/// single scrolling form had room for ("a greedier footprint," Jason,
+/// 2026-09-27) — each page reads more like a real preferences pane, not a
+/// cramped list — still capped under the screen's menu bar and dock
+/// (item 9, `ShowTools Feedback — Worklist for Next CC Session.md`) and
+/// still scrollable if a page ever grows past that. The window itself is
+/// deliberately not user-resizable (`ShowToolsApp.body`'s
+/// `.windowResizability(.contentSize)` on the `Settings` scene): every
+/// native Mac preferences window behaves this way, sizing itself to
+/// whichever pane is selected rather than being dragged by hand: there's
+/// no case yet where a fixed width doesn't fit this content.
+private struct SettingsPage<Content: View>: View {
+    @ViewBuilder var content: Content
+
+    static var width: CGFloat { 640 }
+
+    /// A fixed margin below the visible frame, not the whole screen
+    /// height, so a tall page never touches the menu bar or dock even
+    /// centered.
+    private var maxHeight: CGFloat { (NSScreen.main?.visibleFrame.height ?? 800) - 80 }
 
     var body: some View {
         ScrollView {
-            form
+            Form { content }
+                .formStyle(.grouped)
+                .padding(.bottom, 8)
         }
-        .frame(width: 520)
-        .frame(maxHeight: Self.maxHeight)
+        .frame(width: Self.width)
+        .frame(maxHeight: maxHeight)
     }
+}
 
-    /// Caps the window to fit under the screen's menu bar and dock rather
-    /// than letting the Form grow past the bottom edge (item 9,
-    /// `ShowTools Feedback — Worklist for Next CC Session.md`). A fixed
-    /// margin below the visible frame, not the whole screen height, so it
-    /// never touches the menu bar or dock even centered.
-    private static var maxHeight: CGFloat {
-        (NSScreen.main?.visibleFrame.height ?? 800) - 80
-    }
+private struct LibrarySettingsTab: View {
+    @Environment(AppModel.self) private var model
 
-    private var form: some View {
-        Form {
+    var body: some View {
+        SettingsPage {
             Section("Library") {
                 LabeledContent("Name", value: model.libraryName)
                 LabeledContent("Location") {
@@ -526,6 +568,19 @@ struct SettingsView: View {
                     .font(.callout)
                     .foregroundStyle(.secondary)
             }
+        }
+    }
+}
+
+/// Everyday editing behaviors, grouped together: tags, how a file joins a
+/// show's collection, and the removal notice.
+private struct EditingSettingsTab: View {
+    @AppStorage(FinderTagsSetting.key) private var writeFinderTags = false
+    @AppStorage(CollectionAddNotice.autoAddKey) private var autoAddToCollection = false
+    @AppStorage(SlideRemovalNotice.suppressKey) private var suppressRemovalNotice = false
+
+    var body: some View {
+        SettingsPage {
             Section("Tags") {
                 Toggle("Also write tags as Finder tags", isOn: $writeFinderTags)
                 Text("Tags always live in the library's database, whether or not this is on. With it on, they're also set as macOS Finder tags on the library files themselves.")
@@ -538,20 +593,6 @@ struct SettingsView: View {
                     .font(.callout)
                     .foregroundStyle(.secondary)
             }
-            Section("Export") {
-                Toggle("Strip metadata from exported files", isOn: $stripOnExport)
-                Text(stripOnExport
-                     ? "File ▸ Export Show… removes location, camera, dates and other details from the copies it makes. Audio files keep their title, artist and album; only the buyer's details come off. The files in the library are never changed."
-                     : "Exported copies are exact copies of the library's files, with their location, camera and date still in them.")
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
-            }
-            Section("Playback") {
-                Toggle("Show the slide progress line", isOn: $showSlideProgress)
-                Text("The thin white line along the bottom of the picture that fills through each slide. Also in the viewer's own right-click menu.")
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
-            }
             Section("Alerts") {
                 Toggle("Explain what removing a slide does", isOn: Binding(
                     get: { !suppressRemovalNotice },
@@ -560,18 +601,51 @@ struct SettingsView: View {
                     .font(.callout)
                     .foregroundStyle(.secondary)
             }
-            // Item 21, `ShowTools Feedback — Worklist for Next CC
-            // Session.md`. "Open BGTools at Login" already lives in
-            // BGTools' own window (View ▸ BGTools ▸ Launch BGTools, then
-            // its Settings tab) — this is the separate ask: BGTools
-            // starting alongside ShowTools itself, not just at login.
-            Section("BGTools") {
-                Toggle("Launch BGTools when ShowTools launches", isOn: $launchBGToolsWithShowTools)
-                Text("Starts the desktop background player in the background, without opening its window.")
+        }
+    }
+}
+
+private struct PlaybackSettingsTab: View {
+    @AppStorage("showSlideProgress") private var showSlideProgress = true
+
+    var body: some View {
+        SettingsPage {
+            Section("Playback") {
+                Toggle("Show the slide progress line", isOn: $showSlideProgress)
+                Text("The thin white line along the bottom of the picture that fills through each slide. Also in the viewer's own right-click menu.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
             }
-            // spec/windows.md, "The windows pass," settled 2026-09-26.
+        }
+    }
+}
+
+private struct ExportSettingsTab: View {
+    @AppStorage(ExportSettings.stripKey) private var stripOnExport = true
+
+    var body: some View {
+        SettingsPage {
+            Section("Export") {
+                Toggle("Strip metadata from exported files", isOn: $stripOnExport)
+                Text(stripOnExport
+                     ? "File ▸ Export Show… removes location, camera, dates and other details from the copies it makes. Audio files keep their title, artist and album; only the buyer's details come off. The files in the library are never changed."
+                     : "Exported copies are exact copies of the library's files, with their location, camera and date still in them.")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+            }
+        }
+    }
+}
+
+/// `spec/windows.md`, "The windows pass": grows as the rest of that pass
+/// lands (the drawers' sensitivity setting, light mode's translucency and
+/// a background-transparency setting) — a stable, named home for it
+/// rather than a section sharing a page with something unrelated.
+private struct WindowsSettingsTab: View {
+    @AppStorage(PanelHidingSetting.key) private var panelsHideWhenInactive = true
+
+    var body: some View {
+        SettingsPage {
             Section("Windows") {
                 Toggle("Panels hide when ShowTools isn't frontmost", isOn: $panelsHideWhenInactive)
                 Text("The Info panel, the Rhythm tool and the Slide Editor step out of the way when you switch to another app, like an ordinary panel. The library panel never hides, even with this off — it's where files dragged from Finder land.")
@@ -579,8 +653,27 @@ struct SettingsView: View {
                     .foregroundStyle(.secondary)
             }
         }
-        .formStyle(.grouped)
-        .padding(.bottom, 8)
+    }
+}
+
+/// Item 21, `ShowTools Feedback — Worklist for Next CC Session.md`.
+/// "Open BGTools at Login" already lives in BGTools' own window (View ▸
+/// BGTools ▸ Launch BGTools, then its Settings tab) — this is the
+/// separate ask: BGTools starting alongside ShowTools itself, not just at
+/// login. Its own tab since BGTools is a whole companion app, not one
+/// setting among others.
+private struct BGToolsSettingsTab: View {
+    @AppStorage(BGToolsHelper.launchWithShowToolsKey) private var launchBGToolsWithShowTools = false
+
+    var body: some View {
+        SettingsPage {
+            Section("BGTools") {
+                Toggle("Launch BGTools when ShowTools launches", isOn: $launchBGToolsWithShowTools)
+                Text("Starts the desktop background player in the background, without opening its window.")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+            }
+        }
     }
 }
 

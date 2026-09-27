@@ -463,32 +463,76 @@ an ordinary window.
   item exists to fix.
 - **Settings, opened from the menu or its key, comes up frontmost, and
   panels stop covering it.** Built as `SettingsWindowCoordinator`: every
-  hand-built panel registers itself; whenever a window whose title matches
-  `"<app name> Settings"` becomes key, every registered panel drops to
-  `.normal` (stepping aside without losing `hidesOnDeactivate`'s own
-  state), and returns to `.floating` (if the app's still active) once
-  Settings resigns key. Settings itself stays an ordinary window, per
-  Apple's own guidance (Claude's recommendation, accepted): it can still
-  go behind another window on request, unlike a permanently-floating one.
-  **A first version matched the window by capturing `NSApp.keyWindow`
-  from `SettingsView.onAppear`** — wrong, the same class of timing gotcha
-  `UndoMenuState` already documents in this file for `NSApp.keyWindow`:
-  `.onAppear` isn't guaranteed to fire after the window's actually become
-  key, so it silently captured the *previous* key window instead, and
-  panels never moved. Found with a real Info panel dragged to overlap a
-  reopened Settings window — it stayed on top regardless; matching by
-  title, checked fresh at each key-window change instead of captured
-  once, fixed it, confirmed the same way. **Scoped to this app's own
-  panels** — PaneKit's own pop-outs (the Inspector, the Timeline window)
-  aren't covered, since giving PaneKit a dependency on ShowToolsApp's
-  Settings window wants a cleaner cross-package hook than this pass
-  builds; worth a follow-up if it turns out to matter.
+  hand-built panel registers itself; whenever the Settings window becomes
+  key, every registered panel drops to `.normal` (stepping aside without
+  losing `hidesOnDeactivate`'s own state), and returns to `.floating` (if
+  the app's still active) once Settings resigns key. Settings itself
+  stays an ordinary window, per Apple's own guidance (Claude's
+  recommendation, accepted): it can still go behind another window on
+  request, unlike a permanently-floating one. **Two wrong versions before
+  this one, both found by testing, not assumed correct from a clean
+  build:** first, capturing `NSApp.keyWindow` from `SettingsView
+  .onAppear` — wrong, the same class of timing gotcha `UndoMenuState`
+  already documents in this file for `NSApp.keyWindow`: `.onAppear` isn't
+  guaranteed to fire after the window's actually become key, so it
+  silently captured the *previous* key window instead. Then, matching by
+  title (`"<app name> Settings"`, what SwiftUI titled the window before
+  it had tabs) — broke the moment Settings became a `TabView`
+  (2026-09-27, below): the title now names whichever pane is selected,
+  and "Library" collides with the main window's own title. Both found the
+  same way: a real Info panel dragged to overlap a reopened Settings
+  window, watched with screenshots — it stayed on top both times. Settled
+  on `WindowAccessor`, an `NSViewRepresentable` that reads the actual
+  `NSWindow` a hosted view sits in directly from AppKit, no guessing from
+  timing or title at all; the window is captured once (a stable identity,
+  even though its title keeps changing) and compared thereafter. **Scoped
+  to this app's own panels** — PaneKit's own pop-outs (the Inspector, the
+  Timeline window) aren't covered, since giving PaneKit a dependency on
+  ShowToolsApp's Settings window wants a cleaner cross-package hook than
+  this pass builds; worth a follow-up if it turns out to matter.
 - **About ShowTools** in the app menu — already there. SwiftUI's own
   default app menu provides it for free (confirmed with axtool: "About
   ShowTools" sits right above "Settings…," exactly where you'd expect);
   nothing to build. "Install BGTools" (this doc's own guess at where it
   might live) doesn't exist as a menu item either — the BGTools menu's
   only item today is "Desktop Show…".
+
+**A pro-style, tabbed Settings window — built 2026-09-27.** Jason: the
+single scrolling form was "a settings default suitable for a simple app";
+wanted a pro one instead, tabs across the top tried first (a left-side
+category list is the fallback if a tab row ever gets crowded), grouping
+related settings onto each page, and a wider footprint. SwiftUI's
+`Settings` scene recognizes a top-level `TabView` and renders it exactly
+the way every other Mac app's preferences do — icon tabs in the window's
+toolbar, the title naming the selected pane, reopening on the last one
+used (`com_apple_SwiftUI_Settings_selectedTabIndex`, its own new
+preference key, entirely free) — matching the HIG language already read
+out for the layer-fix discussion a day earlier, so no chrome had to be
+hand-built.
+
+The old sections became six tabs (`SettingsView`, `ShowToolsApp.swift`):
+**Library** (its own section, unchanged), **Editing** (Tags, Collections,
+Alerts — everyday behaviors while working in the library), **Playback**,
+**Export**, **Windows** (this pass's own new section, and where the rest
+of the windows pass will land), **BGTools** (its own tab since it's a
+whole companion app, not one setting among others). Each page is
+`SettingsPage`, a shared scrollable container capped under the screen's
+menu bar and dock, at a wider fixed width (640, up from 520). The window
+itself is deliberately not user-resizable
+(`.windowResizability(.contentSize)` on the `Settings` scene, Jason: "no
+case yet where I'm not thinking of it") — every native Mac preferences
+window sizes itself to the selected pane instead of being dragged by
+hand, and switching tabs now visibly resizes the window on its own,
+confirmed with axtool (640×450 for Library, narrower pages shrinking to
+fit their own shorter content).
+
+**Broke, then fixed, the Settings-covering fix above.** Tabs mean the
+window's title now names the selected pane instead of staying "ShowTools
+Settings" — exactly what defeated the title-matching version of
+`SettingsWindowCoordinator`, found immediately by rerunning the same
+Info-panel-overlap check after the redesign. `WindowAccessor` (above) is
+what replaced it, and is unaffected by the title changing per tab, since
+it identifies the window itself, not what it's currently called.
 
 **Still open, needs its own discussion before any code:**
 - **A settings-and-preferences pass:** define which is which, and

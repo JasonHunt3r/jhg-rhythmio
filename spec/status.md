@@ -38,13 +38,19 @@ to `Library.sqlite.v<N>.bak`.
 **Built most recently (2026-09-27)** — details in `spec/windows.md`, "The
 windows pass," the story in `spec/history/2026-09-27-windows-pass.md`:
 three of its six pieces: **panel-hiding as a setting** (`PanelHidingSetting`,
-a new "Windows" section in Settings; the library panel's own exception
-now explicit, not an accident of `NSPanel`'s default), **Settings no
-longer covered by a floating panel** (`SettingsWindowCoordinator`, scoped
-to this app's own panels, not PaneKit's pop-outs), and **About ShowTools**
-(already there for free, nothing to build). Left: the
-settings-vs-preferences split, the drawers' sensitivity setting, light
-mode's translucency, and Smart View — each wants its own discussion.
+a new "Windows" tab; the library panel's own exception now explicit, not
+an accident of `NSPanel`'s default), **Settings no longer covered by a
+floating panel** (`SettingsWindowCoordinator`, scoped to this app's own
+panels, not PaneKit's pop-outs — its window found by `WindowAccessor`
+after two wrong tries), and **About ShowTools** (already there for free,
+nothing to build). **Settings is also a pro-style tabbed window now**
+(Jason: tabs across the top, wider, not user-resizable): six tabs
+(Library, Editing, Playback, Export, Windows, BGTools), 640 pt wide,
+`.windowResizability(.contentSize)` — SwiftUI's own `Settings` +
+`TabView` gives the native toolbar-pane look for free. Left of the
+windows pass: the settings-vs-preferences split, the drawers' sensitivity
+setting, light mode's translucency, and Smart View — each wants its own
+discussion.
 
 **Built 2026-09-26** — details in the specs, the story in
 `spec/history/2026-09-26-slides-and-the-clutch.md` and
@@ -182,16 +188,20 @@ Not pressing; each wants a discussion or a plan before any code.
 
 ## Still needs Jason's hands
 
-- **The windows pass's three settled pieces** (built 2026-09-27,
-  `spec/windows.md`, "The windows pass"): the panel-hiding setting and the
-  Settings-covering fix were both confirmed with axtool (a real Info
-  panel dragged to overlap a reopened Settings window, checked before and
-  after the fix — it stayed on top, then didn't), but the *feel* of it —
-  whether panels stepping aside from Settings and back reads as natural
-  rather than jumpy, and whether the new Settings toggle's wording is
-  clear — wants a real look. Also worth trying: opening Settings while
-  the Rhythm tool or the Slide Editor (not just Info) is open and
-  overlapping it.
+- **The windows pass's three settled pieces, and the tabbed Settings
+  redesign** (built 2026-09-27, `spec/windows.md`, "The windows pass"):
+  the panel-hiding setting and the Settings-covering fix were both
+  confirmed with axtool (a real Info panel dragged to overlap a reopened
+  Settings window, checked before and after each of two fix attempts —
+  it stayed on top, then didn't), and the tab switcher, its icons, the
+  window resizing per tab, and reopening on the last tab used were all
+  checked the same way. But the *feel* of it — whether panels stepping
+  aside from Settings and back reads as natural rather than jumpy,
+  whether six tabs is the right number or some belong together, whether
+  the tab icons read clearly at a glance, and whether the new Settings
+  toggle's wording is clear — wants a real look. Also worth trying:
+  opening Settings while the Rhythm tool or the Slide Editor (not just
+  Info) is open and overlapping it.
 - **The browser header's wider switch** (built 2026-09-26,
   `spec/plan.md`, "the browser filter"): opens "Other Collections,"
   switches, filters and switches back correctly with axtool against a
