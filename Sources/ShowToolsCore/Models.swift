@@ -416,6 +416,12 @@ public struct ShowEditorState: Codable, Hashable, Sendable {
     /// state, not part of the show itself, so it rides along with the rest
     /// of the editor state rather than its own schema column.
     public var browserGroupID: Int64?
+    /// The browser's collection switch (item 38, `spec/status.md`, "What's
+    /// next"): a transient view choice, exactly like `browserGroupID` —
+    /// which collection's files the browser lists, never which collection
+    /// the show itself belongs to (`Show.collectionID`, untouched). Nil:
+    /// the show's own collection, as always.
+    public var browserCollectionID: Int64?
 
     public init() {}
 
@@ -435,6 +441,7 @@ public struct ShowEditorState: Codable, Hashable, Sendable {
         rangeInLine = get(.rangeInLine, true)
         rangeOutLine = get(.rangeOutLine, true)
         browserGroupID = (try? c.decodeIfPresent(Int64.self, forKey: .browserGroupID)) ?? nil
+        browserCollectionID = (try? c.decodeIfPresent(Int64.self, forKey: .browserCollectionID)) ?? nil
     }
 }
 

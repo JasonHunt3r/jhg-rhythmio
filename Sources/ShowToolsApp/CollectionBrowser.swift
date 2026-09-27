@@ -70,13 +70,25 @@ struct CollectionBrowser: View {
         }
     }
 
+    /// The show's own collection (`Show.collectionID`) — never changed by
+    /// the browser's switcher, only by whatever actually reassigns a show.
     private var collection: MediaCollection? { show.collectionID.flatMap(model.collection) }
+    /// The collection the browser is actually listing (item 38's wider
+    /// switch, `spec/status.md`, "What's next"): the show's own by
+    /// default, or another one picked from the header — a transient view
+    /// choice like `groupFilter`, saved with the show's editor state but
+    /// never touching which collection the show belongs to. Falls back to
+    /// the show's own if the picked one's gone (deleted since).
+    private var browsingCollection: MediaCollection? {
+        show.editor.browserCollectionID.flatMap(model.collection) ?? collection
+    }
     /// The browser's group filter (plan, "Groups inside collections"): view
-    /// state, saved with the show's editor state, not undoable. Ignored if
-    /// it names a group from some other collection (the show's collection
+    /// state, saved with the show's editor state, not undoable. Scoped to
+    /// `browsingCollection`, not necessarily the show's own — ignored if it
+    /// names a group from some other collection (the browsed collection
     /// changed since it was set).
     private var groupFilter: MediaGroup? {
-        guard let id = show.editor.browserGroupID, let g = model.group(id), g.collectionID == collection?.id
+        guard let id = show.editor.browserGroupID, let g = model.group(id), g.collectionID == browsingCollection?.id
         else { return nil }
         return g
     }
@@ -122,9 +134,13 @@ struct CollectionBrowser: View {
             && Rating.Filter.matches(item.rating, filter: minRating)
     }
 
-    /// The show's uses of this collection's files, in order of appearance.
+    /// The show's uses of the browsed collection's files, in order of
+    /// appearance. Browsing a collection other than the show's own
+    /// (item 38) narrows this to whichever of the show's uses happen to
+    /// also be in that collection — most of the time none, since a show's
+    /// slides usually all come from its own collection.
     private var usedEntries: [Use] {
-        guard use != .unused, let c = collection else { return [] }
+        guard use != .unused, let c = browsingCollection else { return [] }
         let inCollection = Set(c.itemIDs)
         let inGroup = groupFilter.map { Set($0.itemIDs) }
         return uses.filter { inCollection.contains($0.item.id) && (inGroup?.contains($0.item.id) ?? true) && passes($0.item) }
@@ -133,9 +149,9 @@ struct CollectionBrowser: View {
     /// The show's files, once each, in the order they first appear.
     private var usedFiles: [MediaItem] { usedEntries.filter { $0.number == 1 }.map(\.item) }
 
-    /// The rest of the collection, in the order the files were added.
+    /// The rest of the browsed collection, in the order the files were added.
     private var unusedFiles: [MediaItem] {
-        guard use != .used, let c = collection else { return [] }
+        guard use != .used, let c = browsingCollection else { return [] }
         let used = used
         let inGroup = groupFilter.map { Set($0.itemIDs) }
         return c.itemIDs.filter { !used.contains($0) && (inGroup?.contains($0) ?? true) }
@@ -231,36 +247,56 @@ struct CollectionBrowser: View {
         .padding(.horizontal, 10).padding(.vertical, 8)
     }
 
-    /// The header, which of this collection's lists the browser is
-    /// showing (item 38, `spec/status.md`, "What's next": "the browser's
-    /// header as a switcher... clicked, a dropdown of which list to
-    /// show" — the worklist's own "Collections list column dropdown,"
-    /// narrowed by Jason, 2026-09-26, to the show's own collection and
-    /// its groups; a wider collection-to-collection switch is a bigger
-    /// design question, left for later). Promotes the old, separate
-    /// `groupFilterMenu` folder-icon control into the title itself
-    /// ("A show can draw from a group: the browser gets a drop-down in
-    /// its title to filter by group," plan, decided) rather than keeping
-    /// both a name and a filter control side by side. Plain text, no
-    /// menu, when the collection has no groups: there's nothing to
-    /// switch to.
+    /// The header, which list the browser is showing (item 38,
+    /// `spec/status.md`, "What's next": "the browser's header as a
+    /// switcher... clicked, a dropdown of which list to show" — the
+    /// worklist's own "Collections list column dropdown"). Built in two
+    /// passes, both 2026-09-26: first the show's own collection and its
+    /// groups (promoting the old, separate `groupFilterMenu` folder-icon
+    /// control into the title itself — "A show can draw from a group: the
+    /// browser gets a drop-down in its title to filter by group," plan,
+    /// decided); then every other collection in the library too, under
+    /// "Other Collections" — a transient view switch, like the group
+    /// filter (`browsingCollection`): it changes what the browser lists,
+    /// never which collection the show itself belongs to
+    /// (`Show.collectionID`, decided with Jason rather than guessed, since
+    /// the other reading — rebinding the show — would have made this an
+    /// undoable edit instead of a view choice). Plain text, no menu, when
+    /// there's nothing to switch to (no groups and no other collections).
     @ViewBuilder private var collectionSwitcher: some View {
         if let c = collection {
-            let groups = model.groups(inCollection: c.id)
-            if groups.isEmpty {
+            let browsing = browsingCollection ?? c
+            let groups = model.groups(inCollection: browsing.id)
+            let others = model.collections.filter { $0.id != browsing.id }
+            if groups.isEmpty && others.isEmpty {
                 Image(systemName: "rectangle.stack").foregroundStyle(.secondary)
-                Text(c.name).fontWeight(.semibold).lineLimit(1).truncationMode(.middle)
+                Text(browsing.name).fontWeight(.semibold).lineLimit(1).truncationMode(.middle)
             } else {
                 Menu {
-                    Button(c.name) { engine.updateEditor { $0.browserGroupID = nil } }
-                    Divider()
-                    ForEach(groups) { g in
-                        Button(g.name) { engine.updateEditor { $0.browserGroupID = g.id } }
+                    Button(browsing.name) { engine.updateEditor { $0.browserGroupID = nil } }
+                    if !groups.isEmpty {
+                        Divider()
+                        ForEach(groups) { g in
+                            Button(g.name) { engine.updateEditor { $0.browserGroupID = g.id } }
+                        }
+                    }
+                    if !others.isEmpty {
+                        Divider()
+                        Menu("Other Collections") {
+                            ForEach(others) { other in
+                                Button(other.name) {
+                                    engine.updateEditor {
+                                        $0.browserCollectionID = other.id == c.id ? nil : other.id
+                                        $0.browserGroupID = nil
+                                    }
+                                }
+                            }
+                        }
                     }
                 } label: {
                     HStack(spacing: 4) {
                         Image(systemName: groupFilter != nil ? "folder" : "rectangle.stack")
-                        Text(groupFilter?.name ?? c.name)
+                        Text(groupFilter?.name ?? browsing.name)
                             .fontWeight(.semibold).lineLimit(1).truncationMode(.middle)
                         Image(systemName: "chevron.down").font(.caption2).foregroundStyle(.secondary)
                     }
@@ -268,7 +304,7 @@ struct CollectionBrowser: View {
                 .menuStyle(.borderlessButton)
                 .fixedSize()
                 .foregroundStyle(.primary)
-                .help("Switch which of this collection's groups the browser shows")
+                .help("Switch which list the browser shows")
             }
         } else {
             Image(systemName: "rectangle.stack").foregroundStyle(.secondary)

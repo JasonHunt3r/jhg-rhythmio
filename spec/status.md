@@ -46,14 +46,18 @@ to `Library.sqlite.v<N>.bak`.
   rows scrolling instead of clipping. Checked at full size (identical to
   before) and shrunk via a direct preference write (clips cleanly, no
   corruption); not yet by a real drag or scroll gesture.
-- **The browser's header is a switcher** (item 38, `spec/plan.md`, "the
-  browser filter"): a click now shows and switches which of the show's
-  own collection's lists the browser shows — the collection itself, or
-  one of its groups — folding the old, separate folder-icon filter
-  control into the title itself. Checked with axtool against a scratch
-  library with a seeded group: opens, lists both, switches, filters.
-  Scoped with Jason to the show's own collection and its groups, not a
-  wider collection-to-collection switch.
+- **The browser's header is a switcher, both scopes** (item 38,
+  `spec/plan.md`, "the browser filter"): a click shows and switches which
+  list the browser shows — the show's own collection, one of its groups,
+  or (built the same day, once Jason settled it as a transient view
+  choice, not a rebind of the show) any other collection in the library
+  under "Other Collections" — folding the old, separate folder-icon
+  filter control into the title itself. `ShowEditorState
+  .browserCollectionID`, additive. Checked with axtool against a scratch
+  library with a seeded group and a second collection: opens, lists all
+  three, switches, filters "In this show" to the intersection when
+  browsing an unrelated collection, and switching back restores the show's
+  own full list — the sidebar's own collection membership never moves.
 - **Edit Slides plays** (`spec/plan.md`, "Slides as mini movies", steps
   1–3): its timeline is live, Play loops the selected slides cut to cut,
   and the **Slide viewer** drawer (Y) shows the picture. A click in the
@@ -103,7 +107,8 @@ No next task is chosen. Open, roughly in the order Jason raised them:
 5. **Large libraries** (item 36): scroll-scrubbing gets ahead of image
    loading. Measure once Jason sets up a big test library.
 6. ~~**The browser's header as a switcher**~~ (item 38) — **built
-   2026-09-26**, scoped to the show's own collection and its groups.
+   2026-09-26, both scopes**: the show's own collection and its groups,
+   then every other collection in the library too.
 7. **BGTools, items 23–25** (`spec/bgtools.md`, "Next up"): the one-click
    Control Center tile and its icon; per-screen stop — **both** the green
    switch and "Plays Nothing" (decided); Pan and Zoom, length and
@@ -163,6 +168,15 @@ Not pressing; each wants a discussion or a plan before any code.
 
 ## Still needs Jason's hands
 
+- **The browser header's wider switch** (built 2026-09-26,
+  `spec/plan.md`, "the browser filter"): opens "Other Collections,"
+  switches, filters and switches back correctly with axtool against a
+  scratch library, but never confirmed by a real click. Worth a look:
+  whether narrowing "In this show" to the intersection (usually empty,
+  browsing an unrelated collection) reads as useful or confusing in
+  practice — the alternative (always show the show's real uses,
+  regardless of which collection is being browsed) wasn't asked about
+  specifically.
 - **The timeline pane's new height, both halves** (built 2026-09-26,
   `spec/windows.md` "Its height," `spec/panekit.md`'s new
   `contentTracking` mechanism, `StorylineView.rowsScrollView`): pinned by

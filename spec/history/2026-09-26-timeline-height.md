@@ -148,17 +148,48 @@ unrelated frame-strip drawer, not reproduced and left no trace in
 of this is flagged in `spec/status.md`, "Still needs Jason's hands,"
 rather than claimed as verified.
 
-## Item C: the wider browser collection switch — not built
+## Item C: the wider browser collection switch — built
 
 The third leftover, extending the browser header's switcher (item 38,
 already built to the show's own collection and its groups) to every
-collection in the library, needs a real decision first: does picking a
+collection in the library, needed a real decision first: does picking a
 different collection there change `show.collectionID` — a real,
 undoable edit to which collection the show belongs to — or is it a
 transient, view-only filter that doesn't touch the show at all?
-`spec/anatomy.md` currently defines the Browser as "the show's
-collection, uses first," which the second reading would break. Asked
-Jason rather than guess; not yet answered, so not built.
+`spec/anatomy.md` defines the Browser as "the show's collection, uses
+first," which the second reading complicates. Asked Jason rather than
+guess: he chose the transient filter, exactly like the existing group
+filter.
+
+Built: `ShowEditorState.browserCollectionID` (additive, nil meaning the
+show's own collection — same persistence as `browserGroupID`, saved with
+the show, no undo step); `CollectionBrowser.browsingCollection` reads it,
+falling back to the show's own if the picked collection's gone. Every
+place that filtered by `collection` (the show's own — kept as its own
+property, since it's still what the browser's *default* and the group
+filter's own collection-mismatch guard need) now reads
+`browsingCollection` instead: `usedEntries`, `unusedFiles`, `groupFilter`,
+and the header's own menu (now listing the browsed collection's groups,
+plus every other collection under "Other Collections"). Browsing a
+collection other than the show's own narrows "In this show" to the
+intersection of the show's real uses and that collection's membership —
+usually empty, since a show's slides normally all come from its own
+collection; flagged in `spec/status.md` as worth Jason's own read, since
+the alternative (always show the real uses regardless of what's browsed)
+wasn't asked about specifically.
+
+**Checked** with axtool against the same scratch library, a second
+collection seeded (`sqlite3`, two files shared with the show, app quit
+first): the header's menu lists "Second Collection" under "Other
+Collections"; picking it relabels the header, updates the count, and
+narrows "In this show" to exactly the two shared files; picking "Untitled
+Collection" back restores the full list. The sidebar's own collection
+membership never moved throughout — confirming the transient reading
+holds. `swift build` clean, `swift test`: 336 core tests unchanged.
+Test copies quit cleanly each time; `com.jhg.showtools` backed up before
+and diffed clean after, both sessions (the second run's backup also
+caught and cleared a stale `runningTestLaunches` entry from the first).
+Not confirmed by a real click.
 
 ## Item 38: the browser's header as a switcher
 

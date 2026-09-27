@@ -1084,15 +1084,44 @@ First built as a separate folder-icon control beside the plain title;
 switcher," item 38) folded it into the title itself — a click shows which
 list the browser is showing (the collection or a group) and switches
 among them, rather than a name and a filter control side by side
-(`CollectionBrowser.collectionSwitcher`). Scoped with Jason to the show's
-own collection and its groups, not a wider collection-to-collection
-switch, which is a bigger design question left for later. The choice lives in `ShowEditorState.
+(`CollectionBrowser.collectionSwitcher`). First scoped with Jason to the
+show's own collection and its groups; the wider collection-to-collection
+switch built the same day, once he'd settled the design question it
+raised (below). The choice lives in `ShowEditorState.
 browserGroupID` — new field, additive decode like every other field in
 that struct — ignored if it names a group from a different collection
 than the show now has (its own collection changed since it was set,
 rather than crashing or showing the wrong group). Set through
 `engine.updateEditor`, so — like the range, loop and line toggles it
 sits beside — it's saved but never an undo step.
+
+**Built 2026-09-26, the wider switch:** the header's menu now lists every
+other collection in the library too, under "Other Collections"
+(`CollectionBrowser.collectionSwitcher`). Before building it, asked
+Jason the question `spec/windows.md`'s "What's known" left open: does
+picking a different collection there **rebind** the show
+(`Show.collectionID`, a real undoable edit) or just **change what the
+browser lists**, leaving the show's own collection untouched? He chose
+the second — a transient view choice, exactly like the group filter, not
+an edit to the show at all. `ShowEditorState.browserCollectionID`
+(additive, nil meaning the show's own collection) carries it, same
+persistence rules as `browserGroupID` (saved with the show, no undo
+step); `CollectionBrowser.browsingCollection` is the collection actually
+listed (the show's own, or the picked one), and `usedEntries`/
+`unusedFiles` and `groupFilter` all read it instead of `collection`
+(the show's own, kept as its own property for whatever still needs that
+specific meaning). Browsing a collection other than the show's own
+narrows "In this show" to whichever of the show's real uses happen to
+also sit in that collection — usually none, since a show's slides
+normally all come from its own collection; that's the honest
+consequence of "In this show" meaning uses, not membership, once the two
+collections can differ. Checked with axtool against a scratch library
+seeded with a second collection sharing two files with the show: the
+switcher lists it under "Other Collections," picking it relabels the
+header and narrows "In this show" to exactly those two files, and
+switching back to the show's own collection restores the full list —
+the sidebar's own collection membership never moved. Not confirmed by a
+real click.
 
 The name clash is fully resolved: "Group Similar" is "**Find Similar
 Images**" everywhere user-facing (the toolbar button's tooltip; doc
