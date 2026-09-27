@@ -250,10 +250,30 @@ panel dropped behind Finder once inactive, and reactivating ShowTools
 window — the "as a package" behavior asked for. `swift build` clean,
 `swift test`: 336 core tests unchanged throughout both fixes.
 
-## What's left of the windows pass
+## Next steps (Jason, closing this session)
 
-Two pieces, each flagged in `spec/windows.md` as needing its own
-discussion before any code: light mode's translucency and a
-background-transparency setting, and the "Smart View" preference. The
-sensitivity dials themselves are built but unturned — Jason's own hands,
-not a discussion.
+In order:
+
+1. **Adjust the new module** — the drawer-sensitivity setting built
+   above. His own hands, by feel: drag the engage line, pull the
+   practice drawer, try the Quick ↔ Smooth slider, see what needs
+   changing (a dial's default, the control's own range, wording). Not a
+   discussion — a build follow-up once he's tried it.
+2. **Discuss how to implement the transparency settings** — light mode's
+   translucency and a window-background transparency setting (item 34,
+   "light mode is awful," `spec/windows.md`'s "Goes in the same pass").
+   No design exists yet; this is the conversation that produces one,
+   before any code.
+3. **Flesh out Smart View** — today it's one paragraph
+   (`spec/plan.md`, "Slides as mini movies": on by default, panes open
+   and close by context; off, each place remembers its own choices).
+   Needs turning into an actual plan — which panes, what "by context"
+   means precisely, how the per-place remembered choices are stored —
+   before it's buildable.
+
+Both 2 and 3 are conversations to have, not scoped work waiting on a
+decision already made — unlike everything built this session, which
+started from something Jason had already settled (a setting to build, a
+control to wire up, a bug to fix once found). Recorded here and in
+`spec/status.md`'s "What's next" so the next session picks up in this
+order without re-deriving it.

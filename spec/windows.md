@@ -566,15 +566,18 @@ preferences distinction, if one turns out to matter later, and today
 nothing in it is document-specific (a show's own settings stay in its
 inspector, a library's in its Info, same as always).
 
-**Goes in the same pass:**
-- ~~The drawers' sensitivity setting with its practice drawer~~ — **built
-  2026-09-27**, in the Windows tab (`spec/panekit.md`, "The clutch," has
-  the story and what's left: Jason's own tuning).
-- Light mode's translucency and a window-background transparency setting
-  (item 34, Jason: light mode "is awful").
-- The "Smart View" preference (panes open and close by context — on by
-  default — or keep your own choices; `spec/plan.md`, "Slides as mini
-  movies").
+**Goes in the same pass, in the order Jason chose to take them
+(2026-09-27):**
+1. ~~The drawers' sensitivity setting with its practice drawer~~ — **built
+   2026-09-27**, in the Windows tab (`spec/panekit.md`, "The clutch," has
+   the story and what's left: Jason's own tuning by feel — next).
+2. Light mode's translucency and a window-background transparency setting
+   (item 34, Jason: light mode "is awful") — **a discussion, not yet
+   had**, on how to build it.
+3. The "Smart View" preference (panes open and close by context — on by
+   default — or keep your own choices; `spec/plan.md`, "Slides as mini
+   movies") — **wants fleshing out**: today it's a one-paragraph sketch,
+   not a build plan.
 
 ## Filling a new collection: the problem the library panel solves
 

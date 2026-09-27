@@ -109,7 +109,12 @@ untouched.
 
 ## What's next
 
-No next task is chosen. Open, roughly in the order Jason raised them:
+**Chosen, in order (Jason, 2026-09-27):** adjust the drawer-sensitivity
+module (his own hands, by feel — see "Still needs Jason's hands"), then
+discuss how to build light mode's translucency and a
+background-transparency setting, then flesh out the "Smart View"
+preference. The rest below is open, not next, roughly in the order Jason
+raised them:
 
 1. ~~**The timeline's height**~~ (`spec/windows.md`, "Its height") —
    **built 2026-09-26, both halves**, including vertical row-scrolling in
@@ -124,10 +129,10 @@ No next task is chosen. Open, roughly in the order Jason raised them:
    by a floating panel, About ShowTools (already there for free), a
    pro-style tabbed Settings window, and the drawers' sensitivity setting
    with its practice drawer. The settings-vs-preferences split turned out
-   moot. Left: **light mode's translucency and a background-transparency
-   setting** (item 34), the **"Smart View"** preference — each still
-   wants its own discussion — and Jason's own tuning of the sensitivity
-   dials by feel.
+   moot. Left, in the order Jason chose to take them: his own tuning of
+   the sensitivity dials by feel; then a discussion (not yet had) on how
+   to build **light mode's translucency and a background-transparency
+   setting** (item 34); then fleshing out the **"Smart View"** preference.
 3. **Slides as mini movies, the rest** (`spec/plan.md`): the Slide Editor
    as the Slide viewer's pop-out, maybe reordering in the viewer, and the
    framework for slides with more inside (portrait shots filling a
