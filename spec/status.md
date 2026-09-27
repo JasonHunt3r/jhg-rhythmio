@@ -327,6 +327,21 @@ Not pressing; each wants a discussion or a plan before any code.
   during this whole rework — his earlier tint experiment (red, ~89%) was
   still live on the Inspector panel in his session, since nothing had been
   reinstalled yet. Resolved once the new build installed.
+
+  **The Catalog itself, same day**: Library and Collections are pinned at
+  the top (`libraryList`'s own `.safeAreaInset`, not a `List` row any
+  more — `libraryRow`, with its own manual selection highlight), the
+  three Catalog bars carry `ScrollBarBackground.sidebar`
+  (`.behindWindow`). **Settled, not left open**: Jason asked for the
+  grid's own dramatic `.withinWindow` look on these bars too, matching
+  Notes' toolbar; measured that `.withinWindow` never composites over a
+  `List`'s `NSTableView` regardless of view-tree position (two real
+  structural attempts, `spec/windows.md`), and that Notes' actual look
+  comes from a genuine `NSToolbar`'s own privileged window-chrome
+  compositing, not a content-level effect view — a real architectural
+  step against PaneKit's whole reason for existing. Jason's call:
+  `.behindWindow` for now, real `NSToolbar` adoption left for later if it
+  still bothers him with use.
 - **The Set Up Triggers box, and the Responsiveness slider** (built,
   reversed twice, and floating by the end of 2026-09-27, `spec/windows.md`,
   "A reusable modal box"): confirmed with axtool against a scratch
