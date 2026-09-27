@@ -70,7 +70,14 @@ final class AppModel {
                .split("main", .horizontal, sized: .first, size: DefaultLayout.sidebarWidth,
                       range: 140...360, title: "Library",
                       .pane("library", title: "Library", minSize: 140),
-                      .pane("detail", title: "Detail", minSize: 240)),
+                      // Extends to the true top of the window, under the
+                      // title bar — the filter bar and the title bar act as
+                      // one continuous translucent surface over the grid's
+                      // own scrolled content (`spec/windows.md`, item 34's
+                      // rework, 2026-09-27; `PaneKit.Pane
+                      // .scrollsUnderTitleBar`). `library` stays below the
+                      // title bar as before.
+                      .pane("detail", title: "Detail", minSize: 240, scrollsUnderTitleBar: true)),
                .pane("storyline", title: "Timeline", minSize: EditShowTimelinePane.minContentHeight, popOut: .window)))
     /// Edit Show's and Edit Slides' columns (`spec/panekit.md`, step 3): one
     /// controller each, shared across every show (`ColumnsSplitView`'s own

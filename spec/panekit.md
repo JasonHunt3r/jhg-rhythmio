@@ -407,6 +407,56 @@ still only reasoned through.
 - **A swipe's direction with "natural" scrolling** wants Jason's own
   swipe: synthetic events don't carry the natural-scrolling flag.
 
+## A pane under the title bar (added 2026-09-27)
+
+`Pane.scrollsUnderTitleBar`: one pane's own content reaches the true top
+of the window, under the title bar, instead of stopping below it, like
+the grid's own filter bar reaching under the window chrome in Photos or
+Mail. Generalizes a one-off hack (`WindowAccessor` reaching into
+`NSTitlebarContainerView` directly from `MainView.swift`, for the
+transparency feature's first, over-scoped cut) that a scratch test showed
+had zero visible effect — tried again as a plain `NSWindow.styleMask`
+toggle plus `.ignoresSafeArea`, still nothing, because PaneKit's own
+layout math never knew the extra height existed. Jason: "adding the
+header opacity logic into PaneKit as a feature for an area to be true
+false about."
+
+- `PaneContainerView.enableContentUnderTitleBar(on window: NSWindow)` —
+  call once, as soon as the window exists. Sets `.fullSizeContentView`
+  (so the container's own `bounds` include the title bar's height) and
+  `titlebarAppearsTransparent` (so AppKit stops painting over whatever the
+  marked pane draws there).
+- `PaneContainerView.titleBarHeight(of:)` — the same figure PaneKit itself
+  computes internally, exposed so the app's own content can size a
+  matching spacer or overlay; a `scrollsUnderTitleBar` pane doesn't
+  otherwise know how tall the strip it's extending into is.
+- `PaneLayout.layout`'s new `titleBarHeight` parameter: the tree is laid
+  out as if the rect stopped below the title bar, exactly as before, and
+  only the marked pane's own frame is stretched back up into that reserved
+  strip afterward — a pure post-process, kept out of `place`'s own
+  recursion the same way `Split.linkedAncestor` and `nearIsRigid` are.
+  Every sibling pane is untouched: pinned by `PaneLayoutTests
+  .testScrollsUnderTitleBarStretchesOnlyThatPaneBackUpIntoTheReservedStrip`.
+
+**Confirmed in the harness** ("A pane under the title bar," a new `Shape`):
+a translucent strip placed over the marked pane genuinely shows that
+pane's own colour bleeding through it, while the sidebar pane stops below
+the title bar exactly as it always did — screenshotted, not just reasoned
+through.
+
+**Wired into ShowTools** the same day: `AppModel.mainPanes`' `detail` pane
+carries the flag; `MainView.swift` calls `enableContentUnderTitleBar` once
+and adds a `titleBarHeight`-tall spacer at the top of the filter bar's own
+translucent background (`ScrollBarBackground`, `spec/windows.md` item 34's
+rework) — Jason: "same slider as the filter bar," so the title bar and the
+filter bar read as one continuous surface over the grid, not two. Checked
+with axtool against a scratch library: the row above the fold visibly
+scrolls up through the taller combined region; the library pane (not
+marked) is unaffected at rest. Not yet checked: whether the 100%-opacity
+seam glitch already known on the filter bar (`spec/windows.md`) shows up
+the same way across this taller region, or a real hand's feel for the
+combined strip.
+
 ## Building a row (added 2026-09-24)
 
 The primitive is strictly two panes. Three or more independently-sized

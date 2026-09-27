@@ -311,11 +311,22 @@ Not pressing; each wants a discussion or a plan before any code.
   giving the header bar real scrolled content underneath it was tried and
   reverted — zero visible effect on a scratch copy either way; PaneKit's
   own layout math would need to learn about a title-bar inset for that to
-  work, which is its own harness-tested task, not attempted this session.
+  work, which is its own harness-tested task — **built the same day
+  anyway**, once Jason proposed doing it properly: `PaneKit.Pane
+  .scrollsUnderTitleBar` (`spec/panekit.md`, "A pane under the title bar";
+  53 PaneKit tests including two new ones). Confirmed first in the harness
+  (a new "A pane under the title bar" shape — a marked pane's colour
+  genuinely bleeds through a translucent strip over it, its sibling
+  untouched), then wired into the real app: `AppModel.mainPanes`' `detail`
+  pane carries the flag, and the same filter-bar `ScrollBarBackground` now
+  covers a spacer over the title bar too, one continuous surface, one
+  slider. `HeaderBarBackground.swift` (the old one-off hack) is deleted.
+  Confirmed with a scratch library: tiles scroll up through the taller
+  combined region; the library pane sits exactly where it always did.
   **Also found**: Jason's own real, running app still had the *old* build
   during this whole rework — his earlier tint experiment (red, ~89%) was
   still live on the Inspector panel in his session, since nothing had been
-  reinstalled yet. Resolves itself once the new build installs.
+  reinstalled yet. Resolved once the new build installed.
 - **The Set Up Triggers box, and the Responsiveness slider** (built,
   reversed twice, and floating by the end of 2026-09-27, `spec/windows.md`,
   "A reusable modal box"): confirmed with axtool against a scratch

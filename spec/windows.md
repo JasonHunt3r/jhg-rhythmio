@@ -872,6 +872,24 @@ header bar reads "Drawer Sensitivity: Set Up Triggers." "It's good."
    Inspector's own reverted code hadn't been reinstalled yet — explains a
    red Inspector panel he'd have seen; resolved once the new build
    installs, since Inspector no longer reads that channel at all.
+
+   **The header bar's real scroll-under effect, built after all, the same
+   day** — Jason: "what about adding the header opacity logic into PaneKit
+   as a feature for an area to be true false about?" `spec/panekit.md`,
+   "A pane under the title bar," has the mechanism: `Pane
+   .scrollsUnderTitleBar`, confirmed first in the harness (a translucent
+   strip genuinely shows a marked pane's own colour through it, its
+   sibling untouched), then wired into the real app — `AppModel.mainPanes`'
+   `detail` pane carries the flag, and the same `ScrollBarBackground` the
+   filter bar uses now covers a `titleBarHeight`-tall spacer at the top of
+   it too, so the title bar and the filter bar read as one continuous
+   surface over the grid, sharing one slider (Jason: "same slider as the
+   filter bar"). `HeaderBarBackground.swift` (the old one-off hack) is
+   deleted, fully superseded. Confirmed with a scratch library: scrolling
+   moves tiles up through the taller combined region, and the library pane
+   (not marked) sits exactly where it always did. The filter bar's own
+   100%-opacity seam glitch (above) hasn't been re-checked against this
+   taller region specifically — same open item, not investigated twice.
 3. The "Smart View" preference (panes open and close by context — on by
    default — or keep your own choices; `spec/plan.md`, "Slides as mini
    movies") — **wants fleshing out**: today it's a one-paragraph sketch,

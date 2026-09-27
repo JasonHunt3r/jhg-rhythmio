@@ -51,7 +51,12 @@ public final class PaneContainerView: NSView {
     /// ordinary window. Read from the window itself (`frame` vs.
     /// `contentLayoutRect`, which already accounts for a toolbar too, not
     /// just the bare title bar), not stored, so it's always current.
-    private var titleBarHeight: CGFloat {
+    private var titleBarHeight: CGFloat { Self.titleBarHeight(of: window) }
+
+    /// The same figure, for an app's own content to size a matching spacer
+    /// or overlay against — a `scrollsUnderTitleBar` pane doesn't otherwise
+    /// know how tall the strip it's extending into is.
+    public static func titleBarHeight(of window: NSWindow?) -> CGFloat {
         guard let window, window.styleMask.contains(.fullSizeContentView) else { return 0 }
         return window.frame.height - window.contentLayoutRect.height
     }

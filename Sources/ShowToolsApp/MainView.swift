@@ -37,9 +37,13 @@ struct MainView: View {
         // Split from the alerts/dialogs below: one expression this size is
         // over the type checker's budget (measured, 2026-09-24).
         layout
-        // spec/windows.md, item 34: the Header Bar's own tunable setting —
-        // installed once the main window exists, not touched again.
-        .background(WindowAccessor { HeaderBarBackground.install(on: $0) })
+        // spec/windows.md, item 34's rework: the detail pane's own content
+        // extends under the title bar (`PaneKit.Pane.scrollsUnderTitleBar`,
+        // `AppModel.mainPanes`) — this is what makes that real, once per
+        // window. `HeaderBarBackground.swift`'s own one-off hack (tried
+        // directly here before PaneKit had the concept, zero visible
+        // effect) is superseded by this and no longer called.
+        .background(WindowAccessor { PaneContainerView.enableContentUnderTitleBar(on: $0) })
         .alert(renamingTitle, isPresented: Binding(get: { renaming != nil }, set: { if !$0 { renaming = nil } })) {
             TextField("Name", text: $draftName)
             Button("Rename") {
@@ -750,6 +754,14 @@ struct LibraryGridView: View {
     /// up under the bar's translucent background (item 34's rework,
     /// 2026-09-27: scoped to bars with scrolled content passing under them).
     @State private var barHeight: CGFloat = 0
+    /// The window's own title bar height, once — the detail pane extends
+    /// under it (`AppModel.mainPanes`, `scrollsUnderTitleBar`), so a spacer
+    /// this tall at the top of the bar's own translucent background makes
+    /// the title bar and the filter bar read as one continuous surface over
+    /// the grid, sharing the same slider (Jason, 2026-09-27: "same slider
+    /// as the filter bar"). Doesn't change with the window's own size, so
+    /// read once rather than tracked like `barHeight`.
+    @State private var titleBarHeight: CGFloat = 0
     /// Why a drag over this grid can't reorder it, shown while it's there.
     @State private var reorderBlockedReason: String?
     /// The grid takes the keyboard on a click, so Delete and ⌘Delete reach
@@ -1426,6 +1438,11 @@ struct LibraryGridView: View {
                     "grid": AnyView(ZStack(alignment: .top) {
                         grid
                         VStack(spacing: 0) {
+                            // The title bar's own reserved strip — empty but
+                            // for this background, so it and the filter bar
+                            // below read as one continuous translucent
+                            // surface over the grid.
+                            Color.clear.frame(height: titleBarHeight)
                             bar
                             Divider()
                             sortStatusBar
@@ -1436,6 +1453,7 @@ struct LibraryGridView: View {
                             Color.clear.onAppear { barHeight = g.size.height }
                                 .onChange(of: g.size.height) { _, h in barHeight = h }
                         })
+                        .background(WindowAccessor { titleBarHeight = PaneContainerView.titleBarHeight(of: $0) })
                     }
                     .environment(model)),
                 ])
