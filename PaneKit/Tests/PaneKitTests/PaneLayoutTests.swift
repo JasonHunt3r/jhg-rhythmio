@@ -345,4 +345,26 @@ final class PaneLayoutTests: XCTestCase {
         let r = PaneLayout.layout(tracked, in: rect, state: PaneKitState())
         XCTAssertEqual(r.panes["bottom"]?.height, 60)
     }
+
+    // MARK: Title bar inset
+
+    /// With no title bar height, nothing changes — an ordinary window.
+    func testNoTitleBarHeightLeavesLayoutUntouched() {
+        let r = PaneLayout.layout(finder, in: rect, state: PaneKitState(), titleBarHeight: 0)
+        XCTAssertEqual(r.panes["sidebar"], CGRect(x: 0, y: 0, width: 200, height: 600))
+    }
+
+    /// The tree is laid out as if the rect stopped below the title bar —
+    /// every pane starts that much lower and that much shorter — except
+    /// `sidebar`, marked `scrollsUnderTitleBar`, whose own frame stretches
+    /// back up to reclaim exactly that height at its top.
+    func testScrollsUnderTitleBarStretchesOnlyThatPaneBackUpIntoTheReservedStrip() {
+        let tree: PaneNode = .split("window", .horizontal, sized: .first, size: 200, range: 150...300,
+                                    .pane("sidebar", title: "Sidebar", scrollsUnderTitleBar: true),
+                                    .pane("files", title: "Files"))
+        let r = PaneLayout.layout(tree, in: rect, state: PaneKitState(), titleBarHeight: 40)
+        XCTAssertEqual(r.panes["sidebar"], CGRect(x: 0, y: 0, width: 200, height: 600))
+        XCTAssertEqual(r.panes["files"], CGRect(x: 201, y: 40, width: 799, height: 560))
+        XCTAssertEqual(r.dividers["window"], CGRect(x: 200, y: 40, width: 1, height: 560))
+    }
 }

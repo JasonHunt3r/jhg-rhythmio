@@ -56,12 +56,26 @@ public struct Pane: Sendable, Identifiable, Equatable {
     /// gives way until then.
     public var minSize: CGFloat
     public var popOut: PopOutStyle
+    /// This pane's own top edge reaches the true top of the window,
+    /// underneath the title bar, instead of stopping below it — for a pane
+    /// whose content is meant to scroll up and pass under a translucent
+    /// title bar (`spec/windows.md`, item 34's rework, 2026-09-27: "adding
+    /// the header opacity logic into PaneKit as a feature for an area to be
+    /// true/false about"). Only sensible for a pane already at the top of
+    /// the tree's own layout — PaneKit trusts the caller here the same way
+    /// it trusts `Split.linkedAncestor`, rather than validating the tree
+    /// shape. Does nothing unless the window also has `.fullSizeContentView`
+    /// (`PaneContainerView.enableContentUnderTitleBar`) — with an ordinary
+    /// window, the title bar reserves no extra height to extend into.
+    public var scrollsUnderTitleBar: Bool
 
-    public init(_ id: String, title: String? = nil, minSize: CGFloat = 80, popOut: PopOutStyle = .none) {
+    public init(_ id: String, title: String? = nil, minSize: CGFloat = 80, popOut: PopOutStyle = .none,
+                scrollsUnderTitleBar: Bool = false) {
         self.id = id
         self.title = title ?? id
         self.minSize = minSize
         self.popOut = popOut
+        self.scrollsUnderTitleBar = scrollsUnderTitleBar
     }
 }
 
@@ -176,8 +190,8 @@ public indirect enum PaneNode: Sendable, Equatable {
 
     /// A pane (see `Pane.init`).
     public static func pane(_ id: String, title: String? = nil, minSize: CGFloat = 80,
-                            popOut: PopOutStyle = .none) -> PaneNode {
-        .leaf(Pane(id, title: title, minSize: minSize, popOut: popOut))
+                            popOut: PopOutStyle = .none, scrollsUnderTitleBar: Bool = false) -> PaneNode {
+        .leaf(Pane(id, title: title, minSize: minSize, popOut: popOut, scrollsUnderTitleBar: scrollsUnderTitleBar))
     }
 
     /// A split (see `Split.init`).

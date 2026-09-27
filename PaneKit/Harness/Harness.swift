@@ -55,7 +55,7 @@ enum Keep {
 
 /// The three shapes: one primitive, nested three ways.
 enum Shape: String, CaseIterable {
-    case finder, mail, showTools, headerHandle
+    case finder, mail, showTools, headerHandle, titleBar
 
     var title: String {
         switch self {
@@ -63,6 +63,7 @@ enum Shape: String, CaseIterable {
         case .mail: "Mail: three columns"
         case .showTools: "ShowTools: timeline under everything"
         case .headerHandle: "A header bar as the handle"
+        case .titleBar: "A pane under the title bar"
         }
     }
 
@@ -106,6 +107,14 @@ enum Shape: String, CaseIterable {
                    handle: .external,
                    .pane("viewer", title: "Viewer"),
                    .pane("grid", title: "Grid", minSize: 150))
+        case .titleBar:
+            // `files` reaches the true top of the window, under the title
+            // bar; `sidebar` stops below it, same as any ordinary pane
+            // (`PaneContainerView.enableContentUnderTitleBar`,
+            // `Pane.scrollsUnderTitleBar`, 2026-09-27).
+            .split("window", .horizontal, sized: .first, size: 200, range: 150...320,
+                   .pane("sidebar", title: "Sidebar"),
+                   .pane("files", title: "Files", minSize: 240, scrollsUnderTitleBar: true))
         }
     }
 }
@@ -148,8 +157,15 @@ final class HarnessDelegate: NSObject, NSApplicationDelegate {
         if shape == .headerHandle, let grid = content["grid"] {
             content["grid"] = HeaderBarPane(controller: c, splitID: "drawer", below: grid)
         }
+        if shape == .titleBar, let files = content["files"] {
+            content["files"] = TranslucentTitleBarPane(below: files)
+        } else {
+            window.titlebarAppearsTransparent = false
+            window.styleMask.remove(.fullSizeContentView)
+        }
         controller = c
         window.contentView = PaneContainerView(controller: c, content: content)
+        if shape == .titleBar { PaneContainerView.enableContentUnderTitleBar(on: window) }
         rebuildViewMenu()
     }
 
@@ -338,6 +354,45 @@ final class HeaderBarPane: NSView {
     }
 
     required init?(coder: NSCoder) { fatalError("HeaderBarPane is made in code") }
+
+    override var isFlipped: Bool { true }
+}
+
+/// `files`'s own content, plus a translucent strip pinned to its top —
+/// standing in for the real app's own bar (the filter bar, say). `below`
+/// extends the full pane height, under the strip, so scrolling it (or just
+/// looking at where its colour meets the strip) shows content passing
+/// under a translucent bar rather than a solid window's title bar chrome.
+@MainActor
+final class TranslucentTitleBarPane: NSView {
+    init(below: NSView) {
+        super.init(frame: .zero)
+        let bar = NSVisualEffectView()
+        bar.material = .headerView
+        bar.blendingMode = .withinWindow
+        bar.state = .active
+        let label = NSTextField(labelWithString: "Translucent bar (should show the pane's colour through it)")
+        label.font = .systemFont(ofSize: 11)
+        label.textColor = .secondaryLabelColor
+        for v in [bar, label, below] { v.translatesAutoresizingMaskIntoConstraints = false }
+        addSubview(below)
+        addSubview(bar)
+        bar.addSubview(label)
+        NSLayoutConstraint.activate([
+            bar.topAnchor.constraint(equalTo: topAnchor),
+            bar.leadingAnchor.constraint(equalTo: leadingAnchor),
+            bar.trailingAnchor.constraint(equalTo: trailingAnchor),
+            bar.heightAnchor.constraint(equalToConstant: 52),
+            label.centerYAnchor.constraint(equalTo: bar.centerYAnchor),
+            label.leadingAnchor.constraint(equalTo: bar.leadingAnchor, constant: 12),
+            below.topAnchor.constraint(equalTo: topAnchor),
+            below.leadingAnchor.constraint(equalTo: leadingAnchor),
+            below.trailingAnchor.constraint(equalTo: trailingAnchor),
+            below.bottomAnchor.constraint(equalTo: bottomAnchor),
+        ])
+    }
+
+    required init?(coder: NSCoder) { fatalError("TranslucentTitleBarPane is made in code") }
 
     override var isFlipped: Bool { true }
 }

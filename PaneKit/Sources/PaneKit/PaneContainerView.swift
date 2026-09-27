@@ -46,6 +46,28 @@ public final class PaneContainerView: NSView {
 
     public override var isFlipped: Bool { true }
 
+    /// How much of this container's own height, at its top, is really the
+    /// window's title bar rather than ordinary content — zero for an
+    /// ordinary window. Read from the window itself (`frame` vs.
+    /// `contentLayoutRect`, which already accounts for a toolbar too, not
+    /// just the bare title bar), not stored, so it's always current.
+    private var titleBarHeight: CGFloat {
+        guard let window, window.styleMask.contains(.fullSizeContentView) else { return 0 }
+        return window.frame.height - window.contentLayoutRect.height
+    }
+
+    /// Sets up a window so a pane marked `scrollsUnderTitleBar` has
+    /// somewhere to extend into: `.fullSizeContentView` reserves no space of
+    /// its own for the title bar, and `titlebarAppearsTransparent` stops
+    /// AppKit painting over whatever that pane draws there. Call once, as
+    /// soon as the window exists — this only sets the two window properties;
+    /// it doesn't draw anything itself (`spec/windows.md`, item 34's rework,
+    /// 2026-09-27).
+    public static func enableContentUnderTitleBar(on window: NSWindow) {
+        window.titlebarAppearsTransparent = true
+        window.styleMask.insert(.fullSizeContentView)
+    }
+
     // MARK: The resize cursor
 
     /// The resize cursor over every divider and handle, reliably. Cursor
@@ -96,7 +118,8 @@ public final class PaneContainerView: NSView {
     public override func layout() {
         super.layout()
         let result = PaneLayout.layout(controller.root, in: bounds, state: controller.displayState,
-                                       peek: controller.peek, contentExtent: controller.contentExtent)
+                                       peek: controller.peek, contentExtent: controller.contentExtent,
+                                       titleBarHeight: titleBarHeight)
         lastLayout = result
         // A drawer sliding (`PaneClutch`): its pane's content keeps the
         // size it's heading for and slides, flush with the divider.

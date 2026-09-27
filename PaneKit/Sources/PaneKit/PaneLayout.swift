@@ -34,11 +34,30 @@ public enum PaneLayout {
     /// (`PaneClutch`) draw with it. Never saved. `contentExtent`: a
     /// content-tracking split's live, unclamped content height, keyed by
     /// split id (`PaneController.setContentExtent`). Never saved.
+    /// `titleBarHeight`: how much of `rect`'s own top edge is really a
+    /// window's title bar, reserved by `.fullSizeContentView` rather than
+    /// ordinary content — zero for an ordinary window. The tree is laid out
+    /// as if `rect` stopped below it, same as always, and only a pane
+    /// marked `scrollsUnderTitleBar` has its frame stretched back up into
+    /// that reserved strip afterward — a pure post-process, kept out of
+    /// `place`'s own recursion the same way `Split.linkedAncestor` and
+    /// `nearIsRigid` are (`PaneContainerView.enableContentUnderTitleBar`).
     public static func layout(_ node: PaneNode, in rect: CGRect, state: PaneKitState,
                               peek: [String: CGFloat] = [:],
-                              contentExtent: [String: CGFloat] = [:]) -> PaneLayoutResult {
+                              contentExtent: [String: CGFloat] = [:],
+                              titleBarHeight: CGFloat = 0) -> PaneLayoutResult {
+        let placeRect = titleBarHeight > 0
+            ? CGRect(x: rect.minX, y: rect.minY + titleBarHeight, width: rect.width, height: rect.height - titleBarHeight)
+            : rect
         var result = PaneLayoutResult()
-        place(node, in: rect, state: state, peek: peek, contentExtent: contentExtent, into: &result)
+        place(node, in: placeRect, state: state, peek: peek, contentExtent: contentExtent, into: &result)
+        if titleBarHeight > 0 {
+            for pane in node.panes where pane.scrollsUnderTitleBar {
+                guard let frame = result.panes[pane.id] else { continue }
+                result.panes[pane.id] = CGRect(x: frame.minX, y: frame.minY - titleBarHeight,
+                                               width: frame.width, height: frame.height + titleBarHeight)
+            }
+        }
         return result
     }
 
