@@ -118,10 +118,12 @@ window.
 
 **When the contents grow** (a row's drawer opens, a preference makes the
 rows taller, a row is added) — Jason: "to a point", never squashing the
-viewer. Proposed, waiting on his word: while it shows all its contents
-it grows with them, up to a ceiling (the viewer keeps about half the
-window, or its own minimum, whichever is more), then the rows scroll;
-dragged smaller than its contents, it keeps its size and scrolls.
+viewer. **Agreed 2026-09-26:** while it shows all its contents it grows
+with them, up to a ceiling — the viewer keeps about half the window, or
+its own minimum, whichever is more — then the rows scroll; dragged
+smaller than its contents, it keeps its size and scrolls. **A new row
+lands at or near the bottom and is scrolled fully into view** (unless
+the window is shorter than the row).
 
 ## Panes that close to an edge, inside one window (Jason, 2026-09-24)
 

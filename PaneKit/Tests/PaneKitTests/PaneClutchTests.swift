@@ -15,10 +15,10 @@ final class PaneClutchTests: XCTestCase {
         XCTAssertLessThan(far, PaneClutch.bite + 40)
     }
 
-    func testItEngagesAtAboutHalfItsSizeWithinBounds() {
-        XCTAssertEqual(PaneClutch.engageDistance(opensTo: 160), 80)
-        XCTAssertEqual(PaneClutch.engageDistance(opensTo: 40), PaneClutch.engageRange.lowerBound, "small: not too twitchy")
-        XCTAssertEqual(PaneClutch.engageDistance(opensTo: 900), PaneClutch.engageRange.upperBound, "big: not a long haul")
+    /// A literal distance: every drawer engages at the same pull.
+    func testItEngagesAtTheSamePullWhateverItsSize() {
+        XCTAssertEqual(PaneClutch.engageDistance(opensTo: 120), PaneClutch.engage)
+        XCTAssertEqual(PaneClutch.engageDistance(opensTo: 900), PaneClutch.engage)
     }
 
     func testPushedPastItsMinimumItResistsThenShuts() {

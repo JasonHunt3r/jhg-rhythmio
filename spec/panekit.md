@@ -220,8 +220,10 @@ the instant jump it had. Every closable split has it, whatever its handle
 
 - **Pulled from closed:** it **bites** (follows the pointer exactly for
   `bite`, 14 pt), then **slips** (takes `slip`, 0.35, of the pointer's
-  further travel), until the pull reaches about half the size it opens to
-  (`engageFraction`, within `engageRange` 48…110 pt): then it **engages**,
+  further travel), until the pull reaches `engage` — **a literal 64 pt, the same for every
+  drawer whatever its size or last size** (Jason, 2026-09-26; the first
+  build used half its size, 48…110 pt, "a little on the slow side"):
+  then it **engages**,
   sliding open to its own size in `slideDuration` (0.18 s, easing out) —
   **and the drag is over** (Jason: "like pulling back a bow and then it
   releases at the threshold"): the cursor is the arrow again and the rest
@@ -266,6 +268,15 @@ the instant jump it had. Every closable split has it, whatever its handle
   the slide's speed wants its own. Belongs in the settings-and-preferences
   pass. Open: which felt slow — the pull's distance, the slide's speed,
   or both.
+- **Tap-to-drag with drag lock** (Jason's trackpad: Dragging and
+  DragLock on). The system itself keeps the button held after the finger
+  lifts, until the next tap — so when a drawer looses, the hold is still
+  on and Jason has to tap deliberately to end it. PaneKit already ignores
+  the rest of the press; what it can't do on its own is end the
+  system's hold. Options put to Jason 2026-09-26: an app with
+  Accessibility permission can post a mouse-up (untested against drag
+  lock — worth a harness first); or a trackpad setting (dragging without
+  drag lock ends the drag a moment after the finger lifts).
 
 Tests: `PaneClutchTests` (5: the bite and slip, where it engages, the
 resistance and where it shuts, a peek drawn below the minimum, a peek

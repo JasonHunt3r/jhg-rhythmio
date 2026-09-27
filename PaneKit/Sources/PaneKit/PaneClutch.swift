@@ -22,10 +22,12 @@ public enum PaneClutch {
     public static var bite: CGFloat = 14
     /// How much of the pointer's travel past the bite the drawer takes.
     public static var slip: CGFloat = 0.35
-    /// How far the pointer must pull a closed drawer before it engages:
-    /// about half the size it opens to, within these bounds.
-    public static var engageFraction: CGFloat = 0.5
-    public static var engageRange: ClosedRange<CGFloat> = 48...110
+    /// How far the pointer must pull a closed drawer before it engages — a
+    /// literal distance, the same for every drawer whatever its size or last
+    /// size (Jason, 2026-09-26: "so all interactions will be the same").
+    /// 64 is a touch quicker than the first build's 48…110 (half the
+    /// drawer's size), which Jason found "a little on the slow side".
+    public static var engage: CGFloat = 64
     /// How far past its minimum an open drawer must be pushed to go shut.
     public static var closeEngage: CGFloat = 48
     /// The slide open or shut once engaged, and a double-click's.
@@ -33,10 +35,9 @@ public enum PaneClutch {
     /// The slide back when let go before engaging.
     public static var settleDuration: TimeInterval = 0.14
 
-    /// How far the pointer pulls a closed drawer before it engages.
-    public static func engageDistance(opensTo target: CGFloat) -> CGFloat {
-        min(max(target * engageFraction, engageRange.lowerBound), engageRange.upperBound)
-    }
+    /// How far the pointer pulls a closed drawer before it engages: always
+    /// `engage`, whatever size it opens to.
+    public static func engageDistance(opensTo target: CGFloat) -> CGFloat { engage }
 
     /// A closed drawer's extent while pulled `pull` from its edge, before it
     /// engages: the bite, then the slip.
