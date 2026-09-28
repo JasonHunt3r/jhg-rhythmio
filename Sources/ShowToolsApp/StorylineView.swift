@@ -63,9 +63,11 @@ struct StorylineView: View {
     /// The whole pane's own height, as PaneKit's fixed host frame actually
     /// gives it — read once, the same way `EditShowTimelinePane.visibleWidth`
     /// already reads its given width: a background `GeometryReader` mirrors
-    /// whatever size its host view was given, which is never circular here,
-    /// since that size ultimately comes from `PaneContainerView`'s own fixed
-    /// `NSHostingView` frame, not from this view's own content.
+    /// whatever size its host view was given. That's only true because the
+    /// body ends in `.frame(maxHeight: .infinity)` before the reader: without
+    /// it the reader measured this view's own content, which is sized from
+    /// this figure — circular, so it latched at the one-row floor and the
+    /// rows scrolled inside a pane with room to spare (2026-09-27).
     @State private var paneAvailableHeight: CGFloat = 0
     /// How far the rows have scrolled vertically, for `rowHandles` (pinned
     /// outside this scroll, on purpose, so it stays put sideways) to follow.
@@ -480,6 +482,9 @@ struct StorylineView: View {
                 pps = min(max((magnifyBase ?? pps) * v.magnification, 2), 400)
             }
             .onEnded { _ in magnifyBase = nil })
+        // Takes whatever the pane has left, so the reader below measures
+        // the pane, not this view's own content (see `paneAvailableHeight`).
+        .frame(maxHeight: .infinity, alignment: .top)
         .background(Color(nsColor: .underPageBackgroundColor))
         .background(GeometryReader { g in
             Color.clear.onAppear { paneAvailableHeight = g.size.height }

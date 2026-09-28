@@ -339,6 +339,15 @@ final class PaneLayoutTests: XCTestCase {
         XCTAssertEqual(r.panes["bottom"]?.height, 299)
     }
 
+    /// A stored size taller than the content itself is clamped down to the
+    /// content — it can't be dragged, or saved, taller than what it holds.
+    func testContentTrackingClampsAStoredSizeAboveTheContent() {
+        var s = PaneKitState()
+        s.splits["window"] = SplitState(size: 287)
+        let r = PaneLayout.layout(tracked, in: rect, state: s, contentExtent: ["window": 246])
+        XCTAssertEqual(r.panes["bottom"]?.height, 246)
+    }
+
     /// No content extent supplied yet (first layout pass, before the app's
     /// measured its view): falls back to `defaultSize`, not zero.
     func testContentTrackingFallsBackToDefaultSizeWithNoMeasurementYet() {

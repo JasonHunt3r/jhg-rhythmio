@@ -29,6 +29,8 @@ struct EditShowTimelinePane: View {
     /// at all four kinds). `spec/windows.md`, "Its height," 2026-09-26:
     /// what a content-tracking split reports as the pane's content extent,
     /// via `PaneController.setContentExtent` (`AppModel.mainPanes`).
+    /// The first pass's guess, before the transport's been measured
+    /// (`transportHeight`): the split's default size.
     static let contentHeight = StorylineView.fullHeight + 56 + 1
     /// The least the pane can shrink to now that the rows scroll
     /// vertically (`StorylineView.rowsScrollView`, `spec/windows.md`,
@@ -54,6 +56,13 @@ struct EditShowTimelinePane: View {
     @AppStorage("snapping") private var snapping = true
     @AppStorage("storylineZoom") private var pps: Double = 24
     @State private var visibleWidth: CGFloat = 800
+    /// The transport bar as actually drawn, measured: `contentHeight`'s
+    /// 56 was stale (it draws about 30), and the pane tracked that figure,
+    /// leaving an empty band under the rows (2026-09-27).
+    @State private var transportHeight: CGFloat?
+    private var contentExtent: CGFloat {
+        transportHeight.map { StorylineView.fullHeight + $0 + 1 } ?? Self.contentHeight
+    }
 
     var body: some View {
         @Bindable var session = session
@@ -68,6 +77,7 @@ struct EditShowTimelinePane: View {
                                  setRangeToView: setRangeToView, setRangeToWholeShow: setRangeToWholeShow,
                                  clearRange: clearRange, toggleRangeLock: { toggleRangeLock(engine) },
                                  inert: !active)
+                    .onGeometryChange(for: CGFloat.self, of: \.size.height) { transportHeight = $0 }
                     Divider()
                     StorylineView(show: show, timeline: timeline, engine: engine, session: session,
                                   selection: $session.selection, selectedTransition: $session.selectedTransition,
@@ -93,7 +103,8 @@ struct EditShowTimelinePane: View {
                 TimelinePanePlaceholder()
             }
         }
-        .onAppear { model.mainPanes.setContentExtent(Self.contentHeight, for: "window") }
+        .onAppear { model.mainPanes.setContentExtent(contentExtent, for: "window") }
+        .onChange(of: transportHeight) { model.mainPanes.setContentExtent(contentExtent, for: "window") }
         .onDisappear {
             // Matches the old FocusedValue's own absence outside Edit
             // Show (spec/hig-audit.md, "G"): leaving this view — by

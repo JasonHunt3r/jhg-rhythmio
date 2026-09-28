@@ -138,7 +138,13 @@ public enum PaneLayout {
         let defaultWanted: CGFloat
         if let tracking = split.contentTracking {
             let reserve = max(mainMin, available * tracking.mainReserveFraction)
-            upperBound = min(split.range.upperBound, max(split.range.lowerBound, available - dividerThickness - reserve))
+            // The content itself is a ceiling too, once it's been measured:
+            // a stored size taller than the content (saved before this
+            // existed, or the content shrank) left an empty band under it
+            // (Jason's screenshot, 2026-09-27).
+            let contentCeiling = contentExtent[split.id] ?? .infinity
+            upperBound = min(split.range.upperBound, contentCeiling,
+                             max(split.range.lowerBound, available - dividerThickness - reserve))
             defaultWanted = contentExtent[split.id] ?? split.defaultSize
         } else {
             upperBound = split.range.upperBound
