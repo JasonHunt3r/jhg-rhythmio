@@ -164,7 +164,8 @@ struct StorylineView: View {
     /// corners don't clip it (Jason, 2026-09-27: "a little breather padding
     /// at the bottom to compensate for the stupid round corners"). Part of
     /// the pane's content height, so the pane still fits its content.
-    static let bottomBreather: CGFloat = 12
+    /// 8: the edge sits where the corner's curve ends (Jason, from 12).
+    static let bottomBreather: CGFloat = 8
 
     /// A transition section being dragged: drawn as it goes, saved on release.
     private struct TransitionEdit {
