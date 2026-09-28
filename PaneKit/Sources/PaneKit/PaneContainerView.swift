@@ -12,6 +12,9 @@ public final class PaneContainerView: NSView {
     private var hosts: [String: PaneHostView] = [:]
     private var dividers: [String: PaneDividerView] = [:]
     private var handles: [String: PaneEdgeHandleView] = [:]
+    /// An open drawer's handle row, shown only while the pointer is over
+    /// its divider or the row itself (`showHoverHandle`).
+    private var hoverHandles: [String: PaneEdgeHandleView] = [:]
     /// The last layout, for drags to measure against.
     private(set) var lastLayout = PaneLayoutResult()
 
@@ -36,6 +39,11 @@ public final class PaneContainerView: NSView {
                 let h = PaneEdgeHandleView(split: split, container: self)
                 handles[split.id] = h
                 addSubview(h)
+                let hover = PaneEdgeHandleView(split: split, container: self, hover: true)
+                hover.isHidden = true
+                hover.alphaValue = 0
+                hoverHandles[split.id] = hover
+                addSubview(hover)
             }
         }
         setAccessibilityRole(.splitGroup)
@@ -174,6 +182,55 @@ public final class PaneContainerView: NSView {
                 handle.isHidden = true
             }
         }
+        for (id, hover) in hoverHandles {
+            if let frame = hoverFrame(id, in: result) {
+                hover.frame = frame
+            } else {
+                hover.isHidden = true
+                hover.alphaValue = 0
+            }
+        }
+    }
+
+    // MARK: The handle row on hover
+
+    /// Jason, 2026-09-27: "for dividers that hide the handle on open, let's
+    /// add show handle row on mouseover." An open `.edge` drawer leaves only
+    /// a thin divider; hovering it shows the closed drawer's own handle row
+    /// along it, on the drawer's side, for as long as the pointer is on the
+    /// divider or the row. The row drags like the divider, and a double-
+    /// click closes the drawer, as on the divider.
+    private func hoverFrame(_ id: String, in result: PaneLayoutResult) -> NSRect? {
+        guard let line = result.dividers[id], let split = controller.root.split(id) else { return nil }
+        let t = PaneLayout.handleThickness
+        switch split.edge(in: controller.displayState) {
+        case .leading: return NSRect(x: line.minX - t, y: line.minY, width: t, height: line.height)
+        case .trailing: return NSRect(x: line.maxX, y: line.minY, width: t, height: line.height)
+        case .top: return NSRect(x: line.minX, y: line.minY - t, width: line.width, height: t)
+        case .bottom: return NSRect(x: line.minX, y: line.maxY, width: line.width, height: t)
+        }
+    }
+
+    func pointerEntered(split id: String) {
+        guard let hover = hoverHandles[id], let frame = hoverFrame(id, in: lastLayout) else { return }
+        hover.frame = frame
+        if hover.isHidden { hover.alphaValue = 0; hover.isHidden = false }
+        NSAnimationContext.runAnimationGroup { $0.duration = 0.12; hover.animator().alphaValue = 1 }
+    }
+
+    /// Hides the row once the pointer is on neither the divider nor the
+    /// row — asked of where the pointer actually is, a moment later, rather
+    /// than by counting enter and exit events between the two views.
+    func pointerExited(split id: String) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) { [weak self] in
+            guard let self, let hover = self.hoverHandles[id], !hover.isHidden, let window else { return }
+            let p = self.convert(window.mouseLocationOutsideOfEventStream, from: nil)
+            let divider = self.dividers[id]?.frame ?? .zero
+            if hover.frame.contains(p) || divider.contains(p) { return }
+            NSAnimationContext.runAnimationGroup({ $0.duration = 0.2; hover.animator().alphaValue = 0 },
+                                                 completionHandler: { MainActor.assumeIsolated {
+                                                     if hover.alphaValue == 0 { hover.isHidden = true } } })
+        }
     }
 
     /// Replaces a pane's content view.
@@ -277,9 +334,18 @@ final class PaneDividerView: NSView, PaneResizeCursorView {
         super.init(frame: .zero)
         setAccessibilityRole(.splitter)
         setAccessibilityLabel("\(split.sizedTitle) divider")
+        // A drawer that hides its handle row while open shows it again on
+        // hover (`PaneContainerView.pointerEntered`).
+        if split.collapsible && split.handle == .edge {
+            addTrackingArea(NSTrackingArea(rect: .zero, options: [.mouseEnteredAndExited, .activeInKeyWindow, .inVisibleRect],
+                                           owner: self))
+        }
     }
 
     required init?(coder: NSCoder) { fatalError("PaneDividerView is made in code") }
+
+    override func mouseEntered(with event: NSEvent) { container?.pointerEntered(split: split.id) }
+    override func mouseExited(with event: NSEvent) { container?.pointerExited(split: split.id) }
 
     override var isFlipped: Bool { true }
 
@@ -304,6 +370,7 @@ final class PaneDividerView: NSView, PaneResizeCursorView {
             return
         }
         trackResize(split, in: container, from: event)
+        container.pointerExited(split: split.id)
     }
 
     private let swipe = PaneSwipe()
@@ -343,19 +410,38 @@ final class PaneEdgeHandleView: NSView, PaneResizeCursorView {
     private let material = NSVisualEffectView()
     private var observer: NSObjectProtocol?
 
-    init(split: Split, container: PaneContainerView) {
+    /// The same row shown over an open drawer's divider on hover
+    /// (`PaneContainerView.pointerEntered`): it drags like the divider, a
+    /// double-click closes the drawer, and it isn't its own accessibility
+    /// element — the divider already is.
+    let hover: Bool
+
+    init(split: Split, container: PaneContainerView, hover: Bool = false) {
         self.split = split
         self.container = container
+        self.hover = hover
         super.init(frame: .zero)
-        toolTip = "Drag, or double-click, to show \(split.sizedTitle)"
-        setAccessibilityRole(.button)
-        setAccessibilityLabel("Show \(split.sizedTitle)")
+        if hover {
+            // Fades in and out (`alphaValue`), which only draws with a layer.
+            wantsLayer = true
+            setAccessibilityElement(false)
+            addTrackingArea(NSTrackingArea(rect: .zero, options: [.mouseEnteredAndExited, .activeInKeyWindow, .inVisibleRect],
+                                           owner: self))
+        } else {
+            toolTip = "Drag, or double-click, to show \(split.sizedTitle)"
+            setAccessibilityRole(.button)
+            setAccessibilityLabel("Show \(split.sizedTitle)")
+        }
         material.material = .headerView
         material.blendingMode = .withinWindow
         material.state = .active
         material.autoresizingMask = [.width, .height]
         material.frame = bounds
         addSubview(material, positioned: .below, relativeTo: nil)
+        marks.handle = self
+        marks.autoresizingMask = [.width, .height]
+        marks.frame = bounds
+        addSubview(marks)
         applyAppearance()
         observer = NotificationCenter.default.addObserver(forName: PaneHandleAppearance.didChange, object: nil,
                                                           queue: .main) { [weak self] _ in
@@ -379,6 +465,7 @@ final class PaneEdgeHandleView: NSView, PaneResizeCursorView {
     private func applyAppearance() {
         material.isHidden = opacity == nil
         needsDisplay = true
+        marks.needsDisplay = true
     }
 
     override func viewDidChangeEffectiveAppearance() {
@@ -389,23 +476,36 @@ final class PaneEdgeHandleView: NSView, PaneResizeCursorView {
     override func draw(_ dirtyRect: NSRect) {
         NSColor.windowBackgroundColor.withAlphaComponent(opacity ?? 1).setFill()
         bounds.fill()
-        // A line along the edge, and a capsule to grab: the frame strip's bar.
-        NSColor.separatorColor.setFill()
-        let horizontal = split.axis == .horizontal
-        let edgeLine: NSRect
-        switch split.edge(in: container?.controller.displayState ?? PaneKitState()) {
-        case .leading: edgeLine = NSRect(x: bounds.maxX - 1, y: 0, width: 1, height: bounds.height)
-        case .trailing: edgeLine = NSRect(x: 0, y: 0, width: 1, height: bounds.height)
-        case .top: edgeLine = NSRect(x: 0, y: bounds.maxY - 1, width: bounds.width, height: 1)
-        case .bottom: edgeLine = NSRect(x: 0, y: 0, width: bounds.width, height: 1)
-        }
-        edgeLine.fill()
-        NSColor.secondaryLabelColor.withAlphaComponent(0.7).setFill()
-        let capsule = horizontal
-            ? NSRect(x: bounds.midX - 1.5, y: bounds.midY - 20, width: 3, height: 40)
-            : NSRect(x: bounds.midX - 20, y: bounds.midY - 1.5, width: 40, height: 3)
-        NSBezierPath(roundedRect: capsule, xRadius: 1.5, yRadius: 1.5).fill()
     }
+
+    /// The line along the edge and the capsule to grab — what makes it read
+    /// as a handle. Its own view, above `material`: drawn in the handle's
+    /// own `draw`, the translucent material (a subview) covered them
+    /// (Jason, 2026-09-27: "you've lost the little pill icon").
+    private final class Marks: NSView {
+        weak var handle: PaneEdgeHandleView?
+        override var isFlipped: Bool { true }
+        override func hitTest(_ point: NSPoint) -> NSView? { nil }
+
+        override func draw(_ dirtyRect: NSRect) {
+            guard let handle else { return }
+            NSColor.separatorColor.setFill()
+            let edgeLine: NSRect
+            switch handle.split.edge(in: handle.container?.controller.displayState ?? PaneKitState()) {
+            case .leading: edgeLine = NSRect(x: bounds.maxX - 1, y: 0, width: 1, height: bounds.height)
+            case .trailing: edgeLine = NSRect(x: 0, y: 0, width: 1, height: bounds.height)
+            case .top: edgeLine = NSRect(x: 0, y: bounds.maxY - 1, width: bounds.width, height: 1)
+            case .bottom: edgeLine = NSRect(x: 0, y: 0, width: bounds.width, height: 1)
+            }
+            edgeLine.fill()
+            NSColor.secondaryLabelColor.withAlphaComponent(0.7).setFill()
+            let capsule = handle.split.axis == .horizontal
+                ? NSRect(x: bounds.midX - 1.5, y: bounds.midY - 20, width: 3, height: 40)
+                : NSRect(x: bounds.midX - 20, y: bounds.midY - 1.5, width: 40, height: 3)
+            NSBezierPath(roundedRect: capsule, xRadius: 1.5, yRadius: 1.5).fill()
+        }
+    }
+    private let marks = Marks()
 
     override func resetCursorRects() {
         addCursorRect(bounds, cursor: split.axis == .horizontal ? .resizeLeftRight : .resizeUpDown)
@@ -414,11 +514,17 @@ final class PaneEdgeHandleView: NSView, PaneResizeCursorView {
     override func mouseDown(with event: NSEvent) {
         guard let container else { return }
         if event.clickCount == 2 {
-            container.controller.setOpen(split.id, true, animated: true)
+            container.controller.setOpen(split.id, !hover, animated: true)
             return
         }
         trackResize(split, in: container, from: event)
+        // The drag's own event loop swallowed any exit; ask where the
+        // pointer ended up.
+        if hover { container.pointerExited(split: split.id) }
     }
+
+    override func mouseEntered(with event: NSEvent) { if hover { container?.pointerEntered(split: split.id) } }
+    override func mouseExited(with event: NSEvent) { if hover { container?.pointerExited(split: split.id) } }
 
     override func accessibilityPerformPress() -> Bool {
         container?.controller.setOpen(split.id, true)
@@ -643,3 +749,4 @@ func dragResize(_ split: Split, root: PaneNode, fromEdge: CGFloat, total: CGFloa
     }
     s.splits[split.id] = st
 }
+
