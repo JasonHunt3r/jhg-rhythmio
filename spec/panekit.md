@@ -622,6 +622,22 @@ ask it to stand aside.
 copy by axtool: every key above; a tile click hands the arrows back to the
 grid and greys the sidebar's selection; ⌥-click folds without renaming.
 
+**`PaneInlineRename`** (added the same evening; Jason: "opt click on a
+list item turns it into an editable field, all text selected … return on
+a selected item often triggers same"). A row's name that becomes a text
+field in place, all selected: Return or any click outside keeps it,
+Escape restores it, empty or unchanged is no rename. `onReturn:` on
+`.paneListNavigation` starts it from the keyboard; Return and Escape hand
+the keyboard back to the list. The Catalog uses it for ⌥-click on a name,
+Return, and the right-click Rename (which lost its "…" — no dialog now);
+the rename alert is gone. Traps, measured: focusing the field in the
+same pass it appears doesn't take while the list holds the keyboard (one
+runloop turn later does); a click on something that doesn't take the
+keyboard (the grid's empty space) never ends the edit through focus, so a
+mouse-down monitor ends it; and the list's key handler sees every key
+typed in the field, so it stands aside while an `NSText` is first
+responder.
+
 **Known limits.** The app's window-wide `SingleKeys` handlers run before
 SwiftUI focus, so a key one of them takes never reaches type-to-select —
 with a show open, J K L M I O N are the timeline's (as they beat the

@@ -17,9 +17,8 @@ struct MainView: View {
     /// Groups folded shut (their own id space, so a collection and a group
     /// that happen to share a number don't fold together).
     @State private var foldedGroups: Set<Int64> = []
-    /// Renaming: what, and the name being typed.
+    /// The row whose name is being edited in place (`startRenaming`).
     @State private var renaming: SidebarItem?
-    @State private var draftName = ""
     /// New Collection, named before it's made (audit H1): nothing is ever
     /// called "Untitled" unless someone clicked OK on that name.
     @State private var creatingCollection = false
@@ -44,20 +43,6 @@ struct MainView: View {
         // directly here before PaneKit had the concept, zero visible
         // effect) is superseded by this and no longer called.
         .background(WindowAccessor { PaneContainerView.enableContentUnderTitleBar(on: $0) })
-        .alert(renamingTitle, isPresented: Binding(get: { renaming != nil }, set: { if !$0 { renaming = nil } })) {
-            TextField("Name", text: $draftName)
-            Button("Rename") {
-                let name = draftName.trimmingCharacters(in: .whitespaces)
-                switch renaming {
-                case .collection(let id): model.renameCollection(id, to: name, undo: undoManager)
-                case .group(let id): model.renameGroup(id, to: name, undo: undoManager)
-                case .show(let id): model.renameShow(id, to: name, undo: undoManager)
-                default: break
-                }
-                renaming = nil
-            }
-            Button("Cancel", role: .cancel) { renaming = nil }
-        }
         .alert("New Collection", isPresented: $creatingCollection) {
             TextField("Name", text: $newCollectionName)
             Button("Create") {
@@ -296,7 +281,8 @@ struct MainView: View {
         // Last, so the pinned Library row above takes the keyboard on a
         // click too, as it did inside the `List`.
         .paneListNavigation(selection: Binding(get: { model.sidebar }, set: { if let s = $0 { model.sidebar = s } }),
-                            order: visibleSidebarOrder, title: sidebarTitle, outline: sidebarOutline)
+                            order: visibleSidebarOrder, title: sidebarTitle, outline: sidebarOutline,
+                            onReturn: { if $0 != .library { startRenaming($0) } })
     }
 
     /// The Library row, pinned above the Collections list
@@ -408,17 +394,21 @@ struct MainView: View {
 }
 
 extension MainView {
-    private var renamingTitle: String {
-        switch renaming {
-        case .collection: "Rename Collection"
-        case .group: "Rename Group"
-        default: "Rename Show"
-        }
+    /// Renames happen in place, in the row itself (`PaneInlineRename`), as
+    /// in Finder's sidebar — from ⌥-clicking a name, Return on the selected
+    /// row, or the right-click Rename. An alert did it before (2026-09-27).
+    private func startRenaming(_ item: SidebarItem) {
+        model.sidebar = item
+        renaming = item
     }
 
-    private func startRenaming(_ item: SidebarItem, current: String) {
-        draftName = current
-        renaming = item
+    private func rename(_ item: SidebarItem, to name: String) {
+        switch item {
+        case .collection(let id): model.renameCollection(id, to: name, undo: undoManager)
+        case .group(let id): model.renameGroup(id, to: name, undo: undoManager)
+        case .show(let id): model.renameShow(id, to: name, undo: undoManager)
+        case .library: break
+        }
     }
 
 
@@ -578,11 +568,23 @@ extension MainView {
         return HStack(spacing: 6) {
             HStack(spacing: 0) {
                 PaneOutlineIndent()
-                Label(title, systemImage: icon)
-                    .onTapGesture {
-                        model.sidebar = item
-                        if renames, NSEvent.modifierFlags.contains(.option) { startRenaming(item, current: title) }
+                Label {
+                    if renames {
+                        PaneInlineRename(title, isEditing: Binding(get: { renaming == item },
+                                                                   set: { if !$0, renaming == item { renaming = nil } }),
+                                         commit: { rename(item, to: $0) })
+                    } else {
+                        Text(title)
                     }
+                } icon: {
+                    Image(systemName: icon)
+                }
+                // Off while its name is being edited, so a click in the
+                // field places the caret instead.
+                .gesture(TapGesture().onEnded {
+                    model.sidebar = item
+                    if renames, NSEvent.modifierFlags.contains(.option) { startRenaming(item) }
+                }, including: renaming == item ? .subviews : .all)
             }
             Spacer()
             Text("\(count)")
@@ -602,7 +604,7 @@ extension MainView {
                 Button("New Show in “\(c.name)”") { model.newShow(in: c.id) }
                 Button("New Group in “\(c.name)”…") { startCreatingGroup(collectionID: c.id) }
                 Divider()
-                Button("Rename…") { startRenaming(.collection(c.id), current: c.name) }
+                Button("Rename") { startRenaming(.collection(c.id)) }
                 Button("Delete Collection…") { deleteCollectionAsking(c) }
             }
             // Dropping files on a collection puts them in it (imported first
@@ -642,7 +644,7 @@ extension MainView {
             .contextMenu {
                 Button("New Group in “\(g.name)”…") { startCreatingGroup(collectionID: g.collectionID, parentID: g.id) }
                 Divider()
-                Button("Rename…") { startRenaming(.group(g.id), current: g.name) }
+                Button("Rename") { startRenaming(.group(g.id)) }
                 Button("Delete Group…") { deleteGroupAsking(g) }
             }
             // Draggable, so it can be dropped on another group to nest it
@@ -702,7 +704,7 @@ extension MainView {
                         .disabled(show.slides.isEmpty || model.movieExportStatus?.finished == false)
                 }
                 Divider()
-                Button("Rename…") { startRenaming(.show(show.id), current: show.name) }
+                Button("Rename") { startRenaming(.show(show.id)) }
                 Button("Delete Show…") { confirmDelete = show }
             }
             // Dropping files on a show appends them to it (asking first about

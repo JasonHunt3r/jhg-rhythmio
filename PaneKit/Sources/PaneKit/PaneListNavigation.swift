@@ -18,7 +18,9 @@ import AppKit
 ///   **⌥→ / ⌥←** open or fold the row and everything under it
 ///   (`outline`; `PaneOutlineIndent`'s ⌥-click does the same);
 /// - **typing** a name's first letters selects it; the same letter again
-///   steps through every row starting with it (`title`).
+///   steps through every row starting with it (`title`);
+/// - **Return** does what the app says (`onReturn`) — rename, in Finder's
+///   convention, through `PaneInlineRename`.
 ///
 /// Rows show whether it has the keyboard through `.paneListRow(selected:)`:
 /// the accent highlight while it does, grey while it doesn't, and a ring
@@ -35,21 +37,24 @@ public struct PaneListNavigation<ID: Hashable>: ViewModifier {
     let order: [ID]
     let title: ((ID) -> String)?
     let outline: PaneListOutline<ID>?
+    let onReturn: ((ID) -> Void)?
     @FocusState private var focused: Bool
     @State private var typed = PaneTypeSelect()
 
     public init(selection: Binding<ID?>, order: [ID], title: ((ID) -> String)? = nil,
-                outline: PaneListOutline<ID>? = nil) {
+                outline: PaneListOutline<ID>? = nil, onReturn: ((ID) -> Void)? = nil) {
         self._selection = selection
         self.order = order
         self.title = title
         self.outline = outline
+        self.onReturn = onReturn
     }
 
     public func body(content: Content) -> some View {
         ScrollViewReader { proxy in
             content
                 .environment(\.paneListFocused, focused)
+                .environment(\.paneListRefocus, { focused = true })
                 .focusable()
                 .focusEffectDisabled()
                 .focused($focused)
@@ -62,8 +67,14 @@ public struct PaneListNavigation<ID: Hashable>: ViewModifier {
     private func handle(_ press: KeyPress, proxy: ScrollViewProxy) -> KeyPress.Result {
         // ⌘ and ⌃ belong to menus and the system, never to the list.
         guard press.modifiers.isDisjoint(with: [.command, .control]) else { return .ignored }
+        // A row's name being edited (`PaneInlineRename`) keeps every key:
+        // a key pressed in a focused child reaches this handler too.
+        guard !(NSApp.keyWindow?.firstResponder is NSText) else { return .ignored }
         let option = press.modifiers.contains(.option)
         switch press.key {
+        case .return:
+            guard let onReturn, let selection, press.phase == .down, press.modifiers.isEmpty else { return .ignored }
+            onReturn(selection)
         case .upArrow: select(Self.stepped(selection, in: order, by: -1), proxy: proxy)
         case .downArrow: select(Self.stepped(selection, in: order, by: 1), proxy: proxy)
         case .leftArrow, .rightArrow:
@@ -239,8 +250,10 @@ public struct PaneListRow: ViewModifier {
 public extension View {
     /// See `PaneListNavigation`.
     func paneListNavigation<ID: Hashable>(selection: Binding<ID?>, order: [ID], title: ((ID) -> String)? = nil,
-                                          outline: PaneListOutline<ID>? = nil) -> some View {
-        modifier(PaneListNavigation(selection: selection, order: order, title: title, outline: outline))
+                                          outline: PaneListOutline<ID>? = nil,
+                                          onReturn: ((ID) -> Void)? = nil) -> some View {
+        modifier(PaneListNavigation(selection: selection, order: order, title: title, outline: outline,
+                                    onReturn: onReturn))
     }
 
     /// See `PaneListRow`.
