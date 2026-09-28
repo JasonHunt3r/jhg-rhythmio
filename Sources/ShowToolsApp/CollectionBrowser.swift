@@ -2,6 +2,7 @@ import SwiftUI
 import ShowToolsCore
 import ShowToolsPlayback
 import PaneKit
+import ListKit
 
 /// Edit Show's right-hand column: the show's collection, its files to build
 /// the show from (plan, 2b; Final Cut's browser). The show's own order lives
@@ -52,7 +53,8 @@ struct CollectionBrowser: View {
     @Environment(\.undoManager) private var undoManager
     /// ⌘Delete's question: files to delete from the library.
     @State private var confirmDelete: [Int64]?
-    @FocusState private var listFocused: Bool
+    /// Whether the list has the keyboard (`ListNavigation`'s report).
+    @State private var listFocused = false
     @State private var search = ""
     @AppStorage("browserUse") private var use: UseFilter = .all
     @AppStorage("browserMinRating") private var minRating = 0
@@ -168,17 +170,14 @@ struct CollectionBrowser: View {
             "viewer": AnyView(SelectionViewer(
                 items: ordered(picked).compactMap { model.itemsByID[$0] },
                 primary: lastPicked.flatMap(itemID), mode: $viewerMode, model: model)),
-            "grid": AnyView(VStack(spacing: 0) {
-                bar
-                Divider()
-                // The drawer's handle: a slim strip with the pill, not the
-                // bar, whose controls take clicks (Jason, 2026-09-26).
-                DrawerGripStrip(controller: viewer, split: ViewerLayout.split)
-                Divider()
+            "grid": AnyView(Group {
                 if collection == nil {
-                    ContentUnavailableView("Not in a collection", systemImage: "rectangle.stack",
-                                           description: Text("This show doesn't belong to a collection."))
-                        .noMenuYet("Edit Show › Browser › empty (no collection)")
+                    VStack(spacing: 0) {
+                        topStack
+                        ContentUnavailableView("Not in a collection", systemImage: "rectangle.stack",
+                                               description: Text("This show doesn't belong to a collection."))
+                            .noMenuYet("Edit Show › Browser › empty (no collection)")
+                    }
                 } else {
                     list
                 }
@@ -331,73 +330,64 @@ struct CollectionBrowser: View {
 
     // MARK: The list
 
+    /// The bar, the drawer's handle and their dividers: pinned over the top
+    /// of the list, which scrolls up under them (Jason, 2026-09-27), on the
+    /// same translucent background as the grid's filter bar — the handle
+    /// too, when Settings says "Include handles".
+    private var topStack: some View {
+        VStack(spacing: 0) {
+            bar
+            Divider()
+            // The drawer's handle: a slim strip with the pill, not the
+            // bar, whose controls take clicks (Jason, 2026-09-26).
+            DrawerGripStrip(controller: model.browserViewer, split: ViewerLayout.split, inStack: true)
+            Divider()
+        }
+        .background(ScrollBarBackground())
+    }
+
+    /// A plain `ScrollView`, not a `List`, since 2026-09-27: a `List`'s
+    /// `NSTableView` never shows through translucent bars laid over it
+    /// (`spec/listkit.md`), and Jason wanted the rows scrolling up under
+    /// the bar and the section headers. ListKit gives back what `List`
+    /// did: picking several (⌘/⇧-click, ⇧-arrows, ⌘A), the keys, a
+    /// double-click, the empty space picking nothing.
     private var list: some View {
         let top = usedEntries, rest = unusedFiles
-        return List(selection: $picked) {
-            if !top.isEmpty {
-                Section {
-                    ForEach(top) { u in
-                        row(u.item, used: true, use: u.of > 1 ? u.number : nil).tag(u.pick)
-                            .itemProvider { ItemDrag.provider([u.item.id]) }
+        return ScrollView {
+            LazyVStack(alignment: .leading, spacing: 0, pinnedViews: [.sectionHeaders]) {
+                if !top.isEmpty {
+                    Section {
+                        ForEach(top) { u in
+                            browserRow(u.item, pick: u.pick, used: true, use: u.of > 1 ? u.number : nil)
+                        }
+                    } header: {
+                        sectionHeader("In this show")
                     }
-                } header: {
-                    Text("In this show")
                 }
-            }
-            if !rest.isEmpty {
-                Section {
-                    ForEach(rest) { item in
-                        row(item, used: false).tag(Pick.file(item.id))
-                            .itemProvider { ItemDrag.provider([item.id]) }
+                if !rest.isEmpty {
+                    Section {
+                        ForEach(rest) { item in browserRow(item, pick: .file(item.id), used: false) }
+                    } header: {
+                        sectionHeader("Not in this show")
                     }
-                } header: {
-                    Text("Not in this show")
                 }
             }
         }
-        .contextMenu(forSelectionType: Pick.self) { picks in
-            if picks.isEmpty {
-                // Below the rows, `ListEmptySpace` answers first (SwiftUI
-                // throws there); this is for anywhere else it's asked empty.
-                NoMenuYetItems(place: "Edit Show › Browser › empty space",
-                               planned: "Import…, Add from Library…")
-            } else {
-                let chosen = ordered(picks)
-                let pictureIDs = model.pictures(chosen)
-                let audioIDs = chosen.filter { model.itemsByID[$0]?.kind == .audio }
-                // The add items first (settled, spec/conventions.md §3, item 5).
-                if !pictureIDs.isEmpty {
-                    Button("Append to Show  (E)") { append(chosen) }
-                    Button("Insert at Playhead  (W)") { insertAtPlayhead(chosen) }
-                    Button("Place in Images Row at Playhead  (Q)") { placeAtPlayhead(chosen) }
-                }
-                if !audioIDs.isEmpty {
-                    Button("Place at Playhead") {
-                        MusicRow.place(audioIDs, at: timeline.wrap(engine.now), model: model, mutate: mutate)
-                    }
-                }
-                // A single use gets its own actions, distinct from the file
-                // picker actions above.
-                if picks.count == 1, let pick = picks.first, pick.isUse {
-                    Divider()
-                    Button("Select in Timeline") { selectInTimeline(pick) }
-                    Button("Play from Here") { playFromHere(pick) }
-                    Button("Remove from Show") { removeUse(pick) }
-                }
-                Divider()
-                if let id = chosen.first { Button("Show in Library") { showInLibrary(id, model: model, undoManager: undoManager) } }
-                if let cid = collection?.id {
-                    Button("Remove from Collection") { model.removeFromCollection(chosen, cid, undo: undoManager) }
-                }
-                Button(chosen.count == 1 ? "Move to Trash…" : "Move \(chosen.count) Items to Trash…") {
-                    confirmDelete = chosen
-                }
-            }
-        } primaryAction: { picks in
-            // Double-clicking a use toggles the inspector, as the order list
-            // before this did. A file not in the show has nothing to inspect.
-            if picks.contains(where: { if case .file = $0 { false } else { true } }) { inspectorShown.toggle() }
+        .contextMenu {
+            NoMenuYetItems(place: "Edit Show › Browser › empty space", planned: "Import…, Add from Library…")
         }
+        .listNavigation(selection: $picked, order: usedEntries.map(\.pick) + unusedFiles.map { .file($0.id) },
+                        primaryAction: { picks in
+                            // Double-clicking a use toggles the inspector, as
+                            // the order list before this did. A file not in
+                            // the show has nothing to inspect.
+                            if picks.contains(where: \.isUse) { inspectorShown.toggle() }
+                        },
+                        onFocusChange: { listFocused = $0 }, accessibilityLabel: "Browser")
+        // Outside the list's keyboard handling, so typing in the bar's
+        // search field never reaches the list's own keys (E appends).
+        .safeAreaInset(edge: .top, spacing: 0) { topStack }
         // Delete by context (plan, Phase 3b): Delete takes the picked files
         // out of this collection (undoable); ⌘Delete deletes them from the
         // library, and asks first.
@@ -407,7 +397,6 @@ struct CollectionBrowser: View {
             guard !files.isEmpty else { return }
             model.removeFromCollection(files, cid, undo: undoManager)
         }
-        .focused($listFocused)
         // ⌘Delete never reaches onKeyPress inside a List; take it before
         // AppKit does, as the Library grid does, while the list has the keys.
         .background(SingleKeys { event in
@@ -427,7 +416,8 @@ struct CollectionBrowser: View {
             Text(deleteMessage(ids))
         }
         .onKeyPress(keys: ["e", "w", "q"]) { press in
-            guard press.modifiers.isEmpty, !picked.isEmpty else { return .ignored }
+            guard press.modifiers.isEmpty, !picked.isEmpty,
+                  !(NSApp.keyWindow?.firstResponder is NSText) else { return .ignored }
             let chosen = ordered(picked)
             switch press.key {
             case "e": append(chosen)
@@ -439,7 +429,7 @@ struct CollectionBrowser: View {
         // Item 20, Aperture's keys, as in the Library grid: 1–5, 0, 9, −
         // and = rate the picked files. (U is MainView's, window-wide.)
         .onKeyPress(characters: CharacterSet(charactersIn: "0123459-=")) { press in
-            guard press.modifiers.isEmpty else { return .ignored }
+            guard press.modifiers.isEmpty, !(NSApp.keyWindow?.firstResponder is NSText) else { return .ignored }
             guard let key = Rating.Key(press.characters), !picked.isEmpty else { return .ignored }
             model.applyRatingKey(key, to: ordered(picked), undo: undoManager)
             return .handled
@@ -492,6 +482,69 @@ struct CollectionBrowser: View {
             if let o, picked != [.overlay(o)] { picked = [.overlay(o)] }
             if o == nil, picked.contains(where: \.isOverlay) { picked = [] }
         }
+    }
+
+    /// The right-click menu for some picks: the whole pick when the row
+    /// clicked is in it, else just that row (as `NSTableView` does — the
+    /// pick itself doesn't change).
+    @ViewBuilder
+    private func menuItems(_ picks: Set<Pick>) -> some View {
+        let chosen = ordered(picks)
+        let pictureIDs = model.pictures(chosen)
+        let audioIDs = chosen.filter { model.itemsByID[$0]?.kind == .audio }
+        // The add items first (settled, spec/conventions.md §3, item 5).
+        if !pictureIDs.isEmpty {
+            Button("Append to Show  (E)") { append(chosen) }
+            Button("Insert at Playhead  (W)") { insertAtPlayhead(chosen) }
+            Button("Place in Images Row at Playhead  (Q)") { placeAtPlayhead(chosen) }
+        }
+        if !audioIDs.isEmpty {
+            Button("Place at Playhead") {
+                MusicRow.place(audioIDs, at: timeline.wrap(engine.now), model: model, mutate: mutate)
+            }
+        }
+        // A single use gets its own actions, distinct from the file
+        // picker actions above.
+        if picks.count == 1, let pick = picks.first, pick.isUse {
+            Divider()
+            Button("Select in Timeline") { selectInTimeline(pick) }
+            Button("Play from Here") { playFromHere(pick) }
+            Button("Remove from Show") { removeUse(pick) }
+        }
+        Divider()
+        if let id = chosen.first { Button("Show in Library") { showInLibrary(id, model: model, undoManager: undoManager) } }
+        if let cid = collection?.id {
+            Button("Remove from Collection") { model.removeFromCollection(chosen, cid, undo: undoManager) }
+        }
+        Button(chosen.count == 1 ? "Move to Trash…" : "Move \(chosen.count) Items to Trash…") {
+            confirmDelete = chosen
+        }
+    }
+
+    /// One row: the file's own `row`, as a ListKit row — picked by the
+    /// list's clicks, dragged as the whole pick when it's in it.
+    private func browserRow(_ item: MediaItem, pick: Pick, used: Bool, use: Int? = nil) -> some View {
+        row(item, used: used, use: use)
+            .padding(.horizontal, 8).padding(.vertical, 4)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .listRow(id: pick, label: item.fileName,
+                     value: used ? (use.map { "use \($0) in this show" } ?? "in this show") : "not in this show")
+            .padding(.horizontal, 6)
+            .id(pick)
+            .onDrag { ItemDrag.provider(picked.contains(pick) ? ordered(picked) : itemID(pick).map { [$0] } ?? []) }
+            .contextMenu { menuItems(picked.contains(pick) ? picked : [pick]) }
+    }
+
+    /// "In this show" / "Not in this show": pinned at the top as the rows
+    /// scroll under it, on the bars' translucent background.
+    private func sectionHeader(_ title: String) -> some View {
+        Text(title)
+            .font(.subheadline.weight(.semibold))
+            .foregroundStyle(.secondary)
+            .padding(.horizontal, 14).padding(.vertical, 5)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(ScrollBarBackground())
+            .accessibilityAddTraits(.isHeader)
     }
 
     /// `use` is which use of the file this entry is, shown when it has more

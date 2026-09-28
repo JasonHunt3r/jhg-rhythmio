@@ -1,6 +1,7 @@
 import SwiftUI
 import ShowToolsCore
 import ShowToolsPlayback
+import ListKit
 
 /// The timeline pane: the transport and the storyline, full width under
 /// the Library pane, not just the detail column (`spec/windows.md`, "The
@@ -413,7 +414,8 @@ struct EditShowTimelinePane: View {
                 // the window answers `selectAll:`, so it beeped. A list
                 // with the keyboard (the browser) keeps its own ⌘A.
                 case (0, _, [.command]):
-                    guard !(NSApp.keyWindow?.firstResponder is NSTableView) else { return false }
+                    guard !(NSApp.keyWindow?.firstResponder is NSTableView),
+                          !ListKeyboard.hasKeyboard(in: NSApp.keyWindow) else { return false }
                     selectAllSlides()
                 case (123, _, []): moveSelection(-1, extend: false, engine: engine)     // ←
                 case (123, _, [.shift]): moveSelection(-1, extend: true, engine: engine)

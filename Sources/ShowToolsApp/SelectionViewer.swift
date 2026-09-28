@@ -180,6 +180,9 @@ struct GripPill: View {
 struct DrawerGripStrip: View {
     let controller: PaneController
     let split: String
+    /// Inside a bar stack that already has its own translucent background
+    /// (the browser's, since 2026-09-27): see `HandleBackground`.
+    var inStack = false
 
     var body: some View {
         Color.clear
@@ -187,7 +190,7 @@ struct DrawerGripStrip: View {
             .frame(height: 12)   // PaneKit's edge handles' thickness
             .overlay { GripPill() }
             .paneHandle(controller, split: split)
-            .background(HandleBackground())
+            .background(HandleBackground(inStack: inStack))
     }
 }
 
