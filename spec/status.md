@@ -124,7 +124,7 @@ discussion — and Jason's own tuning of the sensitivity dials.
 - **Signed "Apple Development"**, team `P82S39V2KJ` (`spec/xcode-port.md`),
   no longer ad hoc.
 
-**Installed:** `~/Applications/ShowTools.app` at `883a1ee`, 2026-09-27,
+**Installed:** `~/Applications/ShowTools.app` at `f4e39b2`, 2026-09-28,
 signed with Jason's team. Every reinstall (`install.sh`) quits the real
 BGTools and doesn't restart it: start it again from View ▸ Desktop Show….
 
