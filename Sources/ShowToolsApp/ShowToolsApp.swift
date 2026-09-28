@@ -705,10 +705,11 @@ private struct WindowsSettingsTab: View {
             // that scrolled content passes under (the Library grid's filter
             // bar) — no sub-window, no region picker, one slider per
             // appearance, right here.
-            Section("Filter Bar") {
+            Section("Translucent Bars") {
                 scrollBarRow(scheme: .dark, label: "Dark Mode")
                 scrollBarRow(scheme: .light, label: "Light Mode")
-                Text("How opaque the grid's filter bar is where photos scroll underneath it — at the low end, the OS's own native look; at the high end, fully solid.")
+                Toggle("Include handles", isOn: $scrollBarSetting.includeHandles)
+                Text("How opaque the bars are where content scrolls underneath them — the grid's filter bar, the sidebar's top and bottom — at the low end, the OS's own native look; at the high end, fully solid. With Include handles, a drawer's handle strip goes translucent with them instead of staying solid.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
             }

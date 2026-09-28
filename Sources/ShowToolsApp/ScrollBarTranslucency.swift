@@ -27,6 +27,14 @@ final class ScrollBarTranslucency: ObservableObject {
 
     @Published private var amount: [String: Double] = [:]
 
+    /// Whether a drawer's handle strip in a translucent bar stack (the
+    /// grid's sort strip) goes translucent with the bars, or stays solid
+    /// as it always has — the default (Jason, 2026-09-27: "Include handles
+    /// in transparency? Checkbox"). `HandleBackground` reads it.
+    @Published var includeHandles: Bool = UserDefaults.standard.bool(forKey: "scrollBarIncludeHandles") {
+        didSet { UserDefaults.standard.set(includeHandles, forKey: "scrollBarIncludeHandles") }
+    }
+
     private func key(_ scheme: ColorScheme) -> String {
         scheme == .dark ? "scrollBarOpacity.dark" : "scrollBarOpacity.light"
     }
@@ -81,6 +89,20 @@ struct ScrollBarBackground: View {
             Color(nsColor: .windowBackgroundColor).opacity(amount)
         }
         .allowsHitTesting(false)
+    }
+}
+
+/// A drawer handle's background inside a translucent bar stack: solid, as
+/// it always was, unless "Include handles" is on — then clear, so the
+/// stack's own `ScrollBarBackground` shows through it like the bars around
+/// it. Edit Show's browser handle (`DrawerGripStrip`) joins once the
+/// browser leaves `List` and has rows scrolling under it
+/// (`spec/listkit.md`).
+struct HandleBackground: View {
+    @ObservedObject private var setting = ScrollBarTranslucency.shared
+
+    var body: some View {
+        if setting.includeHandles { Color.clear } else { Color(nsColor: .controlBackgroundColor) }
     }
 }
 
