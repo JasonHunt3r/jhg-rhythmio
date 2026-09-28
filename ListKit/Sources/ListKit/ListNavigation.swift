@@ -22,47 +22,105 @@ import AppKit
 /// - **Return** does what the app says (`onReturn`) — rename, in Finder's
 ///   convention, through `InlineRename`.
 ///
-/// Rows show whether it has the keyboard through `.listRow(selected:)`:
-/// the accent highlight while it does, grey while it doesn't, and a ring
-/// around the row a right-click menu is open for — `List`'s own states.
+/// **Several at once** (the `Set` form, `multiple`), as `NSTableView` picks:
+/// ⌘-click adds or removes a row, ⇧-click picks the range from the anchor
+/// (the row last clicked), ⇧↑ / ⇧↓ grow or shrink that range from the
+/// lead (the row the arrows move from), ⌘A picks every row, a
+/// double-click runs `primaryAction`, and a click on the empty space below
+/// the rows picks nothing. Rows take their clicks through the id form of
+/// `.listRow(id:label:)`.
+///
+/// Rows show whether it has the keyboard through `.listRow`: the accent
+/// highlight while it does, grey while it doesn't, and a ring around the
+/// row a right-click menu is open for — `List`'s own states.
 ///
 /// The app keeps building its own rows (recursive `DisclosureGroup`s with
 /// `.disclosureGroupStyle(.listOutline)`) and its own keys for everything
-/// else (Delete, Return, rename). `order` is the current, flat, *visible*
-/// row order — folded branches already left out, since only the app knows
-/// its fold state — with each row carrying a matching `.id(_:)` for
+/// else (Delete, rename). `order` is the current, flat, *visible* row order
+/// — folded branches already left out, since only the app knows its fold
+/// state — with each row carrying a matching `.id(_:)` for
 /// `ScrollViewProxy.scrollTo`.
 public struct ListNavigation<ID: Hashable>: ViewModifier {
-    @Binding var selection: ID?
+    @Binding var selection: Set<ID>
+    let multiple: Bool
     let order: [ID]
     let title: ((ID) -> String)?
     let outline: ListOutline<ID>?
     let onReturn: ((ID) -> Void)?
+    let primaryAction: ((Set<ID>) -> Void)?
+    let onFocusChange: ((Bool) -> Void)?
+    let focusOnAppear: Bool
     let accessibilityLabel: String?
     @FocusState private var focused: Bool
     @State private var typed = TypeSelect()
+    /// Where a ⇧-range starts, and where the arrows move from.
+    @State private var anchor: ID?
+    @State private var lead: ID?
+    /// This list's own mark in `ListKeyboard`, so two lists in one window
+    /// don't clear each other's.
+    @State private var token = UUID()
 
+    /// One row at a time (a sidebar).
     public init(selection: Binding<ID?>, order: [ID], title: ((ID) -> String)? = nil,
                 outline: ListOutline<ID>? = nil, onReturn: ((ID) -> Void)? = nil,
+                onFocusChange: ((Bool) -> Void)? = nil, focusOnAppear: Bool = false,
                 accessibilityLabel: String? = nil) {
-        self.accessibilityLabel = accessibilityLabel
-        self._selection = selection
+        self._selection = Binding(get: { selection.wrappedValue.map { [$0] } ?? [] },
+                                  set: { selection.wrappedValue = $0.first })
+        self.multiple = false
         self.order = order
         self.title = title
         self.outline = outline
         self.onReturn = onReturn
+        self.primaryAction = nil
+        self.onFocusChange = onFocusChange
+        self.focusOnAppear = focusOnAppear
+        self.accessibilityLabel = accessibilityLabel
+    }
+
+    /// Several rows at once (a browser).
+    public init(selection: Binding<Set<ID>>, order: [ID], title: ((ID) -> String)? = nil,
+                onReturn: ((ID) -> Void)? = nil, primaryAction: ((Set<ID>) -> Void)? = nil,
+                onFocusChange: ((Bool) -> Void)? = nil, focusOnAppear: Bool = false,
+                accessibilityLabel: String? = nil) {
+        self._selection = selection
+        self.multiple = true
+        self.order = order
+        self.title = title
+        self.outline = nil
+        self.onReturn = onReturn
+        self.primaryAction = primaryAction
+        self.onFocusChange = onFocusChange
+        self.focusOnAppear = focusOnAppear
+        self.accessibilityLabel = accessibilityLabel
     }
 
     public func body(content: Content) -> some View {
         ScrollViewReader { proxy in
             content
+                // The empty space below the rows: picks nothing, as a
+                // `List` does. On the list itself, not behind it (the
+                // scroll view kept those clicks, measured); a row's own tap
+                // wins over this one, as a child's always does.
+                .contentShape(Rectangle())
+                .gesture(TapGesture().onEnded { selection = []; anchor = nil; lead = nil; focused = true },
+                         including: multiple ? .all : .subviews)
                 .environment(\.listFocused, focused)
                 .environment(\.listRefocus, { focused = true })
+                .environment(\.listSelection, ListSelectionContext(
+                    isSelected: { ($0.base as? ID).map(selection.contains) ?? false },
+                    click: { any in
+                        guard let id = any.base as? ID else { return }
+                        click(id)
+                    }))
                 .focusable()
                 .focusEffectDisabled()
                 .focused($focused)
-                .onChange(of: focused, initial: true) { _, on in ListKeyboard.set(on, in: NSApp.keyWindow) }
-                .onAppear { focused = true }
+                .onChange(of: focused, initial: true) { _, on in
+                    ListKeyboard.set(on, token: token, in: NSApp.keyWindow)
+                    onFocusChange?(on)
+                }
+                .onAppear { if focusOnAppear { focused = true } }
                 .onKeyPress(phases: [.down, .repeat]) { press in handle(press, proxy: proxy) }
                 // One named group for VoiceOver to enter and leave, as a
                 // `List` is ("Sidebar").
@@ -71,22 +129,60 @@ public struct ListNavigation<ID: Hashable>: ViewModifier {
         }
     }
 
+    /// A row's click, with the modifiers held and the click count
+    /// (`ListSelectionContext.click`).
+    private func click(_ id: ID) {
+        focused = true
+        let event = NSApp.currentEvent
+        let flags = event?.modifierFlags ?? []
+        let result = Self.clicked(id, command: multiple && flags.contains(.command),
+                                  shift: multiple && flags.contains(.shift),
+                                  selection: selection, anchor: anchor, in: order)
+        if selection != result.selection { selection = result.selection }
+        anchor = result.anchor
+        lead = result.lead
+        if (event?.clickCount ?? 1) >= 2, let primaryAction, selection.contains(id) { primaryAction(selection) }
+    }
+
+    /// The row the arrows move from: the lead, if it's still picked;
+    /// otherwise the first picked row (the pick changed from outside).
+    private var current: ID? {
+        if let lead, selection.contains(lead) { return lead }
+        return order.first(where: selection.contains)
+    }
+
     private func handle(_ press: KeyPress, proxy: ScrollViewProxy) -> KeyPress.Result {
-        // ⌘ and ⌃ belong to menus and the system, never to the list.
-        guard press.modifiers.isDisjoint(with: [.command, .control]) else { return .ignored }
         // A row's name being edited (`InlineRename`) keeps every key:
         // a key pressed in a focused child reaches this handler too.
         guard !(NSApp.keyWindow?.firstResponder is NSText) else { return .ignored }
+        if multiple, press.key == "a", press.modifiers == .command, press.phase == .down {
+            selection = Set(order)
+            anchor = order.first
+            lead = order.last
+            return .handled
+        }
+        // ⌘ and ⌃ belong to menus and the system, never to the list.
+        guard press.modifiers.isDisjoint(with: [.command, .control]) else { return .ignored }
         let option = press.modifiers.contains(.option)
         switch press.key {
         case .return:
-            guard let onReturn, let selection, press.phase == .down, press.modifiers.isEmpty else { return .ignored }
-            onReturn(selection)
-        case .upArrow: select(Self.stepped(selection, in: order, by: -1), proxy: proxy)
-        case .downArrow: select(Self.stepped(selection, in: order, by: 1), proxy: proxy)
+            guard let onReturn, let current, press.phase == .down, press.modifiers.isEmpty else { return .ignored }
+            onReturn(current)
+        case .upArrow, .downArrow:
+            let delta = press.key == .upArrow ? -1 : 1
+            if multiple, press.modifiers.contains(.shift) {
+                guard let next = Self.stepped(current, in: order, by: delta) else { return .handled }
+                let from = anchor.flatMap { selection.contains($0) ? $0 : nil } ?? current ?? next
+                selection = Self.range(from, next, in: order)
+                anchor = from
+                lead = next
+                withAnimation(.default) { proxy.scrollTo(next) }
+            } else {
+                select(Self.stepped(current, in: order, by: delta), proxy: proxy)
+            }
         case .leftArrow, .rightArrow:
             guard let outline else { return .ignored }
-            switch Self.horizontal(selection, right: press.key == .rightArrow, recursive: option,
+            switch Self.horizontal(current, right: press.key == .rightArrow, recursive: option,
                                    in: order, outline: outline) {
             case .select(let id): select(id, proxy: proxy)
             case .setExpanded(let id, let open, let recursive):
@@ -97,16 +193,41 @@ public struct ListNavigation<ID: Hashable>: ViewModifier {
             guard let title, press.phase == .down, !option,
                   let typedChar = press.characters.first, typedChar.isLetter || typedChar.isNumber
                     || (typedChar == " " && !typed.buffer.isEmpty) else { return .ignored }
-            select(typed.next(String(typedChar), at: .now, selection: selection, order: order, title: title),
+            select(typed.next(String(typedChar), at: .now, selection: current, order: order, title: title),
                    proxy: proxy)
         }
         return .handled
     }
 
     private func select(_ id: ID?, proxy: ScrollViewProxy) {
-        guard let id, id != selection else { return }
-        selection = id
+        guard let id else { return }
+        anchor = id
+        lead = id
+        guard selection != [id] else { return }
+        selection = [id]
         withAnimation(.default) { proxy.scrollTo(id) }
+    }
+
+    /// Pure, pinned by `ListKitTests`: what a click does to the pick, as
+    /// `NSTableView` answers it. Plain: just this row. ⌘: this row in or
+    /// out, the rest kept. ⇧: the range from the anchor to this row.
+    static func clicked(_ id: ID, command: Bool, shift: Bool, selection: Set<ID>, anchor: ID?,
+                        in order: [ID]) -> (selection: Set<ID>, anchor: ID?, lead: ID?) {
+        if shift, let anchor, order.contains(anchor) {
+            return (range(anchor, id, in: order), anchor, id)
+        }
+        if command {
+            var s = selection
+            if s.contains(id) { s.remove(id) } else { s.insert(id) }
+            return (s, id, id)
+        }
+        return ([id], id, id)
+    }
+
+    /// Every row from `a` to `b`, either way round, in `order`.
+    static func range(_ a: ID, _ b: ID, in order: [ID]) -> Set<ID> {
+        guard let i = order.firstIndex(of: a), let j = order.firstIndex(of: b) else { return [b] }
+        return Set(order[min(i, j)...max(i, j)])
     }
 
     /// Pure: pinned by `ListKitTests`, not by eye. `nil` selection (or one
@@ -152,17 +273,27 @@ public struct ListNavigation<ID: Hashable>: ViewModifier {
 /// handlers (a grid's arrows) ask this to stand aside, as they did for a
 /// `List` (ShowTools' Library grid took the sidebar's arrows, 2026-09-27).
 @MainActor public enum ListKeyboard {
-    private static let windows = NSHashTable<NSWindow>.weakObjects()
+    /// Each window's lists that have the keyboard, by their own token —
+    /// one list taking it as another lets go mustn't clear the first.
+    private static var lists: [ObjectIdentifier: Set<UUID>] = [:]
 
     public static func hasKeyboard(in window: NSWindow?) -> Bool {
         guard let window else { return false }
-        return windows.contains(window)
+        return !(lists[ObjectIdentifier(window)] ?? []).isEmpty
     }
 
-    static func set(_ on: Bool, in window: NSWindow?) {
+    static func set(_ on: Bool, token: UUID, in window: NSWindow?) {
         guard let window else { return }
-        if on { windows.add(window) } else { windows.remove(window) }
+        let key = ObjectIdentifier(window)
+        if on { lists[key, default: []].insert(token) } else { lists[key]?.remove(token) }
     }
+}
+
+/// What `ListNavigation` hands its rows: whether one is picked, and its
+/// click (the id form of `.listRow`).
+struct ListSelectionContext {
+    let isSelected: (AnyHashable) -> Bool
+    let click: (AnyHashable) -> Void
 }
 
 /// The hierarchy `ListNavigation`'s ← and → need, which a flat `order`
@@ -231,6 +362,10 @@ struct TypeSelect {
 /// so the field can be reached. Not an outline *role* — SwiftUI only gives
 /// that to `List`; see `spec/listkit.md`, "Known limits".
 public struct ListRow: ViewModifier {
+    /// The row's own id, for a list that handles its rows' clicks itself
+    /// (`ListNavigation`'s several-at-once form): picked-ness and the click
+    /// come from the list, not from `selected` and `select`.
+    var id: AnyHashable? = nil
     let selected: Bool
     let label: String
     let value: String?
@@ -238,13 +373,25 @@ public struct ListRow: ViewModifier {
     let cornerRadius: CGFloat
     let select: () -> Void
     @Environment(\.listFocused) private var focused
+    @Environment(\.listSelection) private var list
     @Environment(\.outlineLevel) private var level
     @Environment(\.outlineDisclosure) private var disclosure
     @State private var hovered = false
     @State private var menuOpen = false
 
+    /// Picked: from the list for the id form, else what the app said.
+    private var isPicked: Bool {
+        if let id, let list { return list.isSelected(id) }
+        return selected
+    }
+
+    private func activate() {
+        if let id, let list { list.click(id) } else { select() }
+    }
+
     public func body(content: Content) -> some View {
         let shape = RoundedRectangle(cornerRadius: cornerRadius)
+        let selected = isPicked
         content
             .foregroundStyle(selected && focused ? AnyShapeStyle(.white) : AnyShapeStyle(.primary))
             .background {
@@ -255,6 +402,9 @@ public struct ListRow: ViewModifier {
             }
             .overlay { if menuOpen { shape.strokeBorder(Color.accentColor, lineWidth: 2) } }
             .contentShape(Rectangle())
+            // The id form takes its own clicks (modifiers and double-clicks
+            // read by the list); off while its name is being edited.
+            .gesture(TapGesture().onEnded { activate() }, including: id != nil && !editing ? .all : .subviews)
             .onHover { hovered = $0 }
             // SwiftUI's `.contextMenu` says nothing about opening or
             // closing; AppKit's menu tracking does. The menu is this row's
@@ -273,7 +423,7 @@ public struct ListRow: ViewModifier {
             .accessibilityLabel(spokenLabel)
             .accessibilityValue(spokenValue)
             .accessibilityAddTraits(selected ? .isSelected : [])
-            .accessibilityAction(.default) { select() }
+            .accessibilityAction(.default) { activate() }
             .accessibilityActions {
                 if let disclosure {
                     Button(disclosure.wrappedValue ? "Collapse" : "Expand") {
@@ -306,11 +456,24 @@ public struct ListRow: ViewModifier {
 public extension View {
     /// See `ListNavigation`.
     func listNavigation<ID: Hashable>(selection: Binding<ID?>, order: [ID], title: ((ID) -> String)? = nil,
-                                          outline: ListOutline<ID>? = nil,
-                                          onReturn: ((ID) -> Void)? = nil,
-                                          accessibilityLabel: String? = nil) -> some View {
+                                      outline: ListOutline<ID>? = nil,
+                                      onReturn: ((ID) -> Void)? = nil,
+                                      onFocusChange: ((Bool) -> Void)? = nil, focusOnAppear: Bool = false,
+                                      accessibilityLabel: String? = nil) -> some View {
         modifier(ListNavigation(selection: selection, order: order, title: title, outline: outline,
-                                    onReturn: onReturn, accessibilityLabel: accessibilityLabel))
+                                onReturn: onReturn, onFocusChange: onFocusChange, focusOnAppear: focusOnAppear,
+                                accessibilityLabel: accessibilityLabel))
+    }
+
+    /// See `ListNavigation`: several rows at once.
+    func listNavigation<ID: Hashable>(selection: Binding<Set<ID>>, order: [ID], title: ((ID) -> String)? = nil,
+                                      onReturn: ((ID) -> Void)? = nil,
+                                      primaryAction: ((Set<ID>) -> Void)? = nil,
+                                      onFocusChange: ((Bool) -> Void)? = nil, focusOnAppear: Bool = false,
+                                      accessibilityLabel: String? = nil) -> some View {
+        modifier(ListNavigation(selection: selection, order: order, title: title, onReturn: onReturn,
+                                primaryAction: primaryAction, onFocusChange: onFocusChange,
+                                focusOnAppear: focusOnAppear, accessibilityLabel: accessibilityLabel))
     }
 
     /// See `ListRow`.
@@ -319,9 +482,22 @@ public extension View {
         modifier(ListRow(selected: selected, label: label, value: value, editing: editing,
                              cornerRadius: cornerRadius, select: select))
     }
+
+    /// See `ListRow`: a row in a list that picks several at once — its
+    /// clicks, modifiers and double-clicks are the list's.
+    func listRow<ID: Hashable>(id: ID, label: String, value: String? = nil, editing: Bool = false,
+                               cornerRadius: CGFloat = 6) -> some View {
+        modifier(ListRow(id: AnyHashable(id), selected: false, label: label, value: value, editing: editing,
+                         cornerRadius: cornerRadius, select: {}))
+    }
 }
 
 public extension EnvironmentValues {
     /// Whether the enclosing `ListNavigation` list has the keyboard.
     @Entry var listFocused: Bool = false
+}
+
+extension EnvironmentValues {
+    /// Set by `ListNavigation` for its rows (the id form of `.listRow`).
+    @Entry var listSelection: ListSelectionContext? = nil
 }

@@ -275,7 +275,7 @@ struct MainView: View {
         .listNavigation(selection: Binding(get: { model.sidebar }, set: { if let s = $0 { model.sidebar = s } }),
                             order: visibleSidebarOrder, title: sidebarTitle, outline: sidebarOutline,
                             onReturn: { if $0 != .library { startRenaming($0) } },
-                            accessibilityLabel: "Sidebar")
+                            focusOnAppear: true, accessibilityLabel: "Sidebar")
     }
 
     /// The Library row, pinned above the Collections list

@@ -6,13 +6,12 @@ package, `ListKit/` (top level), beside PaneKit and independent of it.
 its test app. Held to the standard of an App Store app, accessibility
 included (Jason, 2026-09-27).
 
-**Status: Building.** Built 2026-09-27: keyboard navigation with focus,
-outline chevrons and indents, type-to-select, inline rename, the rows'
-VoiceOver elements. Next: multiple selection (⌘/⇧-click, ⇧-arrows, ⌘A),
-dragging a selection, a selection's right-click menu and double-click,
-Delete — what Edit Show's browser needs to leave `List` (so its bars can
-be translucent over its rows). Later, in the accessibility pass: the real
-outline role (`spec/status.md`, "What's next", item 0).
+**Status: Built 2026-09-27**, in use by the sidebar (one at a time, an
+outline) and Edit Show's browser (several at once): keyboard navigation
+with focus, outline chevrons and indents, type-to-select, inline rename,
+multiple selection, the rows' VoiceOver elements. Later, in the
+accessibility pass: the real outline role (`spec/status.md`, "What's
+next", item 0).
 
 Why it exists: `.withinWindow` vibrancy never composites over a `List`'s
 `NSTableView` (measured twice, 2026-09-27), so any list whose bars are
@@ -165,3 +164,34 @@ label instead. What's still missing is the outline *role* itself, which
 SwiftUI gives only to `List`; parked for the accessibility pass
 (`spec/status.md`, "What's next", item 0).
 
+## Several at once, and the browser (added 2026-09-27, late)
+
+`ListNavigation`'s `Set` form picks as `NSTableView` does: a plain click
+just that row; ⌘-click in or out; ⇧-click the range from the anchor (the
+row last clicked); ⇧↑ / ⇧↓ grow or shrink that range from the lead; ⌘A
+all; a double-click runs `primaryAction`; a click on the empty space
+picks nothing. Rows use the id form, `.listRow(id:label:value:)`, which
+takes the row's click itself and reads the modifiers and click count;
+`ListSelectionContext` carries the pick and the click to it through the
+environment. `ListKeyboard` now keeps a token per list, so two lists in
+one window don't clear each other's claim. `focusOnAppear` is opt-in (the
+sidebar takes the keyboard at launch; the browser doesn't). The click and
+range rules are pure and pinned by 5 more tests (24).
+
+Edit Show's browser (`CollectionBrowser`) is its first user: a
+`ScrollView` with pinned section headers, the tools bar, handle and
+dividers in a `.safeAreaInset` on the bars' translucent background, rows
+scrolling up under them. A right-click on a picked row acts on the whole
+pick; on an unpicked row, on that row alone, without changing the pick.
+Dragging a picked row drags the pick.
+
+Traps, measured: the keyboard modifier goes *inside* the `.safeAreaInset`,
+so typing in the bar's search field never reaches the list's own keys
+(E would append); a tap-catcher *behind* a `ScrollView` never sees clicks
+on its empty space (the scroll view keeps them) — the tap goes on the
+scroll view itself, where a row's own tap still wins.
+
+Not changed, on purpose: in Edit Show the timeline takes plain ↑ / ↓
+window-wide (its row navigation), before the browser — as it did before
+the `List` went. Which area owns the arrows is the planned talk
+(`spec/status.md`, Open questions).

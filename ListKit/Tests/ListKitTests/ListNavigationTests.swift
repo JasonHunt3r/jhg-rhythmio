@@ -108,4 +108,32 @@ final class ListNavigationTests: XCTestCase {
         var ts = TypeSelect()
         XCTAssertEqual(ts.next("L", at: t0, selection: nil, order: ["library"], title: { $0 }), "library")
     }
+
+    // MARK: Several at once
+
+    let rows = ["a", "b", "c", "d", "e"]
+
+    func testAPlainClickPicksJustThatRow() {
+        let r = Nav.clicked("c", command: false, shift: false, selection: ["a", "b"], anchor: "a", in: rows)
+        XCTAssertEqual(r.selection, ["c"]); XCTAssertEqual(r.anchor, "c"); XCTAssertEqual(r.lead, "c")
+    }
+    func testACommandClickAddsOrRemovesOneRow() {
+        XCTAssertEqual(Nav.clicked("c", command: true, shift: false, selection: ["a"], anchor: "a", in: rows).selection,
+                       ["a", "c"])
+        XCTAssertEqual(Nav.clicked("a", command: true, shift: false, selection: ["a", "c"], anchor: "c", in: rows).selection,
+                       ["c"])
+    }
+    func testAShiftClickPicksTheRangeFromTheAnchorEitherWay() {
+        let down = Nav.clicked("d", command: false, shift: true, selection: ["b"], anchor: "b", in: rows)
+        XCTAssertEqual(down.selection, ["b", "c", "d"]); XCTAssertEqual(down.anchor, "b"); XCTAssertEqual(down.lead, "d")
+        XCTAssertEqual(Nav.clicked("a", command: false, shift: true, selection: ["c"], anchor: "c", in: rows).selection,
+                       ["a", "b", "c"])
+    }
+    func testAShiftClickWithNoAnchorIsAPlainClick() {
+        XCTAssertEqual(Nav.clicked("d", command: false, shift: true, selection: [], anchor: nil, in: rows).selection, ["d"])
+    }
+    func testARangeIsInListOrder() {
+        XCTAssertEqual(Nav.range("e", "c", in: rows), ["c", "d", "e"])
+        XCTAssertEqual(Nav.range("x", "c", in: rows), ["c"])
+    }
 }
