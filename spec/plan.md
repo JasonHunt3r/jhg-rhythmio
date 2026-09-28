@@ -1480,7 +1480,10 @@ so whether it gets the looping Play waits for that.
 **Also from this conversation — "Smart View" (working name, a
 preference):** on (the default), panes open and close by context, as
 today (the timeline pane closes when no show is open); off, each place
-remembers your own open/closed choices instead.
+remembers your own open/closed choices instead. **Superseded in part,
+2026-09-27:** Jason wants the timeline open with no show, greyed out and
+inert ("an empty toolset") — built — so it no longer closes by context;
+what it does there waits on a talk (`spec/status.md`, Open questions).
 
 **Open:** what exactly one slide's loop covers — its own time cut to
 cut, or its transitions in and out too (Jason: depends on the framework

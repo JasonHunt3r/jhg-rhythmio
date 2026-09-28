@@ -713,6 +713,21 @@ Not pressing; each wants a discussion or a plan before any code.
 
 ## Open questions
 
+- **Talk: arrow keys handing off between lists** (Jason, 2026-09-27: "we
+  need to have a talk about the arrows navigating the lists, then
+  suddenly switching"). Today the keys go to whoever claims them first:
+  window-wide handlers (the grid's, the timeline's, the browser's) run
+  before the sidebar's focused list, and only some of them stand aside
+  when it has the keyboard (`PaneListKeyboard`, `spec/panekit.md`). The
+  talk: which area owns the arrows when, and how you can tell.
+- **Talk: making a show from the timeline in a collection** (Jason,
+  2026-09-27). The timeline now stays open, greyed out and inert, with the
+  Library, a collection or a group selected (`TimelinePanePlaceholder`);
+  what it should do there — the show creator, item 33's option (b) — is
+  the planning talk. This also replaces `plan.md`'s Smart View sketch of
+  the timeline closing with no show; Smart View itself still wants its
+  talk.
+
 - **The selection viewer's name** (2026-09-26): the drawer over the grids
   is called the viewer in the menus and "the viewer drawer" in the plan,
   which clash with the anatomy's **Viewer** and **Drawer**; the anatomy

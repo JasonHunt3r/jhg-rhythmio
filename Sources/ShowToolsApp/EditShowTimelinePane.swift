@@ -461,7 +461,12 @@ struct EditShowTimelinePane: View {
 /// transport bar (`TransportRow`), dimmed and inert, so nothing reflows.
 /// It was Edit Slides' whole timeline until item 33 (2026-09-26), which
 /// draws the real rows there instead — hence no message any more.
-private struct TimelinePanePlaceholder: View {
+/// Since 2026-09-27 it's also the whole pane while the Library, a
+/// collection or a group is selected (Jason: "greyed out but visible, an
+/// empty toolset"), so it carries every tool `TransportRow` has. What the
+/// timeline should do there (making a show from a collection) is a
+/// planning talk still to have (`spec/status.md`).
+struct TimelinePanePlaceholder: View {
     var body: some View {
         VStack(spacing: 0) {
             HStack(spacing: 10) {
@@ -472,6 +477,13 @@ private struct TimelinePanePlaceholder: View {
                 Text("--:-- / --:--")
                     .font(.system(size: 11, design: .monospaced))
                     .frame(width: 110, alignment: .trailing)
+                Divider().frame(height: 16)
+                // The same tools, in the same order, as `TransportRow`.
+                ForEach(["arrow.left.and.line.vertical.and.arrow.right", "timeline.selection",
+                         "arrow.down.to.line.compact", "flag", "repeat"], id: \.self) { Image(systemName: $0) }
+                Divider().frame(height: 16)
+                ForEach(["minus.magnifyingglass", "plus.magnifyingglass", "arrow.left.and.right.square"],
+                        id: \.self) { Image(systemName: $0) }
             }
             .foregroundStyle(.tertiary)
             .padding(.horizontal, 12)
