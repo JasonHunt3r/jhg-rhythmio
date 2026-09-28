@@ -916,14 +916,6 @@ struct LibraryGridView: View {
     /// up under the bar's translucent background (item 34's rework,
     /// 2026-09-27: scoped to bars with scrolled content passing under them).
     @State private var barHeight: CGFloat = 0
-    /// The window's own title bar height, once — the detail pane extends
-    /// under it (`AppModel.mainPanes`, `scrollsUnderTitleBar`), so a spacer
-    /// this tall at the top of the bar's own translucent background makes
-    /// the title bar and the filter bar read as one continuous surface over
-    /// the grid, sharing the same slider (Jason, 2026-09-27: "same slider
-    /// as the filter bar"). Doesn't change with the window's own size, so
-    /// read once rather than tracked like `barHeight`.
-    @State private var titleBarHeight: CGFloat = 0
     /// Why a drag over this grid can't reorder it, shown while it's there.
     @State private var reorderBlockedReason: String?
     /// The grid takes the keyboard on a click, so Delete and ⌘Delete reach
@@ -1048,6 +1040,29 @@ struct LibraryGridView: View {
     /// separate `onChange`s tipped this view's body over the type-checker's
     /// budget (measured).
     private var navScope: String { "\(collectionID ?? -1)/\(groupID ?? -1)" }
+    /// The row above the filter bar: what's in view, and how much, in the
+    /// style of Edit Show's own title (Jason, 2026-09-27: "just add the
+    /// Library Name or Collection name there, and we'll consider that
+    /// empty row as a place we'll add functionality to it like we see in
+    /// Show View"). It replaced a title-bar-high spacer left over from the
+    /// grid meant to reach under the title bar, which it never did
+    /// (`spec/panekit.md`, "Corrected 2026-09-27").
+    private var headerRow: some View {
+        VStack(alignment: .leading, spacing: 1) {
+            Text(group?.name ?? collection?.name ?? (model.isOnMaster ? "Library" : model.libraryName))
+                .font(.headline)
+                .lineLimit(1)
+            Text(selection.isEmpty ? "\(visible.count) \(visible.count == 1 ? "item" : "items")"
+                                   : "\(selection.count) selected")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 14).padding(.top, 8).padding(.bottom, 2)
+        .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(.isHeader)
+    }
+
     private var navigationName: String {
         if let g = group { return g.name }
         if let c = collection { return c.name }
@@ -1600,11 +1615,7 @@ struct LibraryGridView: View {
                     "grid": AnyView(ZStack(alignment: .top) {
                         grid
                         VStack(spacing: 0) {
-                            // The title bar's own reserved strip — empty but
-                            // for this background, so it and the filter bar
-                            // below read as one continuous translucent
-                            // surface over the grid.
-                            Color.clear.frame(height: titleBarHeight)
+                            headerRow
                             bar
                             Divider()
                             sortStatusBar
@@ -1615,7 +1626,6 @@ struct LibraryGridView: View {
                             Color.clear.onAppear { barHeight = g.size.height }
                                 .onChange(of: g.size.height) { _, h in barHeight = h }
                         })
-                        .background(WindowAccessor { titleBarHeight = PaneContainerView.titleBarHeight(of: $0) })
                     }
                     .environment(model)),
                 ])
