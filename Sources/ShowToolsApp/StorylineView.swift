@@ -461,7 +461,10 @@ struct StorylineView: View {
             ScrollView(.horizontal) {
                 VStack(alignment: .leading, spacing: 4) {
                     RulerView(duration: timeline.duration, pps: pps, inset: Self.inset)
-                        .frame(width: contentWidth, height: Self.rulerHeight)
+                        // At least as wide as what's visible, so its ticks
+                        // reach the window's edge however short the show.
+                        .containerRelativeFrame(.horizontal) { visible, _ in max(visible, contentWidth) }
+                        .frame(height: Self.rulerHeight)
                         .onGeometryChange(for: CGFloat.self, of: \.size.height) { measuredRuler = $0; reportNaturalHeight() }
                         .contentShape(Rectangle())
                         .gesture(scrubGesture)
@@ -1665,7 +1668,10 @@ struct RulerView: View {
             let major = steps.first { $0 * pps >= 80 } ?? 1200
             let minor = major / 5
             var t = 0.0
-            while t <= duration + major {
+            // To the ruler's own edge, not just past the show's end: a short
+            // show in a wide window had its ticks stop mid-window (Jason,
+            // 2026-09-27: "they should carry on to the edge of the window").
+            while inset + CGFloat(t * pps) <= size.width {
                 let x = inset + CGFloat(t * pps)
                 let isMajor = abs((t / major).rounded() * major - t) < 1e-6
                 var p = Path()

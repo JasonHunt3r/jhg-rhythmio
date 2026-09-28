@@ -496,6 +496,7 @@ struct TimelinePanePlaceholder: View {
     /// its divider, the rows as drawn, the breather — so the pane fits it
     /// whatever the rows' heights become, as with a show.
     var onNaturalHeight: ((CGFloat) -> Void)? = nil
+    @AppStorage("storylineZoom") private var pps: Double = 24
     @State private var transport: CGFloat?
     @State private var rows: CGFloat?
 
@@ -533,14 +534,10 @@ struct TimelinePanePlaceholder: View {
             // and it's waiting for you"): a ruler, then Images, Transitions,
             // Slides and Audio at their real heights, each with its grip.
             VStack(alignment: .leading, spacing: StorylineView.rowGap) {
-                HStack(spacing: 0) {
-                    ForEach(0..<30, id: \.self) { i in
-                        Rectangle().frame(width: 1, height: i % 5 == 0 ? 8 : 4)
-                            .frame(width: 24, alignment: .leading)
-                    }
-                }
-                .frame(height: StorylineView.rulerHeight, alignment: .bottomLeading)
-                .padding(.leading, StorylineView.inset)
+                // The real ruler, at the timeline's own zoom, to the edge.
+                RulerView(duration: 0, pps: pps, inset: StorylineView.inset)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: StorylineView.rulerHeight)
                 ForEach(TimelineRow.Kind.allCases, id: \.self) { kind in
                     HStack(spacing: 0) {
                         RoundedRectangle(cornerRadius: 2).fill(.quaternary).frame(width: 4)
