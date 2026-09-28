@@ -22,22 +22,28 @@ import ShowToolsPlayback
 /// engine's own lifecycle (`.task(id: show.id)`, `.onDisappear`) — this
 /// view just reads `session.engine`.
 struct EditShowTimelinePane: View {
-    /// The pane's own whole natural height: the transport bar (56, its
+    /// The pane's own whole natural height: the transport bar (its
     /// padding included), its divider, and every row of the storyline with
     /// nothing scrolled off (`StorylineView.fullHeight` — always the real
     /// content, since `TimelineRow.normalized` keeps every show's `rows`
     /// at all four kinds). `spec/windows.md`, "Its height," 2026-09-26:
     /// what a content-tracking split reports as the pane's content extent,
     /// via `PaneController.setContentExtent` (`AppModel.mainPanes`).
+    /// The transport bar's height as drawn (measured 2026-09-27: its
+    /// controls plus 7 pt above and below). The live figure is
+    /// `transportHeight`, measured; this is what's assumed before that, and
+    /// with no show open at all (`TimelinePanePlaceholder`), where nothing
+    /// measures it — 56, the old figure, left an empty band there.
+    static let transportEstimate: CGFloat = 30
     /// The first pass's guess, before the transport's been measured
     /// (`transportHeight`): the split's default size.
-    static let contentHeight = StorylineView.fullHeight + 56 + 1
+    static let contentHeight = StorylineView.fullHeight + transportEstimate + 1
     /// The least the pane can shrink to now that the rows scroll
     /// vertically (`StorylineView.rowsScrollView`, `spec/windows.md`,
     /// "Its height," 2026-09-26): the transport, its divider, the ruler,
     /// and room for one row — `StorylineView.roomForRows`'s own floor —
     /// rather than every row at once.
-    static let minContentHeight = 56 + 1 + StorylineView.rulerHeight + 4 + StorylineView.blockHeight + 12
+    static let minContentHeight = transportEstimate + 1 + StorylineView.rulerHeight + 4 + StorylineView.blockHeight + 12
 
     let show: Show
     let timeline: ShowTimeline
@@ -467,6 +473,17 @@ struct EditShowTimelinePane: View {
 /// timeline should do there (making a show from a collection) is a
 /// planning talk still to have (`spec/status.md`).
 struct TimelinePanePlaceholder: View {
+    /// Each empty row's own words, the same as a real empty show's where it
+    /// has them ("Drop images here", "Drop songs here").
+    static func prompt(_ kind: TimelineRow.Kind) -> String {
+        switch kind {
+        case .images: "Drop images here"
+        case .transitions: "Transitions"
+        case .slides: "Slides"
+        case .music: "Drop songs here"
+        }
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             HStack(spacing: 10) {
@@ -490,7 +507,38 @@ struct TimelinePanePlaceholder: View {
             .padding(.vertical, 7)
             .background(.bar)
             Divider()
-            Color(nsColor: .underPageBackgroundColor)
+            // The default rows, empty and dimmed like an inert timeline
+            // (Jason, 2026-09-27: "it's supposed to show that here's a tool
+            // and it's waiting for you"): a ruler, then Images, Transitions,
+            // Slides and Audio at their real heights, each with its grip.
+            VStack(alignment: .leading, spacing: StorylineView.rowGap) {
+                HStack(spacing: 0) {
+                    ForEach(0..<30, id: \.self) { i in
+                        Rectangle().frame(width: 1, height: i % 5 == 0 ? 8 : 4)
+                            .frame(width: 24, alignment: .leading)
+                    }
+                }
+                .frame(height: StorylineView.rulerHeight, alignment: .bottomLeading)
+                .padding(.leading, StorylineView.inset)
+                ForEach(TimelineRow.Kind.allCases, id: \.self) { kind in
+                    HStack(spacing: 0) {
+                        RoundedRectangle(cornerRadius: 2).fill(.quaternary).frame(width: 4)
+                            .padding(.horizontal, 3)
+                        ZStack(alignment: .leading) {
+                            RoundedRectangle(cornerRadius: 3).fill(Color.white.opacity(0.05))
+                            Label(Self.prompt(kind), systemImage: kind.symbol)
+                                .font(.caption)
+                                .padding(.leading, 8)
+                        }
+                    }
+                    .frame(height: StorylineView.height(of: kind))
+                }
+            }
+            .padding(.vertical, 6)
+            .foregroundStyle(.tertiary)
+            .opacity(0.45)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            .background(Color(nsColor: .underPageBackgroundColor))
         }
         .allowsHitTesting(false)
     }
