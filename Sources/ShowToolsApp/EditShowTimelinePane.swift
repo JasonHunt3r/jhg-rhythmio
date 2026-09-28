@@ -45,6 +45,7 @@ struct EditShowTimelinePane: View {
     /// and room for one row — `StorylineView.roomForRows`'s own floor —
     /// rather than every row at once.
     static let minContentHeight = transportEstimate + 1 + StorylineView.rulerHeight + 4 + StorylineView.blockHeight + 12
+        + StorylineView.bottomBreather
 
     let show: Show
     let timeline: ShowTimeline

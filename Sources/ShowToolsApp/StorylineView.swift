@@ -152,8 +152,14 @@ struct StorylineView: View {
     /// size, which shouldn't have to scroll up and down.
     static var fullHeight: CGFloat {
         let rows = TimelineRow.Kind.allCases.reduce(0) { $0 + height(of: $1) + rowGap }
-        return rowsOrigin + rows + 6
+        return rowsOrigin + rows + 6 + bottomBreather
     }
+
+    /// Empty space under the last row, so the window's rounded bottom
+    /// corners don't clip it (Jason, 2026-09-27: "a little breather padding
+    /// at the bottom to compensate for the stupid round corners"). Part of
+    /// the pane's content height, so the pane still fits its content.
+    static let bottomBreather: CGFloat = 12
 
     /// A transition section being dragged: drawn as it goes, saved on release.
     private struct TransitionEdit {
@@ -213,7 +219,7 @@ struct StorylineView: View {
     /// taken out of the pane's whole given height — never less than one
     /// row, so there's always something to see.
     private var roomForRows: CGFloat {
-        max(Self.height(of: .slides), paneAvailableHeight - Self.rulerHeight - 4 - 12)
+        max(Self.height(of: .slides), paneAvailableHeight - Self.rulerHeight - 4 - 12 - Self.bottomBreather)
     }
     /// The rows' own scrollable viewport: exactly `rowsHeight` — no inner
     /// scrolling at all — until the pane's dragged smaller than that.
