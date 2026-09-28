@@ -48,6 +48,13 @@ final class ScrollBarTranslucency: ObservableObject {
         amount[key(scheme)] = v
         UserDefaults.standard.set(v, forKey: key(scheme))
     }
+
+    /// While the slider's knob moves: every bar redraws at `v` live
+    /// (Jason, 2026-09-27: "the slider adjustment isn't responding live"),
+    /// but nothing's saved until `setValue` on release.
+    func preview(_ v: Double, for scheme: ColorScheme) {
+        amount[key(scheme)] = v
+    }
 }
 
 /// A bar's own tunable background: the native `.headerView` material at

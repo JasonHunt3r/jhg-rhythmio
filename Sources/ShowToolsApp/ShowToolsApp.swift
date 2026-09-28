@@ -721,9 +721,9 @@ private struct WindowsSettingsTab: View {
             get: { scrollBarSetting.value(for: scheme) },
             set: { scrollBarSetting.setValue($0, for: scheme) })
         HStack(spacing: 10) {
-            CommitSlider(title: label, value: value.wrappedValue, range: 0...1, display: 100, unit: "%") { v in
-                value.wrappedValue = v
-            }
+            CommitSlider(title: label, value: value.wrappedValue, range: 0...1, display: 100, unit: "%",
+                         commit: { value.wrappedValue = $0 },
+                         preview: { scrollBarSetting.preview($0, for: scheme) })
             ScrollBarPreview(amount: value.wrappedValue)
         }
     }
