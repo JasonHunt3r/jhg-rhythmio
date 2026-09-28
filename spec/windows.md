@@ -114,6 +114,17 @@ window, whose padding lets it grow past its contents while covered:
 2026-09-26: the padding stays when the window comes to the front, "so as
 not to make the tools jump", until it's scrolled back into place).
 
+**Measured, not added up (2026-09-27).** Row heights will be a preference
+(Jason), so the pane's content height comes from what's drawn: the play
+bar and the storyline each measure themselves (`transportHeight`,
+`StorylineView.onNaturalHeight` — the ruler and the rows' unclipped stack,
+plus a 12 pt breather clear of the window's rounded corners), and so does
+the empty timeline shown with no show open (`TimelinePanePlaceholder`),
+which also means the pane can't be dragged past its content there. The
+fixed figures (`contentHeight`, `fullHeight`) are only a first guess before
+anything's drawn. Proved by making one row 40 pt taller with the fixed sum
+pinned at its old value: the pane grew by exactly 40.
+
 **When the contents grow** (a row's drawer opens, a preference makes the
 rows taller, a row is added) — Jason: "to a point", never squashing the
 viewer. **Agreed 2026-09-26:** while it shows all its contents it grows

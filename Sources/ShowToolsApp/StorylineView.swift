@@ -53,6 +53,11 @@ struct StorylineView: View {
     /// only scroll and zoom — no clicks, drags, drops, keyboard or Listen.
     /// The scroll view and the pinch sit outside the content that's shut off.
     var inert = false
+    /// Reports the storyline's natural height — every row at the height
+    /// it's drawn, nothing scrolled off — as measured, not added up from
+    /// constants, so the timeline pane fits it whatever the rows' heights
+    /// become (Jason, 2026-09-27: row heights will be a preference).
+    var onNaturalHeight: ((CGFloat) -> Void)? = nil
     @Environment(AppModel.self) private var model
     @Environment(\.undoManager) private var undoManager
     /// N: edges land on markers (plan, Phase 3). App-wide, like Final Cut's.
@@ -219,7 +224,18 @@ struct StorylineView: View {
     /// taken out of the pane's whole given height — never less than one
     /// row, so there's always something to see.
     private var roomForRows: CGFloat {
-        max(Self.height(of: .slides), paneAvailableHeight - Self.rulerHeight - 4 - 12 - Self.bottomBreather)
+        max(Self.height(of: .slides), paneAvailableHeight - measuredRuler - 4 - 12 - Self.bottomBreather)
+    }
+
+    /// The ruler and the rows as drawn (`onNaturalHeight`).
+    @State private var measuredRuler: CGFloat = StorylineView.rulerHeight
+    @State private var measuredRows: CGFloat?
+
+    /// Padding above, the ruler, its gap, every row, padding below, the
+    /// breather: the storyline with nothing scrolled off.
+    private func reportNaturalHeight() {
+        guard let measuredRows else { return }
+        onNaturalHeight?(6 + measuredRuler + 4 + measuredRows + 6 + Self.bottomBreather)
     }
     /// The rows' own scrollable viewport: exactly `rowsHeight` — no inner
     /// scrolling at all — until the pane's dragged smaller than that.
@@ -320,6 +336,9 @@ struct StorylineView: View {
         ScrollViewReader { rowsProxy in
             ScrollView(.vertical, showsIndicators: rowsViewportHeight < rowsHeight) {
                 rowsZStack(placed, group)
+                    // Inside the scroll view, so never clipped: the rows'
+                    // own full height (`onNaturalHeight`).
+                    .onGeometryChange(for: CGFloat.self, of: \.size.height) { measuredRows = $0; reportNaturalHeight() }
                     .background(GeometryReader { g in
                         Color.clear.preference(key: RowsScrollKey.self,
                                                value: -g.frame(in: .named("storylineRowsScroll")).minY)
@@ -442,6 +461,7 @@ struct StorylineView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     RulerView(duration: timeline.duration, pps: pps, inset: Self.inset)
                         .frame(width: contentWidth, height: Self.rulerHeight)
+                        .onGeometryChange(for: CGFloat.self, of: \.size.height) { measuredRuler = $0; reportNaturalHeight() }
                         .contentShape(Rectangle())
                         .gesture(scrubGesture)
                         .overlay(alignment: .topLeading) { rangeOnRuler }

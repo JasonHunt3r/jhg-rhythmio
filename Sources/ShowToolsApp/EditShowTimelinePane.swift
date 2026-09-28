@@ -31,13 +31,13 @@ struct EditShowTimelinePane: View {
     /// what a content-tracking split reports as the pane's content extent,
     /// via `PaneController.setContentExtent` (`AppModel.mainPanes`).
     /// The transport bar's height as drawn (measured 2026-09-27: its
-    /// controls plus 7 pt above and below). The live figure is
-    /// `transportHeight`, measured; this is what's assumed before that, and
-    /// with no show open at all (`TimelinePanePlaceholder`), where nothing
-    /// measures it — 56, the old figure, left an empty band there.
+    /// controls plus 7 pt above and below) — only a first guess: the pane's
+    /// height comes from measuring what's actually drawn (`transportHeight`,
+    /// `storylineHeight`; `TimelinePanePlaceholder` with no show), so it
+    /// fits whatever the rows' heights become.
     static let transportEstimate: CGFloat = 30
-    /// The first pass's guess, before the transport's been measured
-    /// (`transportHeight`): the split's default size.
+    /// The first guess, before anything's been measured: the split's
+    /// default size.
     static let contentHeight = StorylineView.fullHeight + transportEstimate + 1
     /// The least the pane can shrink to now that the rows scroll
     /// vertically (`StorylineView.rowsScrollView`, `spec/windows.md`,
@@ -68,8 +68,12 @@ struct EditShowTimelinePane: View {
     /// 56 was stale (it draws about 30), and the pane tracked that figure,
     /// leaving an empty band under the rows (2026-09-27).
     @State private var transportHeight: CGFloat?
+    /// The storyline's natural height, as it measures itself
+    /// (`StorylineView.onNaturalHeight`) — so the pane fits whatever height
+    /// the rows are drawn at, a preference one day.
+    @State private var storylineHeight: CGFloat?
     private var contentExtent: CGFloat {
-        transportHeight.map { StorylineView.fullHeight + $0 + 1 } ?? Self.contentHeight
+        (transportHeight ?? Self.transportEstimate) + 1 + (storylineHeight ?? StorylineView.fullHeight)
     }
 
     var body: some View {
@@ -96,7 +100,8 @@ struct EditShowTimelinePane: View {
                                       SlideEditorWindow.show(slideID: id, show: show, model: model,
                                                              mutate: mutate, undoManager: undoManager)
                                   },
-                                  inert: !active)
+                                  inert: !active,
+                                  onNaturalHeight: { h in if storylineHeight != h { storylineHeight = h } })
                 }
                 .background { if active { shortcuts(engine) } }
                 // Edit Slides' Play loops the selection (nil, the whole
@@ -112,7 +117,7 @@ struct EditShowTimelinePane: View {
             }
         }
         .onAppear { model.mainPanes.setContentExtent(contentExtent, for: "window") }
-        .onChange(of: transportHeight) { model.mainPanes.setContentExtent(contentExtent, for: "window") }
+        .onChange(of: contentExtent) { model.mainPanes.setContentExtent(contentExtent, for: "window") }
         .onDisappear {
             // Matches the old FocusedValue's own absence outside Edit
             // Show (spec/hig-audit.md, "G"): leaving this view — by
@@ -487,6 +492,18 @@ struct TimelinePanePlaceholder: View {
         }
     }
 
+    /// Reports the placeholder's natural height, measured — the play bar,
+    /// its divider, the rows as drawn, the breather — so the pane fits it
+    /// whatever the rows' heights become, as with a show.
+    var onNaturalHeight: ((CGFloat) -> Void)? = nil
+    @State private var transport: CGFloat?
+    @State private var rows: CGFloat?
+
+    private func report() {
+        guard let transport, let rows else { return }
+        onNaturalHeight?(transport + 1 + rows + StorylineView.bottomBreather)
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             HStack(spacing: 10) {
@@ -509,6 +526,7 @@ struct TimelinePanePlaceholder: View {
             .padding(.horizontal, 12)
             .padding(.vertical, 7)
             .background(.bar)
+            .onGeometryChange(for: CGFloat.self, of: \.size.height) { transport = $0; report() }
             Divider()
             // The default rows, empty and dimmed like an inert timeline
             // (Jason, 2026-09-27: "it's supposed to show that here's a tool
@@ -537,7 +555,12 @@ struct TimelinePanePlaceholder: View {
                     .frame(height: StorylineView.height(of: kind))
                 }
             }
+            // The real rows leave a gap after the last one too; matching it
+            // keeps the pane the same height with a show or without.
+            .padding(.bottom, StorylineView.rowGap)
             .padding(.vertical, 6)
+            // Before it's stretched to the pane: the rows' own height.
+            .onGeometryChange(for: CGFloat.self, of: \.size.height) { rows = $0; report() }
             .foregroundStyle(.tertiary)
             .opacity(0.45)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
