@@ -20,6 +20,8 @@ struct MainView: View {
     @State private var foldedGroups: Set<Int64> = []
     /// The row whose name is being edited in place (`startRenaming`).
     @State private var renaming: SidebarItem?
+    /// The title bar strip's height, for `HeaderBarBackground`.
+    @State private var headerHeight: CGFloat = 0
     /// New Collection, named before it's made (audit H1): nothing is ever
     /// called "Untitled" unless someone clicked OK on that name.
     @State private var creatingCollection = false
@@ -43,7 +45,20 @@ struct MainView: View {
         // window. `HeaderBarBackground.swift`'s own one-off hack (tried
         // directly here before PaneKit had the concept, zero visible
         // effect) is superseded by this and no longer called.
-        .background(WindowAccessor { PaneContainerView.enableContentUnderTitleBar(on: $0) })
+        .background(WindowAccessor {
+            PaneContainerView.enableContentUnderTitleBar(on: $0)
+            headerHeight = PaneContainerView.titleBarHeight(of: $0)
+        })
+        // The title bar and toolbar's own background, on Settings' Title Bar
+        // Transparency slider (Jason, 2026-09-27). Behind the whole layout,
+        // reaching up into the strip the title bar reserves.
+        .background {
+            VStack(spacing: 0) {
+                HeaderBarBackground().frame(height: headerHeight)
+                Spacer(minLength: 0)
+            }
+            .ignoresSafeArea(.container, edges: .top)
+        }
         .alert("New Collection", isPresented: $creatingCollection) {
             TextField("Name", text: $newCollectionName)
             Button("Create") {

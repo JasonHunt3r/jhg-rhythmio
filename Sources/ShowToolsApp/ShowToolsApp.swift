@@ -650,6 +650,8 @@ private struct WindowsSettingsTab: View {
     @AppStorage(DrawerSensitivitySetting.engageKey) private var engageDistance = DrawerSensitivitySetting.defaultEngage
     @AppStorage(DrawerSensitivitySetting.slideKey) private var slideSpeed = DrawerSensitivitySetting.defaultSlide
     @ObservedObject private var scrollBarSetting = ScrollBarTranslucency.shared
+    @Environment(\.colorScheme) private var systemScheme
+    @State private var pickedScheme: ColorScheme?
 
     /// One knob standing in for both of `DrawerSensitivitySetting`'s
     /// dials at once: reads back as their average normalized position (so
@@ -705,27 +707,44 @@ private struct WindowsSettingsTab: View {
             // that scrolled content passes under (the Library grid's filter
             // bar) — no sub-window, no region picker, one slider per
             // appearance, right here.
-            Section("Translucent Bars") {
-                scrollBarRow(scheme: .dark, label: "Dark Mode")
-                scrollBarRow(scheme: .light, label: "Light Mode")
-                Toggle("Include handles", isOn: $scrollBarSetting.includeHandles)
-                Text("How opaque the bars are where content scrolls underneath them — the grid's filter bar, the sidebar's top and bottom — at the low end, the OS's own native look; at the high end, fully solid. With Include handles, a drawer's handle strip goes translucent with them instead of staying solid.")
+            // One module (Jason, 2026-09-27): pick the appearance, then its
+            // two sliders and its handles switch — each kept per appearance.
+            Section("Transparency") {
+                Picker("Appearance", selection: editingScheme) {
+                    Text("Light").tag(ColorScheme.light)
+                    Text("Dark").tag(ColorScheme.dark)
+                }
+                .pickerStyle(.segmented)
+                transparencyRow("Panel Transparency", zone: .bars)
+                transparencyRow("Title Bar Transparency", zone: .header)
+                Toggle("Include handles", isOn: Binding(
+                    get: { scrollBarSetting.includesHandles(editingScheme.wrappedValue) },
+                    set: { scrollBarSetting.setIncludesHandles($0, for: editingScheme.wrappedValue) }))
+                Text("Panel Transparency: the bars content scrolls under — the grid's filter bar, the sidebar's top and bottom, the browser's bar and headers. Title Bar Transparency: the window's own title bar and toolbar, which show the desktop behind the window. At 0%, fully solid; at 100%, the OS's own see-through look. Include handles puts drawers' handle rows on the panel setting instead of solid. Each is kept separately for Light and Dark.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
             }
         }
     }
 
+    /// Which appearance the Transparency module is showing: the Mac's own
+    /// until you pick the other.
+    private var editingScheme: Binding<ColorScheme> {
+        Binding(get: { pickedScheme ?? systemScheme }, set: { pickedScheme = $0 })
+    }
+
     @ViewBuilder
-    private func scrollBarRow(scheme: ColorScheme, label: String) -> some View {
-        let value = Binding<Double>(
-            get: { scrollBarSetting.value(for: scheme) },
-            set: { scrollBarSetting.setValue($0, for: scheme) })
+    private func transparencyRow(_ label: String, zone: ScrollBarTranslucency.Zone) -> some View {
+        let scheme = editingScheme.wrappedValue
+        let value = scrollBarSetting.value(for: scheme, zone: zone)
+        // The setting stores how *opaque* (0 the OS's material, 1 solid);
+        // titled Transparency, the slider shows the other way round, so
+        // 100% reads as fully see-through.
         HStack(spacing: 10) {
-            CommitSlider(title: label, value: value.wrappedValue, range: 0...1, display: 100, unit: "%",
-                         commit: { value.wrappedValue = $0 },
-                         preview: { scrollBarSetting.preview($0, for: scheme) })
-            ScrollBarPreview(amount: value.wrappedValue)
+            CommitSlider(title: label, value: 1 - value, range: 0...1, display: 100, unit: "%",
+                         commit: { scrollBarSetting.setValue(1 - $0, for: scheme, zone: zone) },
+                         preview: { scrollBarSetting.preview(1 - $0, for: scheme, zone: zone) })
+            ScrollBarPreview(amount: value, scheme: scheme, material: zone == .header ? .titlebar : .headerView)
         }
     }
 }

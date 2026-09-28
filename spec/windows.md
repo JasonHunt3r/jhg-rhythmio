@@ -781,6 +781,20 @@ header bar reads "Drawer Sensitivity: Set Up Triggers." "It's good."
    four assignable regions, a secondary settings box) is kept only as
    dormant, reusable code (below); it's no longer what's wired into the app.
 
+   **Now (2026-09-27, late): the Transparency module** on the Windows tab
+   (Jason: "a light dark switch at the top and one slider for the
+   currently targeted zones. A slider for the window header bar, and a
+   switch for the handles"; titles his: "Panel Transparency, and Title Bar
+   Transparency"). An Appearance switch picks Light or Dark — the Mac's own
+   to start — and shows that appearance's own **Panel Transparency** (every
+   bar content scrolls under), **Title Bar Transparency** (the main
+   window's title bar and toolbar, `HeaderBarBackground`, on the OS's
+   title-bar material showing the desktop behind — nothing of the window's
+   own passes under it) and **Include handles**. The sliders read as
+   transparency (100% see-through); the setting stores opacity, so saved
+   values kept their look. The header defaults to solid, as it always was;
+   the old single handles switch carried over to both appearances.
+
    **First cut, for the record:** three channels (`TranslucencySetting
    .swift`), each with Opacity, Tint and Blur, kept separately for Dark and
    Light, assignable to four regions (Catalog, Inspector, Panels, Header

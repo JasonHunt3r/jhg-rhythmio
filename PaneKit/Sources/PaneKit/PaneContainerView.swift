@@ -386,10 +386,11 @@ final class PaneDividerView: NSView, PaneResizeCursorView {
 /// "Include handles", Jason 2026-09-27: "There are many handle rows, on
 /// each drawer"). `translucency` gives, for dark or light, how opaque the
 /// window's background is laid over the OS's own header material — 0 the
-/// bare material, 1 solid; nil, solid. Call `changed()` after setting it,
+/// bare material, 1 solid; nil (for the whole hook, or for one
+/// appearance), solid. Call `changed()` after setting it,
 /// or while a slider previews it, and every handle redraws.
 @MainActor public enum PaneHandleAppearance {
-    public static var translucency: ((_ dark: Bool) -> CGFloat)?
+    public static var translucency: ((_ dark: Bool) -> CGFloat?)?
     static let didChange = Notification.Name("PaneHandleAppearanceDidChange")
 
     public static func changed() {
@@ -459,7 +460,7 @@ final class PaneEdgeHandleView: NSView, PaneResizeCursorView {
 
     private var opacity: CGFloat? {
         let dark = effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
-        return PaneHandleAppearance.translucency?(dark)
+        return PaneHandleAppearance.translucency?(dark) ?? nil
     }
 
     private func applyAppearance() {
