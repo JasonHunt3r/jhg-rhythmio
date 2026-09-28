@@ -13,6 +13,7 @@ let package = Package(
     ],
     dependencies: [
         .package(name: "PaneKit", path: "PaneKit"),
+        .package(name: "ListKit", path: "ListKit"),
     ],
     targets: [
         .target(name: "ShowToolsCore", linkerSettings: [.linkedLibrary("sqlite3")]),
@@ -22,7 +23,7 @@ let package = Package(
         // bundle is built by Xcode; see project.yml), so SwiftPM must be told
         // it isn't a resource.
         .executableTarget(name: "ShowToolsApp",
-                          dependencies: ["ShowToolsCore", "ShowToolsPlayback", "PaneKit"],
+                          dependencies: ["ShowToolsCore", "ShowToolsPlayback", "PaneKit", "ListKit"],
                           exclude: ["Info.plist"]),
         .executableTarget(name: "stcli", dependencies: ["ShowToolsCore"]),
         .testTarget(name: "ShowToolsCoreTests", dependencies: ["ShowToolsCore"]),

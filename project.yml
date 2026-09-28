@@ -23,6 +23,8 @@ packages:
     path: .
   PaneKit:
     path: PaneKit
+  ListKit:
+    path: ListKit
 settings:
   base:
     # Signed as Jason's own Apple Development identity (a free Personal
@@ -61,6 +63,8 @@ targets:
         product: ShowToolsPlayback
       - package: PaneKit
         product: PaneKit
+      - package: ListKit
+        product: ListKit
       - target: BGToolsControls
         embed: true
       - target: BGTools

@@ -16,34 +16,34 @@ import AppKit
 /// - **→** opens a folded row, or on an open one steps to its first child;
 ///   **←** folds an open row, or steps from a child to its parent;
 ///   **⌥→ / ⌥←** open or fold the row and everything under it
-///   (`outline`; `PaneOutlineIndent`'s ⌥-click does the same);
+///   (`outline`; `OutlineIndent`'s ⌥-click does the same);
 /// - **typing** a name's first letters selects it; the same letter again
 ///   steps through every row starting with it (`title`);
 /// - **Return** does what the app says (`onReturn`) — rename, in Finder's
-///   convention, through `PaneInlineRename`.
+///   convention, through `InlineRename`.
 ///
-/// Rows show whether it has the keyboard through `.paneListRow(selected:)`:
+/// Rows show whether it has the keyboard through `.listRow(selected:)`:
 /// the accent highlight while it does, grey while it doesn't, and a ring
 /// around the row a right-click menu is open for — `List`'s own states.
 ///
 /// The app keeps building its own rows (recursive `DisclosureGroup`s with
-/// `.disclosureGroupStyle(.paneOutline)`) and its own keys for everything
+/// `.disclosureGroupStyle(.listOutline)`) and its own keys for everything
 /// else (Delete, Return, rename). `order` is the current, flat, *visible*
 /// row order — folded branches already left out, since only the app knows
 /// its fold state — with each row carrying a matching `.id(_:)` for
 /// `ScrollViewProxy.scrollTo`.
-public struct PaneListNavigation<ID: Hashable>: ViewModifier {
+public struct ListNavigation<ID: Hashable>: ViewModifier {
     @Binding var selection: ID?
     let order: [ID]
     let title: ((ID) -> String)?
-    let outline: PaneListOutline<ID>?
+    let outline: ListOutline<ID>?
     let onReturn: ((ID) -> Void)?
     let accessibilityLabel: String?
     @FocusState private var focused: Bool
-    @State private var typed = PaneTypeSelect()
+    @State private var typed = TypeSelect()
 
     public init(selection: Binding<ID?>, order: [ID], title: ((ID) -> String)? = nil,
-                outline: PaneListOutline<ID>? = nil, onReturn: ((ID) -> Void)? = nil,
+                outline: ListOutline<ID>? = nil, onReturn: ((ID) -> Void)? = nil,
                 accessibilityLabel: String? = nil) {
         self.accessibilityLabel = accessibilityLabel
         self._selection = selection
@@ -56,12 +56,12 @@ public struct PaneListNavigation<ID: Hashable>: ViewModifier {
     public func body(content: Content) -> some View {
         ScrollViewReader { proxy in
             content
-                .environment(\.paneListFocused, focused)
-                .environment(\.paneListRefocus, { focused = true })
+                .environment(\.listFocused, focused)
+                .environment(\.listRefocus, { focused = true })
                 .focusable()
                 .focusEffectDisabled()
                 .focused($focused)
-                .onChange(of: focused, initial: true) { _, on in PaneListKeyboard.set(on, in: NSApp.keyWindow) }
+                .onChange(of: focused, initial: true) { _, on in ListKeyboard.set(on, in: NSApp.keyWindow) }
                 .onAppear { focused = true }
                 .onKeyPress(phases: [.down, .repeat]) { press in handle(press, proxy: proxy) }
                 // One named group for VoiceOver to enter and leave, as a
@@ -74,7 +74,7 @@ public struct PaneListNavigation<ID: Hashable>: ViewModifier {
     private func handle(_ press: KeyPress, proxy: ScrollViewProxy) -> KeyPress.Result {
         // ⌘ and ⌃ belong to menus and the system, never to the list.
         guard press.modifiers.isDisjoint(with: [.command, .control]) else { return .ignored }
-        // A row's name being edited (`PaneInlineRename`) keeps every key:
+        // A row's name being edited (`InlineRename`) keeps every key:
         // a key pressed in a focused child reaches this handler too.
         guard !(NSApp.keyWindow?.firstResponder is NSText) else { return .ignored }
         let option = press.modifiers.contains(.option)
@@ -109,7 +109,7 @@ public struct PaneListNavigation<ID: Hashable>: ViewModifier {
         withAnimation(.default) { proxy.scrollTo(id) }
     }
 
-    /// Pure: pinned by `PaneKitTests`, not by eye. `nil` selection (or one
+    /// Pure: pinned by `ListKitTests`, not by eye. `nil` selection (or one
     /// no longer in `order`, a fold having hidden it) starts from either
     /// end, matching which direction was pressed; otherwise clamps at the
     /// ends rather than wrapping — an arrow held at the top or bottom of
@@ -128,10 +128,10 @@ public struct PaneListNavigation<ID: Hashable>: ViewModifier {
         case none
     }
 
-    /// Pure, pinned by `PaneKitTests`: what ← or → does to the selected row,
+    /// Pure, pinned by `ListKitTests`: what ← or → does to the selected row,
     /// the way `NSOutlineView` answers it.
     static func horizontal(_ selection: ID?, right: Bool, recursive: Bool, in order: [ID],
-                           outline: PaneListOutline<ID>) -> Horizontal {
+                           outline: ListOutline<ID>) -> Horizontal {
         guard let id = selection, let i = order.firstIndex(of: id) else { return .none }
         let expanded = outline.isExpanded(id)
         if right {
@@ -146,12 +146,12 @@ public struct PaneListNavigation<ID: Hashable>: ViewModifier {
     }
 }
 
-/// Whether a `PaneListNavigation` list has the keyboard in a window — the
+/// Whether a `ListNavigation` list has the keyboard in a window — the
 /// question an app used to ask with `firstResponder is NSTableView`, which
 /// a hand-rolled list never answers yes to. An app's own window-wide key
 /// handlers (a grid's arrows) ask this to stand aside, as they did for a
 /// `List` (ShowTools' Library grid took the sidebar's arrows, 2026-09-27).
-@MainActor public enum PaneListKeyboard {
+@MainActor public enum ListKeyboard {
     private static let windows = NSHashTable<NSWindow>.weakObjects()
 
     public static func hasKeyboard(in window: NSWindow?) -> Bool {
@@ -165,9 +165,9 @@ public struct PaneListNavigation<ID: Hashable>: ViewModifier {
     }
 }
 
-/// The hierarchy `PaneListNavigation`'s ← and → need, which a flat `order`
+/// The hierarchy `ListNavigation`'s ← and → need, which a flat `order`
 /// doesn't carry. Only the app knows it.
-public struct PaneListOutline<ID: Hashable> {
+public struct ListOutline<ID: Hashable> {
     /// The row's parent row, or nil at the top level.
     public var parent: (ID) -> ID?
     /// Whether the row is open: nil for a row that can't open at all.
@@ -186,8 +186,8 @@ public struct PaneListOutline<ID: Hashable> {
 /// Type-to-select, as `NSTableView` does it: letters typed within a second
 /// of each other build one name to find; the same letter again steps
 /// through every row that starts with it. Pure but for the clock, which is
-/// passed in, so `PaneKitTests` pin it.
-struct PaneTypeSelect {
+/// passed in, so `ListKitTests` pin it.
+struct TypeSelect {
     static let pause: TimeInterval = 1
     private(set) var buffer = ""
     private var last = Date.distantPast
@@ -213,33 +213,33 @@ struct PaneTypeSelect {
     }
 }
 
-/// A row's own chrome inside a `PaneListNavigation` list: `List`'s
+/// A row's own chrome inside a `ListNavigation` list: `List`'s
 /// selection highlight (the accent while the list has the keyboard, grey
 /// while it doesn't), the text colour that goes with it, and the ring
 /// around the row whose right-click menu is open.
 ///
 /// And what `List` tells VoiceOver about a row, since a hand-rolled one
 /// otherwise reads as loose pieces (its icon, its name and its count as
-/// separate elements; Jason, 2026-09-27: PaneKit is held to an App Store
+/// separate elements; Jason, 2026-09-27: these kits are held to an App Store
 /// app's standard). The row is one element: `label` is its name, its value
-/// is `value` plus, in a `.paneOutline` list, "level N" (a row that opens
+/// is `value` plus, in a `.listOutline` list, "level N" (a row that opens
 /// says those in its label instead, and "expanded"/"collapsed" itself —
 /// `spokenLabel`); it carries the selected trait; its default action is
 /// `select`, and a row that opens has Expand or Collapse. The app adds its
 /// own (Rename…) with `.accessibilityAction(named:)` after this. `editing`:
-/// while its name is a text field (`PaneInlineRename`), the row opens up
+/// while its name is a text field (`InlineRename`), the row opens up
 /// so the field can be reached. Not an outline *role* — SwiftUI only gives
-/// that to `List`; see `spec/panekit.md`, "Known limits".
-public struct PaneListRow: ViewModifier {
+/// that to `List`; see `spec/listkit.md`, "Known limits".
+public struct ListRow: ViewModifier {
     let selected: Bool
     let label: String
     let value: String?
     let editing: Bool
     let cornerRadius: CGFloat
     let select: () -> Void
-    @Environment(\.paneListFocused) private var focused
-    @Environment(\.paneOutlineLevel) private var level
-    @Environment(\.paneOutlineDisclosure) private var disclosure
+    @Environment(\.listFocused) private var focused
+    @Environment(\.outlineLevel) private var level
+    @Environment(\.outlineDisclosure) private var disclosure
     @State private var hovered = false
     @State private var menuOpen = false
 
@@ -304,24 +304,24 @@ public struct PaneListRow: ViewModifier {
 }
 
 public extension View {
-    /// See `PaneListNavigation`.
-    func paneListNavigation<ID: Hashable>(selection: Binding<ID?>, order: [ID], title: ((ID) -> String)? = nil,
-                                          outline: PaneListOutline<ID>? = nil,
+    /// See `ListNavigation`.
+    func listNavigation<ID: Hashable>(selection: Binding<ID?>, order: [ID], title: ((ID) -> String)? = nil,
+                                          outline: ListOutline<ID>? = nil,
                                           onReturn: ((ID) -> Void)? = nil,
                                           accessibilityLabel: String? = nil) -> some View {
-        modifier(PaneListNavigation(selection: selection, order: order, title: title, outline: outline,
+        modifier(ListNavigation(selection: selection, order: order, title: title, outline: outline,
                                     onReturn: onReturn, accessibilityLabel: accessibilityLabel))
     }
 
-    /// See `PaneListRow`.
-    func paneListRow(selected: Bool, label: String, value: String? = nil, editing: Bool = false,
+    /// See `ListRow`.
+    func listRow(selected: Bool, label: String, value: String? = nil, editing: Bool = false,
                      cornerRadius: CGFloat = 6, select: @escaping () -> Void) -> some View {
-        modifier(PaneListRow(selected: selected, label: label, value: value, editing: editing,
+        modifier(ListRow(selected: selected, label: label, value: value, editing: editing,
                              cornerRadius: cornerRadius, select: select))
     }
 }
 
 public extension EnvironmentValues {
-    /// Whether the enclosing `PaneListNavigation` list has the keyboard.
-    @Entry var paneListFocused: Bool = false
+    /// Whether the enclosing `ListNavigation` list has the keyboard.
+    @Entry var listFocused: Bool = false
 }

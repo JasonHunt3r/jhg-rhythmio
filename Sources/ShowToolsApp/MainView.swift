@@ -3,6 +3,7 @@ import UniformTypeIdentifiers
 import ShowToolsCore
 import ShowToolsPlayback
 import PaneKit
+import ListKit
 
 /// Types a drop onto the app can carry: files from Finder, file promises
 /// (or data) from Photos.
@@ -196,7 +197,7 @@ struct MainView: View {
         // composites over one, measured twice, `spec/windows.md`). Every
         // row wires up its own selection and highlight now
         // (`sidebarRowChrome`) instead of `List`'s `.tag`/selection
-        // binding, and `.paneListNavigation` (PaneKit) gives back the
+        // binding, and `.listNavigation` (PaneKit) gives back the
         // arrow-key stepping and scroll-into-view `List` gave for free.
         // Delete/⌘Delete no longer has an `.onDeleteCommand` path here —
         // the window-wide `SingleKeys` fallback below (`layout`) already
@@ -218,7 +219,7 @@ struct MainView: View {
                     } label: {
                         collectionRow(c)
                     }
-                    .paneOutlineSubtree { setExpanded(.collection(c.id), $0, recursive: true) }
+                    .outlineSubtree { setExpanded(.collection(c.id), $0, recursive: true) }
                     .id(SidebarItem.collection(c.id))
                 }
                 // Shows in no collection shouldn't exist after the
@@ -226,9 +227,9 @@ struct MainView: View {
                 ForEach(orphanShows) { show in showRow(show) }
             }
             // `List` drew the chevrons and indents; a plain `ScrollView`
-            // doesn't (`PaneKit.PaneOutline`, 2026-09-27), and every row
-            // draws `PaneOutlineIndent` itself (`sidebarRowChrome`).
-            .disclosureGroupStyle(.paneOutline)
+            // doesn't (`PaneKit.OutlineMetrics`, 2026-09-27), and every row
+            // draws `OutlineIndent` itself (`sidebarRowChrome`).
+            .disclosureGroupStyle(.listOutline)
             .padding(.horizontal, 8)
         }
         .safeAreaInset(edge: .top) {
@@ -271,7 +272,7 @@ struct MainView: View {
         }
         // Last, so the pinned Library row above takes the keyboard on a
         // click too, as it did inside the `List`.
-        .paneListNavigation(selection: Binding(get: { model.sidebar }, set: { if let s = $0 { model.sidebar = s } }),
+        .listNavigation(selection: Binding(get: { model.sidebar }, set: { if let s = $0 { model.sidebar = s } }),
                             order: visibleSidebarOrder, title: sidebarTitle, outline: sidebarOutline,
                             onReturn: { if $0 != .library { startRenaming($0) } },
                             accessibilityLabel: "Sidebar")
@@ -281,7 +282,7 @@ struct MainView: View {
     /// (`libraryList`'s `.safeAreaInset(edge: .top)`) rather than a normal
     /// selectable row inside the `ScrollView` — it's outside it entirely,
     /// so `sidebarRowChrome`'s own tap sets the selection directly.
-    /// `.paneListNavigation`'s `order` still lists `.library` first
+    /// `.listNavigation`'s `order` still lists `.library` first
     /// (`visibleSidebarOrder`), so the arrow keys reach it from the first
     /// collection even though it's never scrolled to (there's nothing to
     /// scroll — it's always on screen).
@@ -386,7 +387,7 @@ struct MainView: View {
 }
 
 extension MainView {
-    /// Renames happen in place, in the row itself (`PaneInlineRename`), as
+    /// Renames happen in place, in the row itself (`InlineRename`), as
     /// in Finder's sidebar — from ⌥-clicking a name, Return on the selected
     /// row, or the right-click Rename. An alert did it before (2026-09-27).
     private func startRenaming(_ item: SidebarItem) {
@@ -465,8 +466,8 @@ extension MainView {
 
     /// Every row in the Catalog, in on-screen order, with a folded
     /// collection's or group's own children left out — what
-    /// `.paneListNavigation`'s arrow keys step through
-    /// (`PaneKit.PaneListNavigation`). `.library` goes first: it isn't a
+    /// `.listNavigation`'s arrow keys step through
+    /// (`PaneKit.ListNavigation`). `.library` goes first: it isn't a
     /// row inside the `ScrollView` any more (`libraryRow`, pinned above
     /// it), so `scrollTo` silently does nothing for it, but the selection
     /// itself still moves there correctly — Up from the first collection
@@ -497,7 +498,7 @@ extension MainView {
         return "\(count) \(noun)"
     }
 
-    /// Each row's name, for type-to-select (`PaneListNavigation`).
+    /// Each row's name, for type-to-select (`ListNavigation`).
     private func sidebarTitle(_ item: SidebarItem) -> String {
         switch item {
         case .library: model.isOnMaster ? "Library" : model.libraryName
@@ -507,12 +508,12 @@ extension MainView {
         }
     }
 
-    /// The Catalog's hierarchy, for ← and → (`PaneListOutline`): a group
+    /// The Catalog's hierarchy, for ← and → (`ListOutline`): a group
     /// sits in its parent group or else its collection, a show in its
     /// collection. A collection can always open (as in the `List`, an
     /// empty one keeps its chevron); a group only with groups inside.
-    private var sidebarOutline: PaneListOutline<SidebarItem> {
-        PaneListOutline(
+    private var sidebarOutline: ListOutline<SidebarItem> {
+        ListOutline(
             parent: { item in
                 switch item {
                 case .group(let id):
@@ -560,17 +561,17 @@ extension MainView {
     /// right-click menu (item 32, `ShowTools Feedback — Worklist for Next
     /// CC Session.md`). The name only, not the whole row, so an ⌥-click on
     /// the chevron beside it (fold everything under it,
-    /// `PaneOutlineIndent`) doesn't rename too. A child's tap beats its
+    /// `OutlineIndent`) doesn't rename too. A child's tap beats its
     /// row's, so the name's own tap selects as well.
     private func sidebarRowChrome(_ item: SidebarItem, icon: String, title: String, count: Int,
                                   renames: Bool = false) -> some View {
         let selected = model.sidebar == item
         return HStack(spacing: 6) {
             HStack(spacing: 0) {
-                PaneOutlineIndent()
+                OutlineIndent()
                 Label {
                     if renames {
-                        PaneInlineRename(title, isEditing: Binding(get: { renaming == item },
+                        InlineRename(title, isEditing: Binding(get: { renaming == item },
                                                                    set: { if !$0, renaming == item { renaming = nil } }),
                                          commit: { rename(item, to: $0) })
                     } else {
@@ -592,7 +593,7 @@ extension MainView {
                 .foregroundStyle(.secondary)
         }
         .padding(.leading, 2).padding(.trailing, 8).padding(.vertical, 4)
-        .paneListRow(selected: selected, label: title, value: countWords(item, count),
+        .listRow(selected: selected, label: title, value: countWords(item, count),
                      editing: renaming == item) { model.sidebar = item }
         .accessibilityActions {
             if renames { Button("Rename") { startRenaming(item) } }
@@ -681,7 +682,7 @@ extension MainView {
             } label: {
                 label
             }
-            .paneOutlineSubtree { setExpanded(.group(g.id), $0, recursive: true) }
+            .outlineSubtree { setExpanded(.group(g.id), $0, recursive: true) }
             .id(SidebarItem.group(g.id)))
         }
     }
@@ -1678,7 +1679,7 @@ struct LibraryGridView: View {
             // The sidebar isn't a table since it left `List`: PaneKit says
             // when it has the keyboard instead.
             guard !(NSApp.keyWindow?.firstResponder is NSTableView),
-                  !PaneListKeyboard.hasKeyboard(in: NSApp.keyWindow) else { return false }
+                  !ListKeyboard.hasKeyboard(in: NSApp.keyWindow) else { return false }
             if event.keyCode == 0, event.plainModifiers == [.command] {
                 guard !visible.isEmpty else { return false }
                 selection = Set(visible.map(\.id))

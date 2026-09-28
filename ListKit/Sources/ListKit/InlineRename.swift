@@ -5,19 +5,19 @@ import AppKit
 /// and every `NSTableView` rename does: all of it selected, Return or a
 /// click elsewhere keeps the new name, Escape puts the old one back, and an
 /// empty or unchanged name is no rename at all. What starts it is the
-/// app's (⌥-click, a menu item, or Return through `PaneListNavigation`'s
+/// app's (⌥-click, a menu item, or Return through `ListNavigation`'s
 /// `onReturn`); this only draws it and reports the result.
 ///
 /// Return or Escape hands the keyboard back to the enclosing
-/// `PaneListNavigation` list, so the arrows carry on from the renamed row.
-public struct PaneInlineRename: View {
+/// `ListNavigation` list, so the arrows carry on from the renamed row.
+public struct InlineRename: View {
     let name: String
     @Binding var isEditing: Bool
     let commit: (String) -> Void
     @State private var draft = ""
     @FocusState private var focused: Bool
     @State private var clickWatch = ClickOutside()
-    @Environment(\.paneListRefocus) private var refocus
+    @Environment(\.listRefocus) private var refocus
 
     public init(_ name: String, isEditing: Binding<Bool>, commit: @escaping (String) -> Void) {
         self.name = name
@@ -106,6 +106,6 @@ public struct PaneInlineRename: View {
 }
 
 extension EnvironmentValues {
-    /// Set by `PaneListNavigation`: gives its list the keyboard back.
-    @Entry var paneListRefocus: (() -> Void)? = nil
+    /// Set by `ListNavigation`: gives its list the keyboard back.
+    @Entry var listRefocus: (() -> Void)? = nil
 }

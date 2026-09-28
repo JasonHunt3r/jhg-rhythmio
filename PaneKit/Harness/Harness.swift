@@ -56,7 +56,7 @@ enum Keep {
 
 /// The three shapes: one primitive, nested three ways.
 enum Shape: String, CaseIterable {
-    case finder, mail, showTools, headerHandle, titleBar, sidebarList
+    case finder, mail, showTools, headerHandle, titleBar
 
     var title: String {
         switch self {
@@ -65,7 +65,6 @@ enum Shape: String, CaseIterable {
         case .showTools: "ShowTools: timeline under everything"
         case .headerHandle: "A header bar as the handle"
         case .titleBar: "A pane under the title bar"
-        case .sidebarList: "A translucent, arrow-key-navigable sidebar"
         }
     }
 
@@ -117,11 +116,6 @@ enum Shape: String, CaseIterable {
             .split("window", .horizontal, sized: .first, size: 200, range: 150...320,
                    .pane("sidebar", title: "Sidebar"),
                    .pane("files", title: "Files", minSize: 240, scrollsUnderTitleBar: true))
-        case .sidebarList:
-            // PaneListNavigation over a plain ScrollView, not a List — the
-            // fix for `.withinWindow` blending never compositing over a
-            // real NSTableView (ShowTools' Catalog, 2026-09-27).
-            .pane("list", title: "List", minSize: 200)
         }
     }
 }
@@ -169,9 +163,6 @@ final class HarnessDelegate: NSObject, NSApplicationDelegate {
         } else {
             window.titlebarAppearsTransparent = false
             window.styleMask.remove(.fullSizeContentView)
-        }
-        if shape == .sidebarList {
-            content["list"] = NSHostingView(rootView: SidebarListDemo())
         }
         controller = c
         window.contentView = PaneContainerView(controller: c, content: content)
@@ -405,52 +396,4 @@ final class TranslucentTitleBarPane: NSView {
     required init?(coder: NSCoder) { fatalError("TranslucentTitleBarPane is made in code") }
 
     override var isFlipped: Bool { true }
-}
-
-/// A plain `ScrollView` sidebar, not a `List` — proving `PaneListNavigation`
-/// gives back what a `List` would (arrow keys step the selection, and it
-/// scrolls into view) while also actually compositing real vibrancy
-/// (`.withinWindow`) over its own scrolled rows, which a real `List`'s
-/// `NSTableView` never does (ShowTools' Catalog, 2026-09-27).
-private struct SidebarListDemo: View {
-    let rows = (1...40).map { "Row \($0)" }
-    @State private var selection: String?
-
-    var body: some View {
-        ScrollView {
-            LazyVStack(alignment: .leading, spacing: 0) {
-                ForEach(rows, id: \.self) { row in
-                    Text(row)
-                        .padding(.horizontal, 12).padding(.vertical, 6)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(selection == row ? Color.accentColor : .clear)
-                        .foregroundStyle(selection == row ? .white : .primary)
-                        .contentShape(Rectangle())
-                        .onTapGesture { selection = row }
-                        .id(row)
-                }
-            }
-        }
-        .safeAreaInset(edge: .top) {
-            HStack {
-                Text("Pinned Header").font(.headline)
-                Spacer()
-            }
-            .padding(10)
-            .background(HarnessVibrantBar())
-        }
-        .paneListNavigation(selection: $selection, order: rows)
-    }
-}
-
-private struct HarnessVibrantBar: NSViewRepresentable {
-    func makeNSView(context: Context) -> NSVisualEffectView {
-        let v = NSVisualEffectView()
-        v.material = .headerView
-        v.blendingMode = .withinWindow
-        v.state = .active
-        return v
-    }
-
-    func updateNSView(_ view: NSVisualEffectView, context: Context) {}
 }
