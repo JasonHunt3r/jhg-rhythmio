@@ -374,6 +374,11 @@ struct MainView: View {
                                      })
             } else {
                 TimelinePanePlaceholder()
+                    // Its content's height too, or with no show open the
+                    // split has no content ceiling and drags as tall as
+                    // half the window (Jason, 2026-09-27: "It's not
+                    // supposed to be able to do that. Window fits content").
+                    .onAppear { model.mainPanes.setContentExtent(EditShowTimelinePane.contentHeight, for: "window") }
             }
         }
     }
