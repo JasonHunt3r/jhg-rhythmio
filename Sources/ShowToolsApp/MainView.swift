@@ -1516,7 +1516,7 @@ struct LibraryGridView: View {
         .allowsHitTesting(false)
         .overlay { GripPill() }
         .paneHandle(model.viewer(viewerPlace), split: ViewerLayout.split)
-        .background(HandleBackground())
+        .background(HandleBackground(inStack: true))
     }
 
     /// The slider, what Show Similar is showing, and the fingerprints' progress.

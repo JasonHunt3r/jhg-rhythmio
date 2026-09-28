@@ -313,6 +313,23 @@ final class PaneDividerView: NSView, PaneResizeCursorView {
     }
 }
 
+/// How every drawer's edge handle (`PaneEdgeHandleView`) fills its
+/// background: solid, as always, unless the app says otherwise. An app
+/// with its own translucent bars can have the handles match them (ShowTools'
+/// "Include handles", Jason 2026-09-27: "There are many handle rows, on
+/// each drawer"). `translucency` gives, for dark or light, how opaque the
+/// window's background is laid over the OS's own header material — 0 the
+/// bare material, 1 solid; nil, solid. Call `changed()` after setting it,
+/// or while a slider previews it, and every handle redraws.
+@MainActor public enum PaneHandleAppearance {
+    public static var translucency: ((_ dark: Bool) -> CGFloat)?
+    static let didChange = Notification.Name("PaneHandleAppearanceDidChange")
+
+    public static func changed() {
+        NotificationCenter.default.post(name: didChange, object: nil)
+    }
+}
+
 /// A closed pane's grip on the window edge: always visible, clickable.
 /// Drag it to pull the pane out to a size; double-click it to open the
 /// pane at its last size.
@@ -321,6 +338,10 @@ final class PaneEdgeHandleView: NSView, PaneResizeCursorView {
     var cursorAxis: PaneAxis? { split.axis }
     let split: Split
     private weak var container: PaneContainerView?
+    /// Under the fill, shown only while `PaneHandleAppearance` is
+    /// translucent.
+    private let material = NSVisualEffectView()
+    private var observer: NSObjectProtocol?
 
     init(split: Split, container: PaneContainerView) {
         self.split = split
@@ -329,14 +350,44 @@ final class PaneEdgeHandleView: NSView, PaneResizeCursorView {
         toolTip = "Drag, or double-click, to show \(split.sizedTitle)"
         setAccessibilityRole(.button)
         setAccessibilityLabel("Show \(split.sizedTitle)")
+        material.material = .headerView
+        material.blendingMode = .withinWindow
+        material.state = .active
+        material.autoresizingMask = [.width, .height]
+        material.frame = bounds
+        addSubview(material, positioned: .below, relativeTo: nil)
+        applyAppearance()
+        observer = NotificationCenter.default.addObserver(forName: PaneHandleAppearance.didChange, object: nil,
+                                                          queue: .main) { [weak self] _ in
+            MainActor.assumeIsolated { self?.applyAppearance() }
+        }
     }
 
     required init?(coder: NSCoder) { fatalError("PaneEdgeHandleView is made in code") }
 
+    isolated deinit {
+        if let observer { NotificationCenter.default.removeObserver(observer) }
+    }
+
     override var isFlipped: Bool { true }
 
+    private var opacity: CGFloat? {
+        let dark = effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
+        return PaneHandleAppearance.translucency?(dark)
+    }
+
+    private func applyAppearance() {
+        material.isHidden = opacity == nil
+        needsDisplay = true
+    }
+
+    override func viewDidChangeEffectiveAppearance() {
+        super.viewDidChangeEffectiveAppearance()
+        applyAppearance()
+    }
+
     override func draw(_ dirtyRect: NSRect) {
-        NSColor.windowBackgroundColor.setFill()
+        NSColor.windowBackgroundColor.withAlphaComponent(opacity ?? 1).setFill()
         bounds.fill()
         // A line along the edge, and a capsule to grab: the frame strip's bar.
         NSColor.separatorColor.setFill()

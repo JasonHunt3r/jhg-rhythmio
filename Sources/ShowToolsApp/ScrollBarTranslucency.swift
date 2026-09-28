@@ -1,5 +1,6 @@
 import SwiftUI
 import AppKit
+import PaneKit
 
 /// The rework of item 34 (`spec/windows.md`), 2026-09-27: the earlier
 /// three-channel, four-region system was over-scoped. Jason, after looking
@@ -32,7 +33,19 @@ final class ScrollBarTranslucency: ObservableObject {
     /// as it always has — the default (Jason, 2026-09-27: "Include handles
     /// in transparency? Checkbox"). `HandleBackground` reads it.
     @Published var includeHandles: Bool = UserDefaults.standard.bool(forKey: "scrollBarIncludeHandles") {
-        didSet { UserDefaults.standard.set(includeHandles, forKey: "scrollBarIncludeHandles") }
+        didSet {
+            UserDefaults.standard.set(includeHandles, forKey: "scrollBarIncludeHandles")
+            syncPaneHandles()
+        }
+    }
+
+    /// PaneKit draws every drawer's edge handle itself, so it's told
+    /// directly (`PaneHandleAppearance`), and told again on every change —
+    /// the slider's live preview included.
+    private func syncPaneHandles() {
+        PaneHandleAppearance.translucency = includeHandles
+            ? { [weak self] dark in CGFloat(self?.value(for: dark ? .dark : .light) ?? 1) } : nil
+        PaneHandleAppearance.changed()
     }
 
     private func key(_ scheme: ColorScheme) -> String {
@@ -46,6 +59,7 @@ final class ScrollBarTranslucency: ObservableObject {
                 amount[k] = UserDefaults.standard.double(forKey: k)
             }
         }
+        syncPaneHandles()
     }
 
     func value(for scheme: ColorScheme) -> Double {
@@ -55,6 +69,7 @@ final class ScrollBarTranslucency: ObservableObject {
     func setValue(_ v: Double, for scheme: ColorScheme) {
         amount[key(scheme)] = v
         UserDefaults.standard.set(v, forKey: key(scheme))
+        PaneHandleAppearance.changed()
     }
 
     /// While the slider's knob moves: every bar redraws at `v` live
@@ -62,6 +77,7 @@ final class ScrollBarTranslucency: ObservableObject {
     /// but nothing's saved until `setValue` on release.
     func preview(_ v: Double, for scheme: ColorScheme) {
         amount[key(scheme)] = v
+        PaneHandleAppearance.changed()
     }
 }
 
@@ -92,17 +108,25 @@ struct ScrollBarBackground: View {
     }
 }
 
-/// A drawer handle's background inside a translucent bar stack: solid, as
-/// it always was, unless "Include handles" is on — then clear, so the
-/// stack's own `ScrollBarBackground` shows through it like the bars around
-/// it. Edit Show's browser handle (`DrawerGripStrip`) joins once the
-/// browser leaves `List` and has rows scrolling under it
-/// (`spec/listkit.md`).
+/// A drawer handle row's background: solid, as it always was, unless
+/// "Include handles" is on — then the same translucent bar look as the
+/// bars, following the slider. `inStack`: the handle sits inside a bar
+/// stack that already has one `ScrollBarBackground` (the grid's sort
+/// strip), so it goes clear and lets that show, rather than doubling it.
+/// PaneKit's own edge handles follow the same setting through
+/// `PaneHandleAppearance`.
 struct HandleBackground: View {
+    var inStack = false
     @ObservedObject private var setting = ScrollBarTranslucency.shared
 
     var body: some View {
-        if setting.includeHandles { Color.clear } else { Color(nsColor: .controlBackgroundColor) }
+        if !setting.includeHandles {
+            Color(nsColor: .controlBackgroundColor)
+        } else if inStack {
+            Color.clear
+        } else {
+            ScrollBarBackground()
+        }
     }
 }
 

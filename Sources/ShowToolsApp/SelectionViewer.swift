@@ -187,7 +187,7 @@ struct DrawerGripStrip: View {
             .frame(height: 12)   // PaneKit's edge handles' thickness
             .overlay { GripPill() }
             .paneHandle(controller, split: split)
-            .background(Color(nsColor: .controlBackgroundColor))
+            .background(HandleBackground())
     }
 }
 
