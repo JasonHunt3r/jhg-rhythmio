@@ -12,7 +12,7 @@ Repo: `~/Projects/ShowTools`, pushed to **github.com/JasonHunt3r/jhg-showtools**
 ## Where it stands
 
 **Everything planned is built**, and more has come from Jason's use of it.
-Phases 1–5, Phase 3b, Phase 4 and video export. **349 tests** (336 core +
+Phases 1–5, Phase 3b, Phase 4 and video export. **350 tests** (337 core +
 13 BGTools); PaneKit has its own 55, ListKit its own 24. **Library schema 14.**
 
 | Phase | State |
@@ -591,11 +591,6 @@ Not pressing; each wants a discussion or a plan before any code.
   explained — suspect `UndoMenuState`'s tracking of the key window
   rather than the rating code, but that's unproven.
 
-- **`LibraryLocation.isInICloud` loops forever on a path containing
-  `..`** (`ShowToolsCore/Library.swift:50`): `deleteLastPathComponent` on
-  `..` never shortens the path. Hit with a test launch path
-  `…/Library.sqlite/..`: the app hung at 100% CPU before opening a window,
-  and needed `kill -9` (and its launch note cleared). Not fixed.
 - **Undo registered outside an event stays invisible to Edit ▸ Undo
   until the next event** (AppKit's automatic group stays open). Fixed for
   drag-to-reorder by an explicit undo group; other paths that register

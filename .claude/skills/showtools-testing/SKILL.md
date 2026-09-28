@@ -93,8 +93,10 @@ with real events (`click`, `drag`, `type`, `key`, `menu`).
   — 45 frames of one slow drag found the drag-to-reorder loop that
   result-only checks missed (2026-09-25). Any tool that posts raw events
   must itself refuse unless the target app is frontmost.
-- **Launch paths: never pass one containing `..`** —
-  `LibraryLocation.isInICloud` loops forever on it (Known issues).
+- **Launch paths containing `..`** hung the app forever before any
+  window opened (`LibraryLocation.isInICloud`); fixed 2026-09-28, the
+  library resolves its path first. A resolved path is still the clearer
+  habit.
 - **Accessibility menu titles can be stale.** AX reported "Undo" while the
   open Edit menu said "Undo Add Marker". Check wording with a screenshot
   of the menu open (AXPress the menu bar item, `screencapture -R`,

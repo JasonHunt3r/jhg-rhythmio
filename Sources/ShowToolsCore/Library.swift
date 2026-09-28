@@ -46,9 +46,16 @@ public enum LibraryLocation {
     /// True when `url`, or the folder it would be created in, syncs to iCloud.
     public static func isInICloud(_ url: URL) -> Bool {
         let fm = FileManager.default
-        var probe = url
+        // Resolved first: on a path ending in `..`, `deleteLastPathComponent`
+        // adds another `..` rather than shortening it, and this looped
+        // forever at 100% CPU before any window opened (found 2026-09-23,
+        // a test launch with `…/Library.sqlite/..`).
+        var probe = url.standardizedFileURL
         while !fm.fileExists(atPath: probe.path), probe.pathComponents.count > 1 {
-            probe.deleteLastPathComponent()
+            let shorter = probe.deletingLastPathComponent().standardizedFileURL
+            // Never loop on a step that didn't shorten the path.
+            guard shorter.pathComponents.count < probe.pathComponents.count else { break }
+            probe = shorter
         }
         if fm.isUbiquitousItem(at: probe) { return true }
         return probe.path.contains("/Library/Mobile Documents/")
@@ -125,6 +132,9 @@ public final class Library {
     public var isHidden: Bool { LibraryLocation.isHidden(root) }
 
     public init(root: URL) throws {
+        // Resolved once, here: an unresolved `…/Library.sqlite/..` reached
+        // the file system as a path through a file and failed to open.
+        let root = root.standardizedFileURL
         if LibraryLocation.isInICloud(root) {
             throw DatabaseError(description:
                 "The library can't live in an iCloud-synced folder: \(root.path)")

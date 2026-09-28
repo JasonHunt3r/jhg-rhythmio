@@ -101,6 +101,16 @@ final class LibraryTests: XCTestCase {
 }
 
 final class DecodingTests: XCTestCase {
+    /// A path with `..` in it used to loop forever (`deleteLastPathComponent`
+    /// lengthens `..` instead of shortening it). It must return, and answer
+    /// the same as the resolved path.
+    func testICloudCheckReturnsOnAPathWithDotDot() {
+        let tmp = FileManager.default.temporaryDirectory
+        XCTAssertFalse(LibraryLocation.isInICloud(tmp.appendingPathComponent("a/b/Library.sqlite/..")))
+        XCTAssertFalse(LibraryLocation.isInICloud(tmp.appendingPathComponent("nope/../still-nope/..")))
+        XCTAssertFalse(LibraryLocation.isInICloud(URL(fileURLWithPath: "/../..")))
+    }
+
     func testOneBadFieldDoesNotResetTheRest() throws {
         let json = #"{"length":7,"panAndZoom":"garbage","loop":false,"fit":"fit"}"#
         let d = try JSONDecoder().decode(ShowDefaults.self, from: Data(json.utf8))
