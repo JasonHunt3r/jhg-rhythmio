@@ -569,6 +569,66 @@ guarded by that same `firstResponder is NSTableView` check, meaning
 "suppress while the sidebar has focus" — a concept a plain `ScrollView`
 sidebar has no equivalent for, so the guard now reads as permanently
 true. Not checked by hand whether that's actually noticeable.
+**Resolved the same evening** (next section): it was noticeable — a
+clicked sidebar's ← → went to the grid — and `PaneListKeyboard` answers
+the question now.
+
+## The rest of `List`'s freebies (added 2026-09-27, evening)
+
+Jason, from a screenshot of the Catalog: the chevrons were "jammed up
+against the left" and a show wasn't "within its collection visually" —
+"it seems that you need to write our replacement to have the same
+functionality that the OS list has." Built as two PaneKit pieces, both
+generic:
+
+**`PaneOutline`** (`PaneOutline.swift`) — the chevrons and indents. Outside
+a `List`, macOS's `DisclosureGroup` hangs its chevron in a margin left of
+the row that nothing supplies (clipped at the pane's edge), and doesn't
+indent its content at all. `.disclosureGroupStyle(.paneOutline)` tracks
+each row's depth; `PaneOutlineIndent()`, first in every row's own `HStack`,
+draws the indent plus the chevron (or an equal gutter on a row with no
+children), *inside* the row, so the highlight spans the full width the
+way `NSOutlineView` draws it. `indentPerLevel` 14, `disclosureWidth` 16.
+⌥-click on a chevron opens or folds everything under it, through the
+closure the app gives `.paneOutlineSubtree { open in … }` on each
+`DisclosureGroup`. **Trap:** the style isn't inherited into its own
+content, so it re-applies itself there (a nested group got the system's
+hanging chevron back without it).
+
+**`PaneListNavigation`, rebuilt on SwiftUI focus** instead of a
+window-wide key monitor, so it acts only while the list has the keyboard,
+like a `List`: a click in it takes focus (`.focusable()` — a click on any
+row does it; an extra list-wide `TapGesture` for the purpose swallowed
+every chevron click, measured, so there isn't one). While focused:
+
+- ↑ ↓ step (held, they now repeat), scrolled into view;
+- → opens a folded row or steps into an open one's first child; ← folds
+  an open row or steps from a child to its parent; ⌥→ ⌥← do the whole
+  branch (`outline: PaneListOutline` — parent, isExpanded, setExpanded);
+- typing selects by name (`title:`): a letter jumps to the first match
+  from the top, the same letter again steps through the matches, letters
+  within a second build one name (`PaneTypeSelect`).
+
+`.paneListRow(selected:)` on each row draws `List`'s states: the accent
+highlight with white text while the list has the keyboard, grey
+(`unemphasizedSelectedContentBackgroundColor`) while it doesn't, and the
+accent ring around the row a right-click menu is open for (from AppKit's
+`NSMenu` tracking notifications — `.contextMenu` reports nothing).
+`PaneListKeyboard.hasKeyboard(in:)` is the replacement for asking
+`firstResponder is NSTableView`: the app's own window-wide key handlers
+ask it to stand aside.
+
+13 new `PaneListNavigationTests` (74 PaneKit tests). Checked on a scratch
+copy by axtool: every key above; a tile click hands the arrows back to the
+grid and greys the sidebar's selection; ⌥-click folds without renaming.
+
+**Known limits.** The app's window-wide `SingleKeys` handlers run before
+SwiftUI focus, so a key one of them takes never reaches type-to-select —
+with a show open, J K L M I O N are the timeline's (as they beat the
+`List` too); the rating and U / Y keys are the grid's. VoiceOver sees
+the rows and their chevrons (`AXDisclosureTriangle`, expanded or not,
+selected trait), but not an outline with levels the way it reads a real
+`List` — SwiftUI offers no outline role outside `List`.
 
 ## Building a row (added 2026-09-24)
 

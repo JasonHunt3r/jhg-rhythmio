@@ -1,4 +1,5 @@
 import SwiftUI
+import AppKit
 
 /// The indent and disclosure chevron a `List` draws for a nested
 /// `DisclosureGroup`, for a hand-rolled sidebar that isn't one
@@ -50,6 +51,7 @@ public struct PaneOutlineDisclosureStyle: DisclosureGroupStyle {
                         // A child row is never a disclosure's label itself
                         // unless its own `DisclosureGroup` says so.
                         .environment(\.paneOutlineDisclosure, nil)
+                        .environment(\.paneOutlineSubtree, nil)
                         // Not inherited into a style's own content
                         // (measured: a nested group got the system's
                         // hanging chevron back), so it's set again.
@@ -70,6 +72,7 @@ public extension DisclosureGroupStyle where Self == PaneOutlineDisclosureStyle {
 public struct PaneOutlineIndent: View {
     @Environment(\.paneOutlineLevel) private var level
     @Environment(\.paneOutlineDisclosure) private var disclosure
+    @Environment(\.paneOutlineSubtree) private var subtree
 
     public init() {}
 
@@ -83,7 +86,13 @@ public struct PaneOutlineIndent: View {
                     .frame(width: PaneOutline.disclosureWidth, alignment: .center)
                     .contentShape(Rectangle())
                     .onTapGesture {
-                        withAnimation(.easeInOut(duration: 0.2)) { disclosure.wrappedValue.toggle() }
+                        // ⌥-click: this row and everything under it, as
+                        // `List` does — when the app says what's under it.
+                        let open = !disclosure.wrappedValue
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            if NSEvent.modifierFlags.contains(.option), let subtree { subtree(open) }
+                            else { disclosure.wrappedValue = open }
+                        }
                     }
                     .accessibilityElement()
                     .accessibilityLabel(disclosure.wrappedValue ? "Collapse" : "Expand")
@@ -100,4 +109,16 @@ extension EnvironmentValues {
     @Entry var paneOutlineLevel: Int = 0
     /// Set only on a disclosure's own label: its open/closed state.
     @Entry var paneOutlineDisclosure: Binding<Bool>? = nil
+    /// Set by `.paneOutlineSubtree` on one disclosure: opens or folds it
+    /// and everything under it.
+    @Entry var paneOutlineSubtree: ((Bool) -> Void)? = nil
+}
+
+public extension View {
+    /// On a `DisclosureGroup` in a `.paneOutline` list: what ⌥-clicking its
+    /// chevron does — open or fold this row and everything under it. Only
+    /// the app knows what's under it.
+    func paneOutlineSubtree(_ setExpanded: @escaping (Bool) -> Void) -> some View {
+        environment(\.paneOutlineSubtree, setExpanded)
+    }
 }

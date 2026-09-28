@@ -243,6 +243,7 @@ struct MainView: View {
                     } label: {
                         collectionRow(c)
                     }
+                    .paneOutlineSubtree { setExpanded(.collection(c.id), $0, recursive: true) }
                     .id(SidebarItem.collection(c.id))
                 }
                 // Shows in no collection shouldn't exist after the
@@ -255,8 +256,6 @@ struct MainView: View {
             .disclosureGroupStyle(.paneOutline)
             .padding(.horizontal, 8)
         }
-        .paneListNavigation(selection: Binding(get: { model.sidebar }, set: { if let s = $0 { model.sidebar = s } }),
-                            order: visibleSidebarOrder)
         .safeAreaInset(edge: .top) {
             VStack(alignment: .leading, spacing: 0) {
                 libraryRow
@@ -294,6 +293,10 @@ struct MainView: View {
             .padding(8)
             .background(ScrollBarBackground())
         }
+        // Last, so the pinned Library row above takes the keyboard on a
+        // click too, as it did inside the `List`.
+        .paneListNavigation(selection: Binding(get: { model.sidebar }, set: { if let s = $0 { model.sidebar = s } }),
+                            order: visibleSidebarOrder, title: sidebarTitle, outline: sidebarOutline)
     }
 
     /// The Library row, pinned above the Collections list
@@ -418,17 +421,6 @@ extension MainView {
         renaming = item
     }
 
-    /// Item 32, `ShowTools Feedback — Worklist for Next CC Session.md`:
-    /// ⌥-click a sidebar name to jump straight into its rename alert,
-    /// skipping the right-click menu. A `.simultaneousGesture`, not
-    /// `.onTapGesture` — the latter would steal the plain click a
-    /// `List(selection:)` row needs for its own selection (the same class
-    /// of trap `.onDrag` on a List row is, `showtools-gotchas`).
-    private func renameOnOptionClick(_ item: SidebarItem, current: String) -> some Gesture {
-        TapGesture().onEnded {
-            if NSEvent.modifierFlags.contains(.option) { startRenaming(item, current: current) }
-        }
-    }
 
     private func startCreatingCollection() {
         newCollectionName = model.nextName("Untitled Collection", taken: model.collections.map(\.name))
@@ -515,34 +507,97 @@ extension MainView {
         return order
     }
 
+    /// Each row's name, for type-to-select (`PaneListNavigation`).
+    private func sidebarTitle(_ item: SidebarItem) -> String {
+        switch item {
+        case .library: model.isOnMaster ? "Library" : model.libraryName
+        case .collection(let id): model.collection(id)?.name ?? ""
+        case .group(let id): model.group(id)?.name ?? ""
+        case .show(let id): model.show(id)?.name ?? ""
+        }
+    }
+
+    /// The Catalog's hierarchy, for ← and → (`PaneListOutline`): a group
+    /// sits in its parent group or else its collection, a show in its
+    /// collection. A collection can always open (as in the `List`, an
+    /// empty one keeps its chevron); a group only with groups inside.
+    private var sidebarOutline: PaneListOutline<SidebarItem> {
+        PaneListOutline(
+            parent: { item in
+                switch item {
+                case .group(let id):
+                    guard let g = model.group(id) else { return nil }
+                    return g.parentID.map { .group($0) } ?? .collection(g.collectionID)
+                case .show(let id):
+                    guard let cid = model.show(id)?.collectionID, model.collection(cid) != nil else { return nil }
+                    return .collection(cid)
+                default: return nil
+                }
+            },
+            isExpanded: { item in
+                switch item {
+                case .collection(let id): !folded.contains(id)
+                case .group(let id) where model.groups.contains(where: { $0.parentID == id }):
+                    !foldedGroups.contains(id)
+                default: nil
+                }
+            },
+            setExpanded: { item, open, recursive in setExpanded(item, open, recursive: recursive) })
+    }
+
+    /// Opens or folds a collection or group; `recursive`, every group
+    /// inside it too (⌥-click, ⌥← / ⌥→).
+    private func setExpanded(_ item: SidebarItem, _ open: Bool, recursive: Bool) {
+        func setGroup(_ id: Int64) {
+            if open { foldedGroups.remove(id) } else { foldedGroups.insert(id) }
+            guard recursive else { return }
+            for child in model.groups where child.parentID == id { setGroup(child.id) }
+        }
+        switch item {
+        case .collection(let id):
+            if open { folded.remove(id) } else { folded.insert(id) }
+            if recursive { for g in model.topGroups(inCollection: id) { setGroup(g.id) } }
+        case .group(let id): setGroup(id)
+        default: break
+        }
+    }
+
     /// A sidebar row's selection highlight and click-to-select — `List`'s
     /// own selection binding and `.badge()` gave both for free before
     /// (2026-09-27's rework off `List`, above). Shared by `libraryRow`,
     /// `collectionRow`, `groupRow`'s label and `showRow`.
-    private func sidebarRowChrome(_ item: SidebarItem, icon: String, title: String, count: Int) -> some View {
+    /// `renames`: ⌥-clicking the name opens its rename alert, skipping the
+    /// right-click menu (item 32, `ShowTools Feedback — Worklist for Next
+    /// CC Session.md`). The name only, not the whole row, so an ⌥-click on
+    /// the chevron beside it (fold everything under it,
+    /// `PaneOutlineIndent`) doesn't rename too. A child's tap beats its
+    /// row's, so the name's own tap selects as well.
+    private func sidebarRowChrome(_ item: SidebarItem, icon: String, title: String, count: Int,
+                                  renames: Bool = false) -> some View {
         let selected = model.sidebar == item
         return HStack(spacing: 6) {
             HStack(spacing: 0) {
                 PaneOutlineIndent()
                 Label(title, systemImage: icon)
+                    .onTapGesture {
+                        model.sidebar = item
+                        if renames, NSEvent.modifierFlags.contains(.option) { startRenaming(item, current: title) }
+                    }
             }
             Spacer()
             Text("\(count)")
                 .font(.caption)
-                .foregroundStyle(selected ? .white.opacity(0.8) : .secondary)
+                .foregroundStyle(.secondary)
         }
         .padding(.leading, 2).padding(.trailing, 8).padding(.vertical, 4)
-        .background(selected ? AnyShapeStyle(Color.accentColor) : AnyShapeStyle(.clear),
-                    in: RoundedRectangle(cornerRadius: 6))
-        .foregroundStyle(selected ? .white : .primary)
-        .contentShape(Rectangle())
+        .paneListRow(selected: selected)
         .onTapGesture { model.sidebar = item }
     }
 
     func collectionRow(_ c: MediaCollection) -> some View {
         // Solid folder for a collection, outline for a group inside it
         // (`groupRow`, below) — settled 2026-09-25, feedback item 12.
-        sidebarRowChrome(.collection(c.id), icon: "folder.fill", title: c.name, count: c.itemIDs.count)
+        sidebarRowChrome(.collection(c.id), icon: "folder.fill", title: c.name, count: c.itemIDs.count, renames: true)
             .contextMenu {
                 Button("New Show in “\(c.name)”") { model.newShow(in: c.id) }
                 Button("New Group in “\(c.name)”…") { startCreatingGroup(collectionID: c.id) }
@@ -550,7 +605,6 @@ extension MainView {
                 Button("Rename…") { startRenaming(.collection(c.id), current: c.name) }
                 Button("Delete Collection…") { deleteCollectionAsking(c) }
             }
-            .simultaneousGesture(renameOnOptionClick(.collection(c.id), current: c.name))
             // Dropping files on a collection puts them in it (imported first
             // if they come from Finder or Photos): no question, that's the
             // ask. Dropping a group here can't move it (a group's
@@ -584,14 +638,13 @@ extension MainView {
     /// define its own opaque return type in terms of itself.
     func groupRow(_ g: MediaGroup) -> AnyView {
         let children = model.groups.filter { $0.parentID == g.id }
-        let label = sidebarRowChrome(.group(g.id), icon: "folder", title: g.name, count: g.itemIDs.count)
+        let label = sidebarRowChrome(.group(g.id), icon: "folder", title: g.name, count: g.itemIDs.count, renames: true)
             .contextMenu {
                 Button("New Group in “\(g.name)”…") { startCreatingGroup(collectionID: g.collectionID, parentID: g.id) }
                 Divider()
                 Button("Rename…") { startRenaming(.group(g.id), current: g.name) }
                 Button("Delete Group…") { deleteGroupAsking(g) }
             }
-            .simultaneousGesture(renameOnOptionClick(.group(g.id), current: g.name))
             // Draggable, so it can be dropped on another group to nest it
             // (plan, "groups hold groups, like folders") or on a collection
             // (see `collectionRow`).
@@ -622,12 +675,14 @@ extension MainView {
             } label: {
                 label
             }
+            .paneOutlineSubtree { setExpanded(.group(g.id), $0, recursive: true) }
             .id(SidebarItem.group(g.id)))
         }
     }
 
     func showRow(_ show: Show) -> some View {
-        sidebarRowChrome(.show(show.id), icon: "play.rectangle", title: show.name, count: show.slides.count)
+        sidebarRowChrome(.show(show.id), icon: "play.rectangle", title: show.name, count: show.slides.count,
+                         renames: true)
             .id(SidebarItem.show(show.id))
             .contextMenu {
                 Button("Play") { Player.open(show: show, model: model, fullScreen: false) }
@@ -650,7 +705,6 @@ extension MainView {
                 Button("Rename…") { startRenaming(.show(show.id), current: show.name) }
                 Button("Delete Show…") { confirmDelete = show }
             }
-            .simultaneousGesture(renameOnOptionClick(.show(show.id), current: show.name))
             // Dropping files on a show appends them to it (asking first about
             // any not in its collection).
             .onDrop(of: ItemDrag.accepted, isTargeted: nil) { providers in
@@ -1615,7 +1669,10 @@ struct LibraryGridView: View {
                 cursor = Viewer.step(orderedSelection, from: cursor, by: event.keyCode == 123 ? -1 : 1)
                 return true
             }
-            guard !(NSApp.keyWindow?.firstResponder is NSTableView) else { return false }
+            // The sidebar isn't a table since it left `List`: PaneKit says
+            // when it has the keyboard instead.
+            guard !(NSApp.keyWindow?.firstResponder is NSTableView),
+                  !PaneListKeyboard.hasKeyboard(in: NSApp.keyWindow) else { return false }
             if event.keyCode == 0, event.plainModifiers == [.command] {
                 guard !visible.isEmpty else { return false }
                 selection = Set(visible.map(\.id))
