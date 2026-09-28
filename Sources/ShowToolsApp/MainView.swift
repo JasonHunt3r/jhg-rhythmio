@@ -245,6 +245,7 @@ struct MainView: View {
             VStack(alignment: .leading, spacing: 0) {
                 libraryRow
                 Text("Collections")
+                    .accessibilityAddTraits(.isHeader)
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(.secondary)
                     .padding(.horizontal, 16)
@@ -282,7 +283,8 @@ struct MainView: View {
         // click too, as it did inside the `List`.
         .paneListNavigation(selection: Binding(get: { model.sidebar }, set: { if let s = $0 { model.sidebar = s } }),
                             order: visibleSidebarOrder, title: sidebarTitle, outline: sidebarOutline,
-                            onReturn: { if $0 != .library { startRenaming($0) } })
+                            onReturn: { if $0 != .library { startRenaming($0) } },
+                            accessibilityLabel: "Sidebar")
     }
 
     /// The Library row, pinned above the Collections list
@@ -497,6 +499,14 @@ extension MainView {
         return order
     }
 
+    /// A row's count, as VoiceOver says it: a show counts slides, the
+    /// others items.
+    private func countWords(_ item: SidebarItem, _ count: Int) -> String {
+        let noun: String
+        if case .show = item { noun = count == 1 ? "slide" : "slides" } else { noun = count == 1 ? "item" : "items" }
+        return "\(count) \(noun)"
+    }
+
     /// Each row's name, for type-to-select (`PaneListNavigation`).
     private func sidebarTitle(_ item: SidebarItem) -> String {
         switch item {
@@ -592,7 +602,11 @@ extension MainView {
                 .foregroundStyle(.secondary)
         }
         .padding(.leading, 2).padding(.trailing, 8).padding(.vertical, 4)
-        .paneListRow(selected: selected)
+        .paneListRow(selected: selected, label: title, value: countWords(item, count),
+                     editing: renaming == item) { model.sidebar = item }
+        .accessibilityActions {
+            if renames { Button("Rename") { startRenaming(item) } }
+        }
         .onTapGesture { model.sidebar = item }
     }
 

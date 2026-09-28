@@ -38,11 +38,14 @@ public struct PaneListNavigation<ID: Hashable>: ViewModifier {
     let title: ((ID) -> String)?
     let outline: PaneListOutline<ID>?
     let onReturn: ((ID) -> Void)?
+    let accessibilityLabel: String?
     @FocusState private var focused: Bool
     @State private var typed = PaneTypeSelect()
 
     public init(selection: Binding<ID?>, order: [ID], title: ((ID) -> String)? = nil,
-                outline: PaneListOutline<ID>? = nil, onReturn: ((ID) -> Void)? = nil) {
+                outline: PaneListOutline<ID>? = nil, onReturn: ((ID) -> Void)? = nil,
+                accessibilityLabel: String? = nil) {
+        self.accessibilityLabel = accessibilityLabel
         self._selection = selection
         self.order = order
         self.title = title
@@ -61,6 +64,10 @@ public struct PaneListNavigation<ID: Hashable>: ViewModifier {
                 .onChange(of: focused, initial: true) { _, on in PaneListKeyboard.set(on, in: NSApp.keyWindow) }
                 .onAppear { focused = true }
                 .onKeyPress(phases: [.down, .repeat]) { press in handle(press, proxy: proxy) }
+                // One named group for VoiceOver to enter and leave, as a
+                // `List` is ("Sidebar").
+                .accessibilityElement(children: .contain)
+                .accessibilityLabel(accessibilityLabel ?? "")
         }
     }
 
@@ -210,10 +217,29 @@ struct PaneTypeSelect {
 /// selection highlight (the accent while the list has the keyboard, grey
 /// while it doesn't), the text colour that goes with it, and the ring
 /// around the row whose right-click menu is open.
+///
+/// And what `List` tells VoiceOver about a row, since a hand-rolled one
+/// otherwise reads as loose pieces (its icon, its name and its count as
+/// separate elements; Jason, 2026-09-27: PaneKit is held to an App Store
+/// app's standard). The row is one element: `label` is its name, its value
+/// is `value` plus, in a `.paneOutline` list, "level N" (a row that opens
+/// says those in its label instead, and "expanded"/"collapsed" itself —
+/// `spokenLabel`); it carries the selected trait; its default action is
+/// `select`, and a row that opens has Expand or Collapse. The app adds its
+/// own (Rename…) with `.accessibilityAction(named:)` after this. `editing`:
+/// while its name is a text field (`PaneInlineRename`), the row opens up
+/// so the field can be reached. Not an outline *role* — SwiftUI only gives
+/// that to `List`; see `spec/panekit.md`, "Known limits".
 public struct PaneListRow: ViewModifier {
     let selected: Bool
+    let label: String
+    let value: String?
+    let editing: Bool
     let cornerRadius: CGFloat
+    let select: () -> Void
     @Environment(\.paneListFocused) private var focused
+    @Environment(\.paneOutlineLevel) private var level
+    @Environment(\.paneOutlineDisclosure) private var disclosure
     @State private var hovered = false
     @State private var menuOpen = false
 
@@ -243,22 +269,55 @@ public struct PaneListRow: ViewModifier {
             .onReceive(NotificationCenter.default.publisher(for: NSMenu.didEndTrackingNotification)) { _ in
                 menuOpen = false
             }
+            .accessibilityElement(children: editing ? .contain : .ignore)
+            .accessibilityLabel(spokenLabel)
+            .accessibilityValue(spokenValue)
             .accessibilityAddTraits(selected ? .isSelected : [])
+            .accessibilityAction(.default) { select() }
+            .accessibilityActions {
+                if let disclosure {
+                    Button(disclosure.wrappedValue ? "Collapse" : "Expand") {
+                        withAnimation(.easeInOut(duration: 0.2)) { disclosure.wrappedValue.toggle() }
+                    }
+                }
+            }
     }
+
+    /// "14 items, level 2": the level only in an outline, where a row
+    /// either opens or sits inside one that does.
+    private var details: [String] {
+        var parts: [String] = []
+        if let value { parts.append(value) }
+        if disclosure != nil || level > 0 { parts.append("level \(level + 1)") }
+        return parts
+    }
+
+    /// A row that opens is SwiftUI's own disclosure element, whose value
+    /// is its open state and can't be replaced (measured: it read "1",
+    /// the count and level gone). So there the details join the label,
+    /// and the disclosure says "expanded" or "collapsed" itself.
+    private var spokenLabel: String {
+        disclosure == nil ? label : ([label] + details).joined(separator: ", ")
+    }
+
+    private var spokenValue: String { disclosure == nil ? details.joined(separator: ", ") : "" }
 }
 
 public extension View {
     /// See `PaneListNavigation`.
     func paneListNavigation<ID: Hashable>(selection: Binding<ID?>, order: [ID], title: ((ID) -> String)? = nil,
                                           outline: PaneListOutline<ID>? = nil,
-                                          onReturn: ((ID) -> Void)? = nil) -> some View {
+                                          onReturn: ((ID) -> Void)? = nil,
+                                          accessibilityLabel: String? = nil) -> some View {
         modifier(PaneListNavigation(selection: selection, order: order, title: title, outline: outline,
-                                    onReturn: onReturn))
+                                    onReturn: onReturn, accessibilityLabel: accessibilityLabel))
     }
 
     /// See `PaneListRow`.
-    func paneListRow(selected: Bool, cornerRadius: CGFloat = 6) -> some View {
-        modifier(PaneListRow(selected: selected, cornerRadius: cornerRadius))
+    func paneListRow(selected: Bool, label: String, value: String? = nil, editing: Bool = false,
+                     cornerRadius: CGFloat = 6, select: @escaping () -> Void) -> some View {
+        modifier(PaneListRow(selected: selected, label: label, value: value, editing: editing,
+                             cornerRadius: cornerRadius, select: select))
     }
 }
 

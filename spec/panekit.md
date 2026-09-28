@@ -641,10 +641,15 @@ responder.
 **Known limits.** The app's window-wide `SingleKeys` handlers run before
 SwiftUI focus, so a key one of them takes never reaches type-to-select —
 with a show open, J K L M I O N are the timeline's (as they beat the
-`List` too); the rating and U / Y keys are the grid's. VoiceOver sees
-the rows and their chevrons (`AXDisclosureTriangle`, expanded or not,
-selected trait), but not an outline with levels the way it reads a real
-`List` — SwiftUI offers no outline role outside `List`.
+`List` too); the rating and U / Y keys are the grid's. VoiceOver: since 2026-09-27 (evening) `.paneListRow` makes each row one
+element — "Shorty, 5 slides, level 2", selected, with Press (select),
+Expand/Collapse and the app's own (Rename) — and the list one named group
+("Sidebar"). Checked by performing each action through the Accessibility
+API. A row that opens is SwiftUI's own disclosure element, whose value is
+its open state and can't be replaced, so its count and level ride in its
+label instead. What's still missing is the outline *role* itself, which
+SwiftUI gives only to `List`; parked for the accessibility pass
+(`spec/status.md`, "What's next", item 0).
 
 ## Building a row (added 2026-09-24)
 

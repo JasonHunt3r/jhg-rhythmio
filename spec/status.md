@@ -186,6 +186,16 @@ smaller thing scoped to the filter bar (below) — one open glitch there
 before it's really done. Then flesh out the "Smart View" preference. The
 rest below is open, not next, roughly in the order Jason raised them:
 
+0. **An accessibility pass, later in the build** (Jason, 2026-09-27: "PaneKit
+   should be made to the standards of a pro level App Store candidate").
+   Parked item for it: give `PaneListNavigation` lists VoiceOver's real
+   outline role through `.accessibilityRepresentation` — a hidden `List`
+   with `OutlineGroup` standing in for the hand-rolled rows. Unknown to
+   settle first, in the harness: whether VoiceOver's cursor and axtool's
+   frames still land on the drawn rows. Built already, 2026-09-27: each
+   row one element with name, count, level, selected state, and Press /
+   Expand / Collapse / Rename actions (`spec/panekit.md`, "Known limits").
+
 1. ~~**The timeline's height**~~ (`spec/windows.md`, "Its height") —
    **built 2026-09-26, both halves**, including vertical row-scrolling in
    `StorylineView` (which didn't exist before) and scrolling a moved row
