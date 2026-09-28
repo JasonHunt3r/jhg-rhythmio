@@ -13,7 +13,7 @@ Repo: `~/Projects/ShowTools`, pushed to **github.com/JasonHunt3r/jhg-showtools**
 
 **Everything planned is built**, and more has come from Jason's use of it.
 Phases 1–5, Phase 3b, Phase 4 and video export. **349 tests** (336 core +
-13 BGTools; PaneKit has its own 51). **Library schema 14.**
+13 BGTools); PaneKit has its own 55, ListKit its own 24. **Library schema 14.**
 
 | Phase | State |
 |---|---|
@@ -35,75 +35,32 @@ patterns, 12 their note length, 13 groups, 14 a drag order for a
 collection's/group's files). Before an upgrade the database is copied
 to `Library.sqlite.v<N>.bak`.
 
-**Built most recently (2026-09-27, later still)** — `spec/windows.md`, "A
-reusable modal box"; `spec/panekit.md`, "The clutch": the drawer-sensitivity
-section split in two — the Windows tab now shows one combined
-**Responsiveness** slider, and a **"Set Up Triggers…" button** opens the
-line, the Quick ↔ Smooth slider and the practice drawer in a new
-**`SettingsBox`** — a reusable case meant for other settings items too,
-not just this one. Went through three shapes the same day: **app-modal**
-first (`NSApp.runModal`, every ShowTools window blocked) — found and
-fixed a real bug (blocked every other window correctly but took no input
-itself, until the modal session started on the next run-loop turn
-instead of synchronously inside the button tap that opened it) — then
-**tied to Settings' own lifecycle** once Jason said "I was wrong about
-making it demand the window" — then, once he found that could hide the
-box *behind* Settings unconfirmed, **a floating panel** instead, his own
-idea: "persist above all — most — windows until you click done," so
-nothing can ever hide it, sidestepping the problem rather than reacting
-to it. Found and fixed a second real bug the same way: `isFloatingPanel`/
-`level` set *before* `contentViewController` and `center()` silently
-didn't stick (`kCGWindowLayer` read back `0`, not `3`) — moving them
-*after* fixed it. Checked with axtool against a scratch library,
-carefully: Jason had the real app open with an identical Settings window
-and box on screen at the same default coordinates, so every check first
-read window positions by pid and moved the scratch copy's windows to a
-region proven not to overlap his, before any click. Confirmed: the box
-stays open and untouched when Settings closes (the point of the whole
-redesign); it stays layer-3 after clicking through to another window; its
-own Done button still closes it normally; reopening it brings the
-existing one forward rather than a second copy. Nothing in Jason's live
-session was touched.
-
-**Then, once Jason was done using it and had closed his own copy**:
-where these two windows open (`spec/windows.md`, "Where these windows
-open"). Settings now always opens centered under the triggering
-monitor's own bar (`TriggeringScreen.swift`) rather than restoring its
-autosaved position across launches — refined mid-conversation from
-"centered in the triggering monitor" to "centered top under main window
-bar," then again once the box came up: "the launch of the secondary
-window needs to be relative to the current position of the settings
-window," not the monitor — so `SettingsBox` now follows wherever Settings
-currently sits (`positionUnderBar(of:)`), including if it's been dragged.
-Two more real bugs found by testing, the same class as the layer bug
-above — something set too early, before the window was actually sized or
-shown: Settings' own positioning silently did nothing at all (proven with
-an absurd canary value that changed nothing) because the observer that
-was meant to apply it wasn't even installed yet when the window's first
-`didBecomeKeyNotification` fired — fixed by positioning directly on
-first capture instead of only from that observer; the box centered on
-the screen's raw midpoint, not its own size, because `frame.size` still
-read `.zero` immediately after creation — fixed by deferring a run-loop
-turn, the same fix `captured()` already needed. Also: **the header bar
-now reads "ShowTools Settings: Windows"** (or whichever tab), not just
-the tab's own name — a KVO observation on the window's `title` reapplies
-the prefix after every tab switch, since there's no "tab changed"
-notification to hook instead. All four confirmed with axtool against a
-scratch library, no overlap risk this time (Jason's own app wasn't
-running).
-
-**One more, right after**: `SettingsBox` titles itself — first cut, after
-the tab it opened from ("Windows: Set Up Triggers"), confirmed with
-axtool against a scratch library alongside Jason's own live session
-again (both landed at the exact same deterministic spot, confirming the
-earlier positioning fix holds for him too). **Corrected minutes later**:
-"it should be the module it came out of, in this case Drawer
-Sensitivity" — the tab isn't the section. `SettingsBox.present` now takes
-an explicit `section` parameter instead of reading the tab name back out
-of Settings' own title; the Windows tab's button passes `"Drawer
-Sensitivity"`. Left open in a scratch test copy for Jason to check
-directly rather than described back to him: "it's good" — header bar
-reads "Drawer Sensitivity: Set Up Triggers."
+**Built most recently (2026-09-27, evening)** — the story in
+`spec/history/2026-09-27-bands-listkit-transparency.md`:
+- **Empty bands gone** (`spec/panekit.md`, "Corrected 2026-09-27"): a
+  PaneKit container reserves only the title bar it actually sits under.
+- **The timeline pane fits its content, measured**: the storyline and the
+  empty timeline each report the height they're drawn at (row heights
+  will be a preference), with an 8 pt breather clear of the window's
+  corners; it can't be dragged taller than that, with or without a show
+  (`spec/windows.md`, "Its height").
+- **With no show open** the timeline stays, greyed and inert: the full
+  toolset over the four default rows, waiting.
+- **ListKit** (`spec/listkit.md`), its own package beside PaneKit: the
+  sidebar's and the browser's lists — keyboard focus, ↑↓ with repeat,
+  ←/→ and ⌥ folding, type-to-select, outline chevrons and indents, inline
+  rename (⌥-click, Return, right-click Rename; undoable), several picked
+  at once, and each row one VoiceOver element.
+- **Edit Show's browser is off `List`**: its tools bar, handle and pinned
+  section headers are translucent, the rows scrolling up under them.
+- **The Transparency module** (Settings → Windows): an Appearance switch,
+  then Panel Transparency, Title Bar Transparency and Include handles,
+  each kept per appearance (`spec/windows.md`, "The windows pass").
+- **Handle rows**: every drawer's handle follows Include handles
+  (`PaneHandleAppearance`), and an open drawer's divider shows its handle
+  row on hover (`spec/panekit.md`, "Handle rows").
+- **The Library grid's header row** shows what's in view and its count —
+  the place for Library-view tools later.
 
 **Built earlier the same day (2026-09-27)** — details in `spec/windows.md`,
 "The windows pass," and `spec/panekit.md`, "The clutch"; the story in
@@ -127,9 +84,8 @@ is built too, in the Windows tab: a draggable-line control for the engage
 distance, a Quick ↔ Smooth slider, and a real practice drawer embedded
 live so both are felt at once, not just read as numbers. The
 settings-vs-preferences split turned out moot once everything fit one
-tabbed window. Left of the windows pass: light mode's translucency and
-Smart View — each still wants its own discussion — and Jason's own tuning
-of the sensitivity dials.
+tabbed window. Left of the windows pass: Smart View — it wants its own
+discussion — and Jason's own tuning of the sensitivity dials.
 
 **Built 2026-09-26** — details in the specs, the story in
 `spec/history/2026-09-26-slides-and-the-clutch.md` and
@@ -168,7 +124,7 @@ of the sensitivity dials.
 - **Signed "Apple Development"**, team `P82S39V2KJ` (`spec/xcode-port.md`),
   no longer ad hoc.
 
-**Installed:** `~/Applications/ShowTools.app` at `39fcbd6`, 2026-09-26,
+**Installed:** `~/Applications/ShowTools.app` at `ea7c889`, 2026-09-27,
 signed with Jason's team. Every reinstall (`install.sh`) quits the real
 BGTools and doesn't restart it: start it again from View ▸ Desktop Show….
 
@@ -188,68 +144,30 @@ rest below is open, not next, roughly in the order Jason raised them:
 
 0. **An accessibility pass, later in the build** (Jason, 2026-09-27: "PaneKit
    should be made to the standards of a pro level App Store candidate").
-   Parked item for it: give `PaneListNavigation` lists VoiceOver's real
+   Parked item for it: give ListKit's lists VoiceOver's real
    outline role through `.accessibilityRepresentation` — a hidden `List`
    with `OutlineGroup` standing in for the hand-rolled rows. Unknown to
    settle first, in the harness: whether VoiceOver's cursor and axtool's
    frames still land on the drawn rows. Built already, 2026-09-27: each
    row one element with name, count, level, selected state, and Press /
-   Expand / Collapse / Rename actions (`spec/panekit.md`, "Known limits").
+   Expand / Collapse / Rename actions (`spec/listkit.md`, "Known limits").
 
 1. ~~**The timeline's height**~~ (`spec/windows.md`, "Its height") —
    **built 2026-09-26, both halves**, including vertical row-scrolling in
    `StorylineView` (which didn't exist before) and scrolling a moved row
    into view. Not yet confirmed by a real drag or scroll — see "Still
    needs Jason's hands."
-2. **The windows pass, the rest** — four of the six pieces, plus a tabbed
-   redesign and a second panel-leveling bug, all **built 2026-09-27**
-   (`spec/windows.md`, "The windows pass"; `spec/panekit.md`, "The
-   clutch"): panel-hiding as a setting (and a deeper fix, panels no
-   longer floating over other apps forever), Settings no longer covered
-   by a floating panel, About ShowTools (already there for free), a
-   pro-style tabbed Settings window, and the drawers' sensitivity setting
-   with its practice drawer. The settings-vs-preferences split turned out
-   moot. **Light mode's translucency and a background-transparency
-   setting** (item 34) went through a full build-then-rework the same day
-   (`spec/windows.md`, "The windows pass," has the whole story): the first
-   cut (three Opacity Channels, four assignable regions, a secondary
-   settings box) was over-scoped — Jason, after looking at native apps:
-   translucency only reads as intentional on a bar that scrolled content
-   passes under, nowhere else. Reworked to one slider per appearance
-   (native ↔ opaque), scoped to the Library grid's filter bar, no secondary
-   window. The three-channel engine is kept, unwired, as the seed for a
-   future Slide Editor tool. **One known glitch, unresolved**: a thin
-   sliver of content still peeks through at 100% opacity, right at the
-   bar/grid seam. The header bar got the same real scroll-under treatment
-   after all (`Pane.scrollsUnderTitleBar`, PaneKit), and the Catalog's own
-   bars (Library/Collections header, New+ footer) were pinned and given
-   the same translucency once the sidebar migrated off `List` to a plain
-   `ScrollView` with a new, genuinely reusable PaneKit primitive
-   (`PaneListNavigation`, arrow-key stepping + scroll-into-view for any
-   `List`-free selection list) — `.withinWindow` blending measured flat
-   with **zero** vibrancy over a real `NSTableView`, confirmed two
-   independent ways, which is why the migration was necessary rather than
-   a quick fix. A leftover `.sidebar`/`.behindWindow` call site from
-   before that migration caused a real "no transparency" bug, fixed (the
-   convenience itself removed, nothing needs it now). **A second real
-   regression, found the same day from an annotated screenshot**: Edit
-   Show's alignment broke because `detail`'s `scrollsUnderTitleBar` static
-   flag fought with `ShowView`'s own genuine `.toolbar` — fixed by making
-   the flag runtime-toggleable in PaneKit (`PaneController
-   .setScrollsUnderTitleBar`, an override consulted by `PaneLayout.layout`
-   alongside the tree's static value), off for as long as a show is open,
-   restored the moment it closes. Confirmed on a scratch copy: Edit Show's
-   Browser row reads flush now, the Library grid's own scroll-behind title
-   bar is unaffected. **Left**: applying the same scroll-behind
-   translucency to Edit Show's own Browser cluster (collection picker,
-   item count, Search, "In this show" label — Jason's blue box), while
-   keeping the thin grip/divider strip solid ("leave the handle bar solid
-   for now"); a DisclosureGroup random-collapse bug found while stress-
-   testing the migration (documented, not diagnosed); an arrow-key monitor
-   race between the sidebar and the grid (documented, not fixed); his own
-   tuning of the drawer-sensitivity dials by feel; the filter-bar seam
-   glitch and his own tuning of that slider; then fleshing out the
-   **"Smart View"** preference.
+2. **The windows pass, the rest** (`spec/windows.md`, "The windows pass"):
+   built — panel-hiding, Settings' tabs, About, the drawers' sensitivity
+   setting, and the Transparency module with every bar that content
+   scrolls under (the grid's filter bar, the sidebar's, Edit Show's
+   browser) and the title bar. **Left**: Jason's tuning of the sensitivity
+   dials and the transparency values by feel; the filter-bar seam (a
+   sliver showing through at solid, not re-checked since the rework); a
+   DisclosureGroup random-collapse seen once while stress-testing the
+   sidebar (not diagnosed, not seen since its own disclosure style); then
+   the **"Smart View"** preference — its "timeline closes with no show"
+   part already overruled (Open questions).
 3. **Slides as mini movies, the rest** (`spec/plan.md`): the Slide Editor
    as the Slide viewer's pop-out, maybe reordering in the viewer, and the
    framework for slides with more inside (portrait shots filling a
@@ -322,108 +240,14 @@ Not pressing; each wants a discussion or a plan before any code.
 
 ## Still needs Jason's hands
 
-- **The filter bar's translucency slider** (rework, 2026-09-27,
-  `spec/windows.md` item 34 has the whole story — the three-channel,
-  four-region version it replaced, and why). Now: one slider per
-  appearance on the Windows tab directly (no secondary window), 0 (native
-  material) to 1 (fully opaque), with a live preview swatch next to each.
-  Confirmed with a scratch library: real Library-grid tiles genuinely
-  scroll up and pass under the bar, sampled live (`.withinWindow`
-  blending) — a colorful tile's top edge visibly bleeds through as it
-  scrolls by. **Not yet right**: at 100% opacity, which should be fully
-  solid, a thin sliver of the row above still shows through at the exact
-  seam between the bar and the grid — not explained by `sortStatusBar`'s
-  own separate opaque background (checked, unrelated). Needs a fresh look
-  with screenshots at a few scroll positions and opacity values before
-  the code is touched again, rather than more guessing. Also unconfirmed:
-  the two Dark/Light sliders' values, by feel, once the seam is sorted.
-  Reverted cleanly: Catalog, Inspector and Panels are back to their exact
-  original rendering (no `TranslucentBackground` anywhere on them);
-  `TranslucencySettingsBox.swift` (the old region-picker UI) is deleted;
-  `TranslucencySetting.swift`/`TranslucentBackground.swift` (the
-  three-channel engine) are kept, explicitly marked unwired, reserved for
-  a future Slide Editor tool. `HeaderBarBackground.swift` stays installed
-  but dormant. A `fullSizeContentView` + `.ignoresSafeArea` attempt at
-  giving the header bar real scrolled content underneath it was tried and
-  reverted — zero visible effect on a scratch copy either way; PaneKit's
-  own layout math would need to learn about a title-bar inset for that to
-  work, which is its own harness-tested task — **built the same day
-  anyway**, once Jason proposed doing it properly: `PaneKit.Pane
-  .scrollsUnderTitleBar` (`spec/panekit.md`, "A pane under the title bar";
-  53 PaneKit tests including two new ones). Confirmed first in the harness
-  (a new "A pane under the title bar" shape — a marked pane's colour
-  genuinely bleeds through a translucent strip over it, its sibling
-  untouched), then wired into the real app: `AppModel.mainPanes`' `detail`
-  pane carries the flag, and the same filter-bar `ScrollBarBackground` now
-  covers a spacer over the title bar too, one continuous surface, one
-  slider. `HeaderBarBackground.swift` (the old one-off hack) is deleted.
-  Confirmed with a scratch library: tiles scroll up through the taller
-  combined region; the library pane sits exactly where it always did.
-  **Also found**: Jason's own real, running app still had the *old* build
-  during this whole rework — his earlier tint experiment (red, ~89%) was
-  still live on the Inspector panel in his session, since nothing had been
-  reinstalled yet. Resolved once the new build installed.
-
-  **The Catalog itself, same day**: Library and Collections are pinned at
-  the top (`libraryList`'s own `.safeAreaInset`, not a `List` row any
-  more — `libraryRow`, with its own manual selection highlight), the
-  three Catalog bars carry `ScrollBarBackground.sidebar`
-  (`.behindWindow`). Jason asked for the grid's own dramatic
-  `.withinWindow` look on these bars too, matching Notes' toolbar;
-  measured that `.withinWindow` never composites over a `List`'s
-  `NSTableView` regardless of view-tree position (two real structural
-  attempts, `spec/windows.md`), and that Notes' actual look comes from a
-  genuine `NSToolbar`'s own privileged window-chrome compositing, not a
-  content-level effect view — a real architectural step against PaneKit's
-  whole reason for existing. Declined; his own follow-up instead: "why
-  can't we just add the transparency characteristic to any bar that is in
-  a scroll behind position?"
-
-  **Answer, built the same day**: the Catalog no longer uses `List` at
-  all. Jason: "as long as we're making something reusable for future apps
-  using PaneKit. We're basically writing this into PaneKit, right?" — yes:
-  `PaneKit.PaneListNavigation` (`spec/panekit.md`, "Arrow-key navigation
-  for a hand-rolled list") gives a plain `ScrollView` the one thing
-  `List(selection:)` gave for free that nothing else does — arrow keys
-  step the selection, scrolled into view — proven first in the harness (25
-  and 35 consecutive Down presses landed exactly on Row 25 and Row 35),
-  6 new PaneKit tests (65 total). `libraryList` is a `ScrollView` now;
-  every row carries `sidebarRowChrome` (manual selection highlight and
-  tap, replacing `.tag`/`.badge()`); `visibleSidebarOrder` computes the
-  fold-aware flat order. Context menus, rename-on-option-click, drag and
-  drop, the recursive `DisclosureGroup`s — all unchanged, none of it was
-  ever `List`-specific. `.onDeleteCommand` is gone, redundant: the
-  window-wide `SingleKeys` Delete/⌘Delete fallback already covered every
-  case unconditionally once `firstResponder is NSTableView` can never be
-  true here again.
-
-  **Confirmed on a scratch copy** (the seeded 25-collection library): rows
-  genuinely scroll behind a visibly translucent bar now; arrow keys from
-  launch land on Library first, then step through collections/groups/shows
-  in drawn order, auto-scrolling correctly; a click selects and updates
-  the detail pane; Delete on a selected group raised the real confirmation
-  dialog (in its own separate window — worth remembering to check for
-  next time nothing seems to happen). **One real, unresolved side
-  effect, confirmed**: `LibraryGridView`'s own keyboard shortcuts are
-  guarded by that same `firstResponder is NSTableView` check (meaning
-  "suppress while the sidebar has focus"), which a plain `ScrollView`
-  sidebar has no equivalent for — an arrow key sometimes moved the
-  *grid's* own selection instead of the sidebar's, a real monitor race
-  between `PaneArrowKeys` and the grid's own, not just a theoretical gap.
-
-  **A real bug in the fix, found immediately after installing**: Jason —
-  "no transparency from the library headers with scrollbehind content."
-  Both Catalog bars were still calling the now-deleted
-  `ScrollBarBackground.sidebar` (`.behindWindow`) — left over from before
-  the migration, never switched to the plain `ScrollBarBackground()`
-  default (`.withinWindow`) the whole migration was *for*. Fixed;
-  `.sidebar` removed from `ScrollBarTranslucency.swift` entirely, nothing
-  needs it any more. **Not yet re-confirmed visually** — synthetic clicks
-  and arrow keys landed inconsistently in the sidebar in this same
-  session (the monitor race above), so this is reasoned from the code
-  (the identical mechanism already proven twice: the grid's own filter
-  bar, and the PaneKit harness demo) rather than screenshotted again.
-  Worth Jason's own look.
+- **The Transparency module, by eye** (Settings → Windows): the Panel and
+  Title Bar values for Light and Dark, Include handles, and the hover
+  handle row on an open drawer's divider — all checked by measurement on a
+  scratch copy, none yet by Jason's own eye. Also the filter-bar seam
+  (Where it stands, "What's next" item 2).
+- **Edit Show's browser, by hand**: ⌘/⇧-click picks, a picked group
+  dragged onto the timeline with a real mouse, and the bars' look as the
+  list scrolls under them.
 - **The Set Up Triggers box, and the Responsiveness slider** (built,
   reversed twice, and floating by the end of 2026-09-27, `spec/windows.md`,
   "A reusable modal box"): confirmed with axtool against a scratch

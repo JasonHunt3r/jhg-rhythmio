@@ -1108,7 +1108,10 @@ header bar reads "Drawer Sensitivity: Set Up Triggers." "It's good."
    (giving that Browser cluster the same scroll-behind material the
    filter bar and Catalog bars use) and the grip-strip exclusion are
    **not done** — this fix only settles the alignment regression, per
-   Jason's "leave the handle bar solid for now."
+   Jason's "leave the handle bar solid for now." **Done later the same day**: the
+   browser left `List` for ListKit and its whole bar stack, headers and
+   handle went translucent (`spec/listkit.md`); the handle follows the
+   Transparency module's Include handles.
 3. The "Smart View" preference (panes open and close by context — on by
    default — or keep your own choices; `spec/plan.md`, "Slides as mini
    movies") — **wants fleshing out**: today it's a one-paragraph sketch,
