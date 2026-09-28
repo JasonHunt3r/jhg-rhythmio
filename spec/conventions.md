@@ -1,6 +1,7 @@
 # Conventions — what each gesture means, everywhere
 
-**Status:** Draft, 2026-09-24. Nothing new is built. Each row is marked:
+**Status:** Begun 2026-09-24. Every "not built" claim checked against the
+code 2026-09-28. Open work: see `spec/backlog.md`. Each row is marked:
 - **Built**: it works this way today.
 - **Settled**: Jason has decided it, and it's not built yet.
 - **Proposed**: Claude's suggestion, awaiting Jason.
@@ -32,7 +33,9 @@ itself. Names follow `spec/anatomy.md`.
 2. **Everything can be found without a manual.** Every control has a
    tooltip, every command has a menu item showing its shortcut, and
    every right-click offers what's under the pointer.
-   (Today: 78 tooltips, and Edit Show's commands are in no menu, F1.)
+   (78 tooltips counted 2026-09-24. F1 built: Edit Show's transport and
+   range are in the Show menu, bare keys named in the titles, and Help ▸
+   Keyboard Shortcuts lists the single-key commands, F3.)
 3. **Every change is one undo step,** with a name in Edit ▸ Undo. Drags
    commit once, on release. Viewing isn't changing: zoom, scroll,
    selection and panels aren't undone. (CLAUDE.md; G1 fixed the three
@@ -54,7 +57,7 @@ itself. Names follow `spec/anatomy.md`.
 | **Drag on empty space** | Rubber-band selection; ⌘ or ⇧ adds | The timeline: a drag on the ruler scrubs instead | **Settled** (Jason, 2026-09-24; B4) |
 | **Double-click** | **Go into it:** open the thing one level deeper | See "Double-click" below | **Settled** as the meaning (Jason, 2026-09-24); some targets are still to be tried |
 | **⌥-click** | Jason's leading idea: **select the thing behind** in an overlap, such as the slide under a transition or a lane image | ⌥-click on a row handle already opens or closes every drawer. ⌥-drag copies (§1 note) | **Open**. See "How ⌥ is used elsewhere" below |
-| **Right-click** | The commands for what's under the pointer, or for the selection if it's part of it (§3) | — | Built in some places; missing on lane images, transitions, markers (C1–C3) |
+| **Right-click** | The commands for what's under the pointer, or for the selection if it's part of it (§3) | — | Built in most places. Lane images, transitions and markers have only the minimal C1–C3 menus (Replace Image… / Remove Image, Remove Transition, Remove Marker); their full §3 menus aren't built (checked 2026-09-28) |
 | **Hover** | A tooltip saying what it is, and its shortcut | — | Built for most controls |
 | **Drag an item** | Move it: within an area it reorders; onto another area it adds or places there (§4) | A selected item drags the whole selection | Built |
 | **Pinch** | Zoom the thing under the pointer (the timeline's scale, the viewer's work zoom) | The Library grid's tile size, the same range as its slider, down to the list view (Jason, 2026-09-25) | Built; the grid's 2026-09-26 |
@@ -65,12 +68,12 @@ itself. Names follow `spec/anatomy.md`.
 | **Drag an open drawer's divider** | Resize it; at its minimum the divider **stops dead**, and only once the pointer is **64 pt past the stopped divider** does it loose shut (Jason, 2026-09-26: "once the brakes are slammed on, it should stay still"). Let go before and it stays open at its minimum | — | Built (PaneKit) |
 | **Flick a drawer's handle** | Open or shut it at once — a quick drag (over 1000 pt/s, at least 12 pt), judged while moving and at the release | — | Built 2026-09-26 (PaneKit) |
 | **Drag a pane across the main area** (its divider or its handle) | **Switch sides**: once less than its starting size is left, it trades places with main and mounts on the opposite edge (Jason, 2026-09-25: "basically we're reordering the columns") | Within its own split only; drag back to return; ⌥⌘0 resets | Built (PaneKit, `spec/panekit.md`) |
-| **⌘⌥-click a timeline row** | Open that row's drawer | ⌥-click on a row *handle* opens or closes every drawer | Settled (Jason, 2026-09-24); not built |
-| **⌥⌘-click the range button** | Set the range to the part of the timeline in view | A locked range refuses it, with a beep | Settled (Jason, 2026-09-24) |
-| **⇧⌥⌘-click the range button** | Set the range to the whole show | A locked range refuses it | Settled (Jason, 2026-09-24) |
-| **Drag a range end** (I or O) on the ruler | Move that end; one undo step | Not while the range is locked | Settled (Jason, 2026-09-24) |
-| **⌘[ / ⌘]** | Go Back / Go Forward: the playhead's own history, with the timeline's scroll and zoom. The playhead is never in ⌘Z | — | Settled (Jason, 2026-09-24); not built |
-| **⌥-double-click a screen's box** (BGTools) | Move the settings window to that monitor | A plain double-click selects the screen | Modified double-click settled (Jason, 2026-09-24); ⌥ proposed |
+| **⌘⌥-click a timeline row** | Open that row's drawer | ⌥-click on a row *handle* opens or closes every drawer (built, `StorylineView.toggleDrawer`) | Settled (Jason, 2026-09-24); not built (checked 2026-09-28) |
+| **⌥⌘-click the range button** | Set the range to the part of the timeline in view | A locked range refuses it, with a beep | Settled (Jason, 2026-09-24); built (W7, `EditShowView.rangeButton`; also in the Show menu). Not yet tried by hand |
+| **⇧⌥⌘-click the range button** | Set the range to the whole show | A locked range refuses it | Settled (Jason, 2026-09-24); built (W7), not yet tried by hand |
+| **Drag a range end** (I or O) on the ruler | Move that end; one undo step | Not while the range is locked | Settled (Jason, 2026-09-24); built (W6). By hand (2026-09-28) the end runs faster than the mouse: a bug, `spec/backlog.md` B-02 |
+| **⌘[ / ⌘]** | Go Back / Go Forward: the playhead's own history, with the timeline's scroll and zoom. The playhead is never in ⌘Z | — | Settled (Jason, 2026-09-24); built (W8, View menu), checked by Jason 2026-09-28 |
+| **⌥-double-click a screen's box** (BGTools) | Move the settings window to that monitor | A plain double-click selects the screen | Modified double-click settled (Jason, 2026-09-24); ⌥ was Claude's proposal. Built (BGTools `MainWindow.swift`) |
 
 ### How ⌥ is used elsewhere (for deciding ⌥-click)
 
@@ -85,7 +88,7 @@ What's well established on the Mac and in creative apps:
   follows this.
 - **⌥-click sets a point:** Photoshop's Clone Stamp sets its source with
   ⌥-click. It's a precedent for **aiming Pan and Zoom's zoom-to point**
-  by ⌥-clicking the image (plan, Later).
+  by ⌥-clicking the image (`spec/backlog.md`, B-56).
 - **Selecting what's behind:** design apps mostly use ⌘-click
   (Illustrator's "select behind"), or a right-click menu listing
   everything under the pointer (Photoshop, Figma). In ShowTools ⌘-click
@@ -109,7 +112,8 @@ candidates, real testing picks one:
 - **Double-click: open the thing one level deeper.**
   - a collection row: open its disclosure (Jason's original idea);
   - a Library tile: Quick Look, or Get Info (B6). Quick Look is the
-    natural one, now that Space is play/pause (§2);
+    natural one, now that Space is play/pause (§2). **Built: Quick Look**
+    (B5), on the second click and on ⌘Y;
   - **a slide, in either mode: the Slide Editor.** Settled 2026-09-24
     (PaneKit step 4's first piece, `spec/windows.md`, `spec/panekit.md`):
     the Slide Editor won double-click over the inspector, since it matches
@@ -124,25 +128,26 @@ candidates, real testing picks one:
 storyline, opens the Slide Editor (`SlideEditorWindow.swift`) — the image
 with its Transform/Rotation handles, and the full inspector beside it, in
 one window that replaces itself when a different slide is opened. Also on
-"Open in Slide Editor" in both places' context menus. **Not yet done:**
-the picture's own right-click (stop 4, `spec/status.md`'s "The order from
-here"), ⌥-click's inspector meaning, and Esc clearing the selection
-afterward (Esc closes the window; built no further than that).
+"Open in Slide Editor" in both places' context menus, and (2026-09-24)
+on the picture's own right-click in Edit Show's viewer
+(`EditShowView.slideImageMenu`). **Not yet done:** ⌥-click's inspector
+meaning, and Esc clearing the selection afterward (Esc closes the window;
+built no further than that).
 
 ## 2. Keys
 
 | Key | Means, everywhere | Where it differs | State |
 |---|---|---|---|
-| **Delete** | Remove the selection from *where it is*: a slide from its show, a file from its collection, a lane item from its row. Asks first where the plan says so | In the Library (not a collection), a file goes to the Trash, after asking | Built for slides, the grid and the browser. The Library pane is missing (D1) |
+| **Delete** | Remove the selection from *where it is*: a slide from its show, a file from its collection, a lane item from its row. Asks first where the plan says so | In the Library (not a collection), a file goes to the Trash, after asking | Built for slides, the grid, the browser and (D1) the Library pane: a show, collection or group asks first, ⌘Delete doesn't for a show or collection (`MainView`'s window-wide `SingleKeys`) |
 | **⌘Delete** | Move to the Trash (delete from the library), without asking | In a collection it still asks, since it's more than leaving it | Built (settled, plan 2b) |
 | **Esc** | Step back one level: **close the Slide Editor** (Jason), a drawer or a popover; then clear the selection | In a text field, cancel the edit. In the player, leave full screen | Built partly. Little use for it yet (Jason, 2026-09-24): more cases will turn up with use, and go in §8 |
-| **Return** | Do the default: OK in a dialog, commit a text field | On a selected item: rename it (Finder) | Built in dialogs; rename on Return **Settled** (Jason, 2026-09-24; B6, D4) |
-| **Space** | **Play and pause, pretty much always** (Jason, 2026-09-24). Wanting to stop playback and having to juggle windows first would be confusing and frustrating | Never while typing in a text field. **Not Quick Look**, which departs from Finder on purpose: Quick Look is ⌘Y (Finder's other key for it) and double-clicking a tile. **In Edit Slides, Space loops the selected slides**, in show order, cut to cut (nothing selected: the show) — plan, "Slides as mini movies" | **Settled.** Built in Edit Show, the player and (2026-09-26) Edit Slides |
-| **← → ↑ ↓** | Move the selection; with ⇧, extend it | **The timeline (settled, Jason, 2026-09-24):** ← → move through the items in the current row (slides, or audio clips); ↑ ↓ move between rows; **in the ruler**, ← → nudge the playhead. The player: previous and next slide. The viewer with an image selected: nudge it. **A grid with the viewer drawer open and several selected:** ← → move the outline (the stack's top card) within the selection, wrapping, and the selection stays (Jason, 2026-09-26, Aperture's multi-up). **Edit Slides:** the slide list keeps ↑ ↓ once clicked; the timeline's arrows work there too, since it's live in both modes | Built in lists, the player, the viewer, the grid and the timeline |
+| **Return** | Do the default: OK in a dialog, commit a text field | On a selected item: rename it (Finder) | Built in dialogs; rename on Return **Settled** (Jason, 2026-09-24; B6, D4), built in the Library grid (B6; checked by Jason 2026-09-28) |
+| **Space** | **Play and pause, pretty much always** (Jason, 2026-09-24). Wanting to stop playback and having to juggle windows first would be confusing and frustrating | Never while typing in a text field. **Not Quick Look**, which departs from Finder on purpose: Quick Look is ⌘Y (Finder's other key for it) and double-clicking a tile. **In Edit Slides, Space loops the selected slides**, in show order, cut to cut (nothing selected: the show) — `spec/slides-as-mini-movies.md` | **Settled.** Built in Edit Show, the player and (2026-09-26) Edit Slides |
+| **← → ↑ ↓** | Move the selection; with ⇧, extend it | **Edit Show: the arrows go to the area last clicked, or the active area** (Jason, 2026-09-28, reversing 2026-09-24): "It was a mistake to reserve the arrow keys for the timeline in show view… probably the default behavior is what we really want after all." He was trying to move through the browser list and the timeline took the keys. *Superseded 2026-09-28: the timeline's claim on the arrows everywhere in Edit Show.* **The timeline, once it has them (settled, Jason, 2026-09-24):** ← → move through the items in the current row (slides, or audio clips); ↑ ↓ move between rows; **in the ruler**, ← → nudge the playhead. The player: previous and next slide. The viewer with an image selected: nudge it. **A grid with the viewer drawer open and several selected:** ← → move the outline (the stack's top card) within the selection, wrapping, and the selection stays (Jason, 2026-09-26, Aperture's multi-up). **Edit Slides:** the slide list keeps ↑ ↓ once clicked; the timeline's arrows work there too, since it's live in both modes | Built in lists, the player, the viewer, the grid and the timeline. The 2026-09-28 reversal (arrows follow focus in Edit Show) is not built: `spec/backlog.md` B-03 |
 | **Home / End** | The first or last item, or the show's start or end | — | Built in the player |
 | **Tab** | Move the keyboard to the next area | — | Built by SwiftUI where areas are focusable |
-| **0–5, 9, − / =, U** | **Rate a file, Aperture's keys** (item 20, Jason, 2026-09-26): 1–5 stars, 0 clears, 9 rejects, − / = one star down/up; U shows/hides ratings. **Y** opens/closes the viewer drawer over the grids and **⇧Y** switches it Side by Side / Stack (Aperture's Viewer key; built 2026-09-26 in the Library grid, the library panel and Edit Show's browser, `spec/plan.md` "The viewer drawer"); **in Edit Slides, Y opens/closes the Slide viewer** (one picture, so no ⇧Y) | The rating keys only where files are: the Library grid, the library panel, Edit Show's browser. Never on slides, the timeline, the viewer or the player. − / = may need to become contextual if they clash. **U works everywhere in the window and nothing else ever gets it** — not the sidebar's type-select (it used to jump to "Untitled Collection"; Jason: "it's not supposed to jump at all"), only a text field. See `showtools-gotchas`, "U is taken window-wide" | Built |
-| **Single letters** | Final Cut's keys, where there's a timeline: J K L shuttle, I O range, M marker, N snapping; E W Q add from the browser | Never while typing in a text field (`SingleKeys`) | Built; shown in no menu (F1) |
+| **0–5, 9, − / =, U** | **Rate a file, Aperture's keys** (item 20, Jason, 2026-09-26): 1–5 stars, 0 clears, 9 rejects, − / = one star down/up; U shows/hides ratings. **Y** opens/closes the viewer drawer over the grids and **⇧Y** switches it Side by Side / Stack (Aperture's Viewer key; built 2026-09-26 in the Library grid, the library panel and Edit Show's browser, `spec/viewer-drawer.md`); **in Edit Slides, Y opens/closes the Slide viewer** (one picture, so no ⇧Y) | The rating keys only where files are: the Library grid, the library panel, Edit Show's browser. Never on slides, the timeline, the viewer or the player. − / = may need to become contextual if they clash. **U works everywhere in the window and nothing else ever gets it** — not the sidebar's type-select (it used to jump to "Untitled Collection"; Jason: "it's not supposed to jump at all"), only a text field. See `showtools-gotchas`, "U is taken window-wide" | Built |
+| **Single letters** | Final Cut's keys, where there's a timeline: J K L shuttle, I O range, M marker, N snapping; E W Q add from the browser | Never while typing in a text field (`SingleKeys`) | Built. Space, M, I, O are named in the Show menu's titles and E, W, Q in the browser's right-click (F1, C8); Help ▸ Keyboard Shortcuts lists them all (F3) |
 
 ## 3. Right-click menus
 
@@ -180,39 +185,39 @@ divider, and empty groups are skipped:
 
 | Target | Items |
 |---|---|
-| Library tile | **Settled 2026-09-24.** Play (the selection, or one picture; greyed out until playing without a show is built), Quick Look (⌘Y), Show Similar ✓ · New Show from *N* Items… ✓ (opens the New Show panel), Add to Show ✓ · New Collection from ✓, Add to Collection ✓ · Copy · Rename… ✓, Get Info ✓ · Remove from Collection ✓, Move to Trash… ✓ |
-| Find Similar Images set header (was Group Similar) | **Settled 2026-09-24.** Select Group, Keep One… ✓, **Keep as Group** · New Show from Group…, Add Group to Collection ▸ |
-| Library pane: a group | *To settle with groups* (`spec/plan.md`, "Groups inside collections"). Drop files onto it; it lists beside the collection's shows. **Promotion to its own collection** is one idea for it (Jason, 2026-09-25), not yet designed |
-| Empty grid space | **Settled 2026-09-24.** Import…, Select All, New Collection |
-| Slide (list or timeline) | **Settled for Edit Slides, 2026-09-24.** Play from Here ✓, Play Full Screen (from the slide) · Duplicate ✓, Copy, Paste (**with ⌥ held: Copy Settings, Paste Settings**) · **Replace Image…** · Show in Library, Open Inspector · Remove from Show ✓. No Show in Finder. **Quick settings as submenus** (settled): Length ▸, Transition ▸, Pan and Zoom ▸, each applying to every selected slide as one undo step |
+| Library tile | **Settled 2026-09-24.** Play (the selection, or one picture; greyed out until playing without a show is built), Quick Look (⌘Y), Show Similar ✓ · New Show from *N* Items… ✓ (opens the New Show panel), Add to Show ✓ · New Collection from ✓, Add to Collection ✓ · Copy · Rename… ✓, Get Info ✓ · Remove from Collection ✓, Move to Trash… ✓. Play, Quick Look and Copy aren't on the menu yet (checked 2026-09-28); Quick Look works by ⌘Y (File menu) and double-click |
+| Find Similar Images set header (was Group Similar) | **Settled 2026-09-24.** Select Group ✓, Keep One… ✓, **Keep as Group** ✓ · New Show from Group… ✓, Add Group to Collection ▸ ✓ |
+| Library pane: a group | *To settle with groups* (`spec/groups.md`; `spec/backlog.md`, B-46). Drop files onto it; it lists beside the collection's shows. **Promotion to its own collection** is one idea for it (Jason, 2026-09-25), not yet designed |
+| Empty grid space | **Settled 2026-09-24.** Import… ✓, Select All (⌘A works; not on the menu), New Collection ✓; in a collection, Add from Library… ✓ |
+| Slide (list or timeline) | **Settled for Edit Slides, 2026-09-24.** Play from Here ✓, Play Full Screen (from the slide) ✓ · Duplicate ✓, Copy ✓, Paste ✓ (**with ⌥ held: Copy Settings, Paste Settings**; built as two always-visible items, §3 route item 3) · **Replace Image…** ✓ · Show in Library ✓, Open Inspector · Remove from Show ✓. No Show in Finder. **Quick settings as submenus** (settled): Length ▸, Transition ▸, Pan and Zoom ▸, each applying to every selected slide as one undo step ✓ |
 | Edit Slides: empty list space | **Settled 2026-09-24, to try.** Add from Collection…, Import…, Paste, Select All (today it shows the slide menu with nothing to act on) |
 | Edit Slides: the defaults bar | **Settled 2026-09-24, to try by hand.** Use Defaults for All Slides (clears each slide's own values), Save as Preset… (the New Show presets), Reset to App Defaults |
-| Viewer: a slide's image in the picture | **Settled 2026-09-24.** Open in Slide Editor (greyed out until built), Show in Library · Length ▸, Transition ▸, Pan and Zoom ▸ (the slide list's quick settings) · Reset Transform, Rotation Handles on/off · **Select ▸** (everything under the pointer, e.g. a lane image and the slide beneath) · **Slide Progress on/off** (the white bar; work order, 2026-09-24) |
-| Viewer: the pasteboard (the grey round the picture) | **Settled 2026-09-24.** Work Zoom ▸ (Fit, 75 %, 50 %), Onion Skin on/off, Pop Out Viewer |
+| Viewer: a slide's image in the picture | **Settled 2026-09-24.** Open in Slide Editor ✓, Show in Library ✓ · Length ▸, Transition ▸, Pan and Zoom ▸ (the slide list's quick settings) ✓ · Reset Transform ✓, Rotation Handles on/off ✓ · **Select ▸** (everything under the pointer, e.g. a lane image and the slide beneath; not built) · **Slide Progress on/off** (the white bar; work order, 2026-09-24) ✓ |
+| Viewer: the pasteboard (the grey round the picture) | **Settled 2026-09-24.** Work Zoom ▸ (Fit, 75 %, 50 %) ✓, Onion Skin on/off ✓, Pop Out Viewer ✓ |
 | Viewer: the frame strip | **Settled 2026-09-24.** Play from Here, Follow Timeline / Whole Show, Hide Frame Strip |
-| Timeline: a block (a slide) | **Settled 2026-09-24.** The same menu as Edit Slides' slide (above), plus **Select All After** (Final Cut's) |
+| Timeline: a block (a slide) | **Settled 2026-09-24.** The same menu as Edit Slides' slide (above), plus **Select All After** (Final Cut's). Today it has only Open in Slide Editor, Duplicate, Replace Image… and Remove from Show (checked 2026-09-28) |
 | Timeline: a cut with no transition | **Settled 2026-09-24.** Add Transition ▸ (the styles), Add Show Default Transition (what the "+" on hover does) |
 | Transition | **Settled 2026-09-24.** Style ▸, Duration ▸ (0.5 s, 1 s, 2 s, Custom…), Use Show Default, Apply to All Cuts · Remove Transition ✓ (leaves a cut) |
-| Lane image | **Settled 2026-09-24.** Duplicate, Replace Image… · Fade ▸ (In, Out, Both, None) · Show in Library · Remove Image ✓ |
+| Lane image | **Settled 2026-09-24.** Duplicate, Replace Image… ✓ · Fade ▸ (In, Out, Both, None) · Show in Library · Remove Image ✓ |
 | Audio clip | **Settled 2026-09-24.** Detect Beats… ✓, Set Range to Clip · Fade ▸ (In, Out, Both, None) · Show in Library · Remove Audio Clip ✓ |
-| Timeline: empty audio-row space | **Settled 2026-09-24.** Add Audio… (at the pointer), **Add Audio Row** (Jason: "add audio track"; audio rows stack, `spec/plan.md`) |
+| Timeline: empty audio-row space | **Settled 2026-09-24.** Add Audio… (at the pointer), **Add Audio Row** (Jason: "add audio track"; audio rows stack, `spec/backlog.md` B-22) |
 | Timeline: a marker | **Settled 2026-09-24.** Show / Hide Line · Remove Marker ✓; on a beat marker, Remove All Beat Markers (for its audio clip) |
 | Timeline: empty ruler space | **Settled 2026-09-24.** Add Marker Here, Set Range In Here, Set Range Out Here, Clear Range (M, I, O and ⌥X at the pointer) |
-| Timeline: the range on the ruler | **Settled 2026-09-24 (work order).** **Fill Range with Images…** (`spec/plan.md`, "The range and the ruler") · Lock Range (proposed: one lock for both ends) · Clear Range |
-| Timeline: the range button (transport) | **Settled 2026-09-24 (work order).** Set Range to View (⌥⌘-click), Set Range to Whole Show (⇧⌥⌘-click), Lock Range (proposed); the two Set Range commands are in the Show menu too |
+| Timeline: the range on the ruler | **Settled 2026-09-24 (work order).** **Fill Range with Images…** ✓ (`spec/range-and-ruler.md`) · Lock Range ✓ (one lock for both ends, settled) · Clear Range ✓ |
+| Timeline: the range button (transport) | **Settled 2026-09-24 (work order).** Set Range to View (⌥⌘-click) ✓, Set Range to Whole Show (⇧⌥⌘-click) ✓, Lock Range ✓; the two Set Range commands are in the Show menu too ✓ |
 | Timeline: a row handle | **Settled 2026-09-24.** Open Drawer, Move Row Up, Move Row Down, the row's own tool (Rhythm… on the slides row, Detect Beats… on an audio row) |
 | The player | **Settled 2026-09-24.** Play/Pause, Previous Slide, Next Slide, Go to Slide…, Loop, Enter/Exit Full Screen. No Close |
 | The pop-out viewer | **Settled 2026-09-24.** The player's menu, plus Close Viewer Window |
 | The Info panel | **Settled 2026-09-24.** Show in Library |
-| Timeline: the transport | **Settled 2026-09-24.** Loop Playback on/off |
-| Browser entry | **Settled 2026-09-24.** Append to Show (E) ✓, Insert at Playhead (W) ✓, Place in Images Row at Playhead (Q) ✓; for an audio file, **Place at Playhead** · for a *use* (an entry under "In this show"): Select in Timeline, Play from Here · Show in Library · Remove from Show (that use only), Remove from Collection ✓, **Move to Trash…** (was "Delete from Library…", C7). The letters show as shortcuts at the menu's right edge, if that can be done without E, W and Q taking typing from Search; otherwise they stay in the titles (C8) |
-| Inspector: a section header | **Settled 2026-09-24.** Reset Section to Show Default · Copy Section Settings, Paste Section Settings |
-| Inspector: the header bar (the slide's name and length) | **Settled 2026-09-24.** Play from Here · Replace Image… · Show in Library |
+| Timeline: the transport | **Settled 2026-09-24.** Loop Playback on/off (in the Show menu, ⌘L ✓; not on a transport right-click) |
+| Browser entry | **Settled 2026-09-24.** Append to Show (E) ✓, Insert at Playhead (W) ✓, Place in Images Row at Playhead (Q) ✓; for an audio file, **Place at Playhead** ✓ · for a *use* (an entry under "In this show"): Select in Timeline ✓, Play from Here ✓ · Show in Library ✓ · Remove from Show (that use only) ✓, Remove from Collection ✓, **Move to Trash…** ✓ (was "Delete from Library…", C7). The letters show as shortcuts at the menu's right edge, if that can be done without E, W and Q taking typing from Search; otherwise they stay in the titles (C8; they're still in the titles) |
+| Inspector: a section header | **Settled 2026-09-24.** Reset Section to Show Default · Copy Section Settings, Paste Section Settings. Built for Transform and Sound only (§3 route item 6) |
+| Inspector: the header bar (the slide's name and length) | **Settled 2026-09-24.** Play from Here ✓ · Replace Image… ✓ · Show in Library ✓ |
 | Inspector: a single control (a slider, a picker) | **Settled 2026-09-24.** Reset to Default |
-| Browser: empty space | **Settled 2026-09-24.** Import…, Add from Library… |
-| Library pane: a show | **Settled 2026-09-24.** Play ✓, Play Full Screen ✓, Play on Desktop · Duplicate Show · Export ▸ (Show…, Movie…) · Rename ✓ (in place, 2026-09-27) · Delete Show… ✓ |
-| Library pane: a collection | **Settled 2026-09-24.** Play (greyed out until playing without a show is built) · New Show in… ✓ · Rename ✓ (in place, 2026-09-27) · Delete Collection… ✓ |
-| Library pane: the Library row | **Settled 2026-09-24.** Import…, New Collection, Open Library Panel · Show in Finder (the library's folder) |
+| Browser: empty space | **Settled 2026-09-24.** Import…, Add from Library… (not built: a "No menu yet" note names them) |
+| Library pane: a show | **Settled 2026-09-24.** Play ✓, Play Full Screen ✓, Play on Desktop (on the menu, greyed out until the BGTools handoff) · Duplicate Show ✓ · Export ▸ (Show…, Movie…) ✓ · Rename ✓ (in place, 2026-09-27) · Delete Show… ✓ |
+| Library pane: a collection | **Settled 2026-09-24.** Play (greyed out until playing without a show is built; not on the menu yet) · New Show in… ✓ · Rename ✓ (in place, 2026-09-27) · Delete Collection… ✓ |
+| Library pane: the Library row | **Settled 2026-09-24.** Import… ✓, New Collection ✓, Open Library Panel ✓ · Show in Finder (the library's folder) ✓ |
 | An empty row | Place Image Here… ✓ (images row); for an audio row, see the timeline rows above |
 
 **Show in Finder is for a library's location only** (Jason, 2026-09-24).
@@ -234,7 +239,7 @@ Library; Get Info.
 | The Library grid | Imports the files (from Finder or Photos) | Built |
 | A collection's grid, or its row in the Library pane | Imports if they're from outside, then adds them to the collection | Built |
 | A show's Library pane row | Appends pictures as slides (asks about any not in its collection) | Built; undoable since G1 |
-| The slide list | Inserts where it lands, like the timeline. **Dropped onto a slide:** offers Replace or Insert (settled 2026-09-24, Replace Image…) | **Settled** (Jason, 2026-09-24); today it appends (G2) |
+| The slide list | Inserts where it lands, like the timeline. **Dropped onto a slide:** offers Replace or Insert (settled 2026-09-24, Replace Image…) | **Built** (item 8): a row's top or bottom edge inserts before or after it, its middle replaces (`SlideRowDrop`); the list's empty space still appends. Not yet tried by hand |
 | The timeline's slides row | Inserts where it lands; audio goes into the audio row at that time. **Dropped onto a slide:** offers Replace or Insert (settled 2026-09-24) | Built |
 | The images row | Places images at the drop time, end to end as room allows | Built |
 | The audio row | Places audio at the drop time | Built |
@@ -251,18 +256,23 @@ collection, unless the setting says always. (Built.)
 | Paste Settings ⇧⌘V | — | Proposed: paste the copied slide's settings and effects onto the selected slides, like Final Cut's Paste Attributes | — |
 | Duplicate ⌘D | — | slides; a selected lane image (A2) | — |
 | Delete | as the Delete key | as the Delete key | text |
-| Select All ⌘A | every tile in view (A1). **Top priority** (Jason: hand-clicking 4,000 test images) | every slide (A1; built 2026-09-26) | text |
+| Select All ⌘A | every tile in view (A1; built). **Top priority** (Jason: hand-clicking 4,000 test images) | every slide (A1; built 2026-09-26) | text |
 
-Undo, Redo and Delete are Built. Copy and Paste of slides and ⌘A are
-wanted (settled 2026-09-24); the rest is Proposed.
+Undo, Redo, Delete, Duplicate of slides and ⌘A are Built. Copy and Paste
+of slides are wanted (settled 2026-09-24) and work from the slide's
+right-click in Edit Slides (`SlideClipboard`), but not yet from the Edit
+menu (checked 2026-09-28). Copying tiles, Paste Settings ⇧⌘V and
+Duplicate of a lane image aren't built; the rest is Proposed.
 
 **Copying tiles to Finder or Mail is small:** the files' URLs go on the
 pasteboard, and Finder pastes copies. Photos is different: **native
 access to the Photos library** (browsing it inside ShowTools, plan,
 Later) is the larger job, but **it doesn't need the paid developer
-membership** (checked 2026-09-24). ShowTools is signed ad hoc, with no
-team, no hardened runtime and **no sandbox** (`project.yml`; only the
-Control Center tiles are sandboxed). For an app like that, Photos'
+membership** (checked 2026-09-24). ShowTools has no hardened runtime
+and **no sandbox** (`project.yml`; only the Control Center tiles are
+sandboxed). *(When this was written it was signed ad hoc; since
+2026-09-26 every bundle is signed Apple Development, team `P82S39V2KJ`,
+so the catch below is already dealt with.)* For an app like that, Photos'
 framework needs only a usage line in Info.plist
 (`NSPhotoLibraryUsageDescription`) and the user's permission. The
 photos-library entitlement matters only to a sandboxed or hardened app,
@@ -308,7 +318,7 @@ Each entry says what happened, and the rule it became.
 | 2026-09-24, first real show | New Show from a selection made twenty 5-second dissolves without asking, and the fix (the defaults bar) wasn't discoverable | **Anything that makes several things at once asks for their settings first.** The New Show panel |
 | 2026-09-24 | A new collection gave no hint of how to fill it, short of a small, far-away Import button or a small drop target | **A container you're meant to fill shows how, front and centre** (H2). A floating library over it gives a big drop target |
 | 2026-09-24, planning windows | The library window shouldn't jump around with whatever image is playing, but a file used in a show still needs a way back to the library | **Anything that uses a file can take you to it, on request:** Show in Library, which opens the library and selects it |
-| 2026-09-24 | Pan and Zoom only zoomed, and aiming it meant dragging a small frame | **Aim at the picture itself:** click, or ⌥-click, on the image (plan, Later) |
+| 2026-09-24 | Pan and Zoom only zoomed, and aiming it meant dragging a small frame | **Aim at the picture itself:** click, or ⌥-click, on the image (`spec/backlog.md`, B-56) |
 
 ## Plan: the right-click conversation (next session)
 
@@ -367,7 +377,7 @@ universals first.
     single tile builds exactly that. Recorded in
     `spec/simple-things-fast.md`.
 - **Groups inside collections** (Jason, 2026-09-24): raised here, to be
-  built right away: `spec/plan.md`, "Groups".
+  built right away: `spec/groups.md`.
 - **3. Edit Slides: settled 2026-09-24, built 2026-09-24** (except Save as
   Preset…, and the empty-list-space menu for a non-empty list). Jason's
   answers:
@@ -464,7 +474,7 @@ universals first.
     (`ListEmptySpace`, 2026-09-26).
 - **Replace Image…** (Jason, 2026-09-24, raised here): on a slide and a
   lane image, to swap which picture it uses and keep its settings
-  (`spec/plan.md`, Later).
+  (`spec/plan.md`, "Replace a slide's image").
 - **6. The inspector: settled 2026-09-24, built 2026-09-24** (Transform
   and Sound sections only; Replace Image… and "a single control" left
   out).
@@ -508,7 +518,7 @@ universals first.
   - **An audio clip:** Detect Beats…, Set Range to Clip, Fade ▸, Show in
     Library, then Remove Audio Clip.
   - **Empty audio-row space:** Add Audio… at the pointer, **and Add Audio
-    Row**: Jason has decided audio rows stack (`spec/plan.md`).
+    Row**: Jason has decided audio rows stack (`spec/backlog.md`, B-22).
   - **A marker:** Show / Hide Line, Remove Marker; on a beat marker,
     Remove All Beat Markers.
   - **Empty ruler space:** Add Marker Here, Set Range In / Out Here,

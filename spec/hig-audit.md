@@ -497,11 +497,15 @@ Today they disagree on several of the "should match" items:
   Status's known issue, "pulling the inspector's divider far to the left
   breaks the layout", may be related.
   *Fix direction:* edge handles, visible on every edge a pane can close
-  against (`spec/windows.md`, "Panes that close to an edge"). Until
+  against (`spec/timeline-pane.md`, "Panes that close to an edge"). Until
   they're built, a pane shouldn't be able to go past the edge without
   one; View ▸ Restore Default Layout (⌥⌘0) is the way back today.
 
 ## Fix batches (proposed order)
+
+Open work: see `spec/backlog.md`. Batch 8's rubber-band (B-21), several
+lane images or songs at once (B-23) and Cut/Copy/Paste (B-20) are there;
+group selection (B7) and inline rename (D4) are built.
 
 Each batch is one commit and can be written in a cloud session, **unbuilt**:
 Jason builds, runs `swift test` and does the hands-on check listed. They're
@@ -544,6 +548,10 @@ ordered from least to most risk.
    rename (D4).
 
 ## Decisions for Jason
+
+Settled since: B6 (Quick Look), E2 (the timeline's arrows,
+`spec/conventions.md` §2), A3 (wanted), G4 (Space loops the selection).
+Still open: G6 and G7, `spec/backlog.md` B-51 and B-52.
 
 - **B6:** what double-clicking a tile does: Quick Look, Get Info, or
   nothing.

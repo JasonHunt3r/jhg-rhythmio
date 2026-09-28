@@ -17,7 +17,8 @@ the decision it records didn't. Read this for *why* the port off
 
 ## Why
 
-The layout-loop crash in "Known issues" (`spec/status.md`) is caused by
+The layout-loop crash (fixed; its Known Issues entry is kept in
+`spec/history/2026-09-28-status-archive.md`) is caused by
 SwiftUI's `.inspector()` modifier on Edit Slides. Confirmed tonight
 (`spec/history/2026-09-23-crash-hunt-session3.md`): stripping
 `.inspector()` out of `ShowView`'s `.slides` case survived the exact repro
@@ -106,7 +107,8 @@ applies here as much as anywhere.
    still: opens/closes from the toolbar and by double-click, shows the
    right slide's settings, and its divider drags/collapses/reveals the
    way `ColumnsSplitView`'s existing behavior already does in Edit Show.
-5. **Update `spec/status.md`'s Known Issues entry** in the same commit
+5. **Update `spec/status.md`'s Known Issues entry** (kept since in
+   `spec/history/2026-09-28-status-archive.md`) in the same commit
    that lands the fix — say what was true, what changed, and point at
    this file and the two crash-hunt history docs rather than repeating
    them.

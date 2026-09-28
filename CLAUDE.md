@@ -6,27 +6,51 @@ A macOS slideshow composer and player for Jason's own Mac.
 
 | File | | What it is |
 |---|---|---|
-| `spec/status.md` | **current** | **Read first each session.** The state of play in the present tense: what's built, what's next, what needs his hands, known issues. Rewritten each session, not appended to. |
+| `spec/status.md` | **current** | **Read first each session.** The state of play in the present tense: where it stands, what's next, what's installed. Rewritten each session, not appended to, **150 lines at most**. |
+| `spec/backlog.md` | **current** | **The only to-do list.** Every open item once, with an ID (B-NN), a priority and a pointer to its design: the build queue, what needs Jason's hands, what needs a decision or is parked, and known issues. Specs point here; they don't keep lists of their own. |
+| `spec/shakedown.md` | **current** | The permanent hands-on checklist, one row per feature a person has to try. Passed rows stay, dated. Only Jason ticks a box. |
 | `spec/how-we-design.md` | current | Why things are the way they are: the six pillars of a slideshow, perceptual efficiency, and each principle with the story that taught it. The kernel of a design manual. |
-| `spec/plan.md` | current | Every decision, phase by phase, with its reasoning. Read before designing anything. |
+| `spec/plan.md` | current | The founding decisions, the data model and the phases as built, with their reasoning. Read before designing anything. New designs get their own spec. |
+| `spec/rhythm.md` | current | Beat detection (Music Understanding), the range as first settled, and the Rhythm tool's patterns. |
+| `spec/setlist.md` | current | Setlist export and import: `show.json`, `show.tsv`, stripping, the round trip. |
+| `spec/range-and-ruler.md` | current | The range after the first test: dragging and locking its ends, Go Back, the range button, Fill Range with Images. |
+| `spec/groups.md` | current | Groups inside collections, the browser's switcher, drag-to-reorder (its terms and dials), nesting by drag. |
+| `spec/viewer-drawer.md` | current | The selection viewer over the grids: Side by Side and Stack, its handle, its keys. |
+| `spec/slides-as-mini-movies.md` | current | Edit Slides plays: the live timeline, looping the selection, the Slide viewer; Smart View; slides with more inside. |
 | `spec/bgtools.md` | current | Phase 5, BGTools: the desktop companion app that lives inside ShowTools. |
-| `spec/video-export.md` | current | Video export: the writer, the traps, the codecs. |
+| `spec/video-export.md` | current | Video export: the hook, the writer, the traps, the codecs. |
 | `spec/video-audio.md` | current | A video slide's own sound. |
 | `spec/xcode-port.md` | current | Why one Xcode project builds both bundles, and how. |
 | `spec/edit-slides-inspector-port.md` | current | The fix for the layout-loop crash: ported Edit Slides' inspector off SwiftUI's `.inspector()`. |
 | `spec/simple-things-fast.md` | current | Planned: making simple things fast — the first run, playing without building a show, and Basic / Advanced / "Bring it on!" levels. |
 | `spec/panekit.md` | current | Our own reusable pane system (two panes and one divider, nested), with edge handles and pane ⇄ panel pop-out — built and in use throughout the app (the main window, Edit Show's and Edit Slides' columns, every pop-out), meant to be reused in other Mac apps too. **How every drawer feels under the hand — the clutch, flick, swipe and their dials — is in its "The clutch" section.** |
 | `spec/listkit.md` | current | Our own pro-level lists for when a SwiftUI `List` can't be used (translucent bars over the rows): keyboard navigation, outline chevrons, type-to-select, inline rename, the rows' accessibility; multiple selection next. Its own package, `ListKit/`, independent of PaneKit. |
-| `spec/windows.md` | current | Areas of the main window in windows of their own (the Slide Editor, the library panel, the Inspector, the Timeline pane — all built) and editors for one thing. What's left: the timeline's height (agreed), **the windows pass** (the layer hierarchy, settings vs preferences, About — planned), the open questions under "Jason's answers," and the areas nothing's asked for yet (the Library pane, the browser). |
+| `spec/windows.md` | current | Areas of the main window in windows of their own (the Slide Editor, the library panel, the Inspector, the Timeline pane — all built), how they behave, and editors for one thing. |
+| `spec/timeline-pane.md` | current | The timeline pane: its height, panes closing to an edge, the rows' drawers. |
+| `spec/window-behavior.md` | current | The windows pass: window layers, panels hiding and floating, Settings (tabbed, frontmost), the reusable `SettingsBox`, where windows open, the Transparency module. |
 | `spec/conventions.md` | current | What each gesture, key, right-click, drop and Edit-menu item means everywhere: Built / Settled / Proposed / Open, plus a log of conventions found by use. Fixes build toward it. |
 | `spec/hig-audit.md` | current | Expected Mac behaviour that was never built: the Edit menu, context menus, keyboard selection, Edit Slides vs Edit Show. Findings and fix batches. |
 | `spec/anatomy.md` | reference | The screen's map: one name for each area, how areas nest, the picture's layers, and what selecting or changing one area does to the others. Use its names. |
 | `spec/layout.md` | reference | The file-by-file map: which target owns what. Read before moving code between targets or adding a file. |
 | `spec/first-run-brief.md` | reference | A brief for whoever builds the guided first run. Not a build plan. |
-| `spec/history/` | **history** | Dated events. **Never read for current rules or current state** — only when the question is *why* something is the way it is. Start at its `README.md`. |
+| `spec/history/` | **history** | Dated events. **Never read for current rules or current state** — only when the question is *why* something is the way it is. Start at its `README.md`. `spec/history/verbatim/` holds frozen copies of retired docs, never edited. |
 
 Each feature spec opens with a status block: Planned / Building / Built
-<date>, and what's left.
+<date>, and its open work as backlog IDs.
+
+**The docs' own rules.** `status.md` stays at 150 lines or fewer, present
+tense only. **`backlog.md` is the only to-do list**: no spec, and not
+status, keeps one of its own. Every shipped user-facing feature adds
+a row to `shakedown.md`; Claude never ticks one, and what a shakedown
+finds goes to the backlog. `tools/docs-check.sh` checks the mechanical
+part.
+
+**At the end of every session:**
+1. Dated story goes to `spec/history/` (a new file, and a README row).
+2. Close finished backlog IDs; add new ones for anything found.
+3. Update the status block of every spec the session touched.
+4. Run `tools/docs-check.sh` and fix what it reports.
+5. Commit (and offer the push).
 
 Two skills load on demand: **`showtools-testing`** before launching any
 test copy or doing a hands-on check, and **`showtools-gotchas`** before

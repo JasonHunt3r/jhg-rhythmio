@@ -1,14 +1,28 @@
 # Video export
 
 **Status:** Built 2026-09-22 (E1–E5, the whole plan in one session).
-**Left:** a listen — an exported movie against the same show playing,
-for timing, crossfades, and a video slide's sound against a song.
+Listened to by Jason 2026-09-25. **Open work:** see `spec/backlog.md`
+(B-79).
 
-The hook has been in since day one (plan, "Video-export hook"): everything
+The hook has been in since day one ("The hook, as planned", below): everything
 that draws goes through `ShowTimeline.frame(at:)` → `Compositor.compose`,
 so an exporter is a new menu item, not a rewrite. `stcli render` already
 walks a show's times and writes PNGs through exactly that path — it is the
 exporter's inner loop, working today.
+
+## The hook, as planned (2026-09-20) — paid off 2026-09-22
+
+Moved here from `spec/plan.md` on 2026-09-28, word for word.
+
+All rendering goes through one function: **"what does the screen look like at
+time *t*?"** That covers which slide(s) are on screen, how far the transition has
+got, and where the Pan and Zoom frame is. The live player, the timeline scrubber and
+the desktop mode all call it. A future video exporter calls it too, once per
+frame, and writes the frames with `AVAssetWriter`. So adding export later is a
+new menu item, not a rewrite.
+
+Slides never keep their own timers. Time always comes from one clock, which is
+the music when a track is loaded and the system clock when it isn't.
 
 ## Settled with Jason
 
@@ -184,14 +198,9 @@ Core doesn't decide this: a video slide's picture is whatever the caller's
 
 ## Still open
 
-- **Nobody has listened to an export yet**, against the same show
-  playing. Jason's alpha test (2026-09-22, `077568f`) played an exported
-  movie back and nothing broke, so the export works end to end — but that
-  was a drive-through, not a listen against the app.
-- A very long video slide's sound is decoded whole into memory. Fine for
-  slides; worth revisiting if whole films ever become slides.
-- `stcli render` still draws video slides as the background colour; only
-  `stcli movie` and the app go through `MovieMedia`.
+Open work: see `spec/backlog.md` (B-79: a video slide's sound decoded
+whole on export; `stcli render` drawing video slides as the background
+colour). The listen against the app is done (Jason, 2026-09-25).
 
 ## Not in this
 

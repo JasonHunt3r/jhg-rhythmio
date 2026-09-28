@@ -140,6 +140,8 @@ aren't fast".
 
 ## Open questions to settle
 
+Open work: see `spec/backlog.md` (B-40, which is these questions).
+
 1. The list of first encounters, and their order (library, collection,
    show, Edit Show, inspector, music row, lane, Rhythm panel…).
 2. What each one says, and which button it offers.

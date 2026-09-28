@@ -13,7 +13,7 @@ building Edit Show's three columns turned into `PaneNode.row(…)`, a
 reusable recipe for a row of three independently-sized panes ("Building a
 row" below) — not ShowTools-specific, since a second app hitting the same
 shape shouldn't have to re-derive it. Step 4's own prerequisite, the show
-session, is also done (`spec/windows.md`, `ShowSession.swift`) — the
+session, is also done (`ShowSession.swift`; `spec/history/2026-09-24-windows-before-panekit.md`, "What stands in the way") — the
 show's selection, engine and lane state moved out of `ShowView`'s and
 `EditShowView`'s `@State` into one object `AppModel` owns, so nothing on
 screen changed but a pane in another window now has something to read.
@@ -27,7 +27,8 @@ repo for now (settled, Jason).
 ("What every pane can do", "The clutch"): bite, slip and loose at a
 literal 64 pt; a slow drag that brakes at the minimum and shuts 64 pt past
 it; flicks and handle swipes; slides instead of jumps; the resize cursor
-on every handle. Left: Jason's tuning and the sensitivity setting.
+on every handle. The sensitivity setting is built, and Jason checked the
+feel by hand 2026-09-28 (`spec/shakedown.md`).
 
 **Step 4, first piece — the Slide Editor: built 2026-09-24**
 (`Sources/ShowToolsApp/SlideEditorWindow.swift`). Jason picked the build
@@ -36,10 +37,10 @@ settled double-click in its favour over the inspector (`spec/conventions.md`
 §"Double-click"). v1 scope, also Jason's call: the image with its
 Transform/Rotation handles and the full inspector beside it — no playback
 controls, since it's one slide, not the show; the collage maker and
-clicking to aim the Pan and Zoom point stay Later (`spec/plan.md`).
+clicking to aim the Pan and Zoom point stay for later (`spec/backlog.md`, B-43 and B-56).
 Follows the Info panel's pattern (an `NSPanel` hosting SwiftUI, its own
 `undoManager` override) rather than a new SwiftUI window scene, per
-`spec/windows.md`'s note on the layout-loop crash. Owns its own
+`spec/history/2026-09-24-windows-before-panekit.md`'s note on the layout-loop crash ("What stands in the way"). Owns its own
 `PlaybackEngine`, paused on the one slide, so opening it never disturbs
 the main window's preview and it works from Edit Slides too (which has no
 engine running at all); retargeting to a different slide reuses the same
@@ -51,7 +52,7 @@ open it, retargeting reuses the window, Esc closes it, no new
 `ShowTools-exception.log` entries — and **confirmed by Jason's own hands,
 2026-09-24: "seems to work as expected."** **Left of step 4:** one
 detachable area (probably the inspector), the timeline pane detached
-last — `spec/windows.md`, "A possible order".
+last — `spec/history/2026-09-24-windows-before-panekit.md`, "A possible order".
 
 **Step 4, second piece — the library panel: built 2026-09-24**
 (`LibraryPanel`/`LibraryPanelWindow`, `Sources/ShowToolsApp/Libraries.swift`).
@@ -217,7 +218,7 @@ Assistant). Not needed for our fix.
   toggle; the search field types and the button's double-click doesn't
   toggle.
 - **A split that auto-fits its own content — built 2026-09-26**
-  (`spec/windows.md`, "The timeline pane," "Its height"): `Split
+  (`spec/timeline-pane.md`, "Its height"): `Split
   .contentTracking` (`ContentTracking`) replaces a fixed `defaultSize`
   with the app's own live, unclamped content measurement
   (`PaneController.setContentExtent(_:for:)`, never saved). With no
@@ -234,7 +235,7 @@ Assistant). Not needed for our fix.
   (`AppModel.mainPanes`'s `"window"` split, `EditShowTimelinePane
   .contentHeight`/`.minContentHeight`) exercises both halves: the
   timeline pane's floor came down once `StorylineView` grew its own
-  vertical row-scrolling the same day (`spec/windows.md`, "Its height,"
+  vertical row-scrolling the same day (`spec/timeline-pane.md`, "Its height,"
   has the rest).
 
 ### The clutch: how a drawer feels (Jason, 2026-09-26) — built
@@ -324,7 +325,7 @@ Slides' inspector (an edge handle, the other axis): a 60-pt pull peeked
 with the pointer, every divider and the grip.
 
 **A sensitivity setting — built 2026-09-27**, in Settings' Windows tab
-(`spec/windows.md`), exactly as proposed: `EngageDistanceControl`, a box
+(`spec/window-behavior.md`), exactly as proposed: `EngageDistanceControl`, a box
 with a draggable line marking the trigger distance (Jason's own idea for
 the control, "something visual to drag"), a Quick ↔ Smooth slider for the
 slide's own speed, and a working practice drawer right below both — a
@@ -345,7 +346,7 @@ dials want Jason's hand" below.
 **Moved into its own modal box, later the same day** (Jason: a button on
 the tab should open the fine controls "in a top-level box, the kind that
 must be dismissed before you can change focus to other windows" — see
-`spec/windows.md`, "A reusable modal box"). The tab itself now shows one
+`spec/window-behavior.md`, "A reusable modal box"). The tab itself now shows one
 combined **Responsiveness** slider (a single normalized 0...1 position
 mapped onto both `engageRange` and `slideRange` at once); the line, the
 Quick ↔ Smooth slider and the practice drawer moved into
@@ -396,19 +397,16 @@ hidden has nothing for an alert to catch. A second real bug found by
 testing, not assumed fixed: setting `isFloatingPanel`/`level` *before*
 assigning `contentViewController` and calling `center()` silently didn't
 stick (`kCGWindowLayer` read back `0`, not `3`) — moving them *after*
-fixed it. `spec/windows.md`, "A reusable modal box," has the fuller
+fixed it. `spec/window-behavior.md`, "A reusable modal box," has the fuller
 story, including what's confirmed (closing Settings really does leave the
 box open, checked carefully around Jason's own live session) and what's
 still only reasoned through.
 
-**Left:**
-- **The dials want Jason's hand.** He called the first snap "a little on
-  the slow side"; the sensitivity setting (above) is built so he can tune
-  it directly by feel, rather than being asked which number felt slow.
-- **A swipe's direction with "natural" scrolling** wants Jason's own
-  swipe: synthetic events don't carry the natural-scrolling flag.
-- **A swipe's direction with "natural" scrolling** wants Jason's own
-  swipe: synthetic events don't carry the natural-scrolling flag.
+**Left:** nothing open. The dials (Jason called the first snap "a little
+on the slow side") and a swipe's direction with "natural" scrolling
+(synthetic events don't carry that flag) were for Jason's own hand; he
+checked the drawers' feel, clutch included, 2026-09-28
+(`spec/shakedown.md`). Open work: see `spec/backlog.md`.
 
 ## A pane under the title bar (added 2026-09-27)
 
@@ -450,13 +448,13 @@ through.
 **Wired into ShowTools** the same day: `AppModel.mainPanes`' `detail` pane
 carries the flag; `MainView.swift` calls `enableContentUnderTitleBar` once
 and adds a `titleBarHeight`-tall spacer at the top of the filter bar's own
-translucent background (`ScrollBarBackground`, `spec/windows.md` item 34's
+translucent background (`ScrollBarBackground`, `spec/window-behavior.md`, "The Transparency module"; item 34's
 rework) — Jason: "same slider as the filter bar," so the title bar and the
 filter bar read as one continuous surface over the grid, not two. Checked
 with axtool against a scratch library: the row above the fold visibly
 scrolls up through the taller combined region; the library pane (not
 marked) is unaffected at rest. Not yet checked: whether the 100%-opacity
-seam glitch already known on the filter bar (`spec/windows.md`) shows up
+seam glitch already known on the filter bar (`spec/backlog.md`, B-71) shows up
 the same way across this taller region, or a real hand's feel for the
 combined strip.
 
@@ -472,7 +470,7 @@ bar (`contentLayoutRect`), zero for all of those. **Consequence to know:**
 in the real window the root container never reaches under the title bar,
 so `scrollsUnderTitleBar` has nothing to stretch into there — the Library
 grid's "combined strip" was only ever the filter bar's own spacer
-(`spec/status.md`, Known issues). The harness, whose container *is* the
+(`spec/backlog.md`, B-54). The harness, whose container *is* the
 window's content view, is unaffected.
 
 **Runtime override, added 2026-09-27**: `scrollsUnderTitleBar` on the
@@ -560,7 +558,7 @@ future app gets the recipe instead of re-deriving it:
   `near` is what's adjacent to it. **Under `nearIsRigid`, this flips: the
   space goes to `main` instead**, so `near` stays exactly as unmoved by a
   collapse as it already was by a direct drag (added 2026-09-25, item 1,
-  `ShowTools Feedback — Worklist for Next CC Session.md` — see `PaneModel
+  `spec/history/2026-09-25-feedback-worklist.md` — see `PaneModel
   .row`'s own doc comment).
 - This is one specific, opinionated trade — not the only one a three-pane
   row could make (an app could instead cap both `near` and `far` and give
@@ -680,7 +678,7 @@ app gets it.
   registers them with PaneKit rather than with one window.
 - **What PaneKit can't do for the app:** a pane can only move between
   windows if what it shows lives *outside* its views. ShowTools' show
-  session (`spec/windows.md`: the selection, the engine and the zoom,
+  session (`spec/history/2026-09-24-windows-before-panekit.md`: the selection, the engine and the zoom,
   out of the views) is that app-side prerequisite. PaneKit moves the
   view; the app keeps the state.
 
@@ -933,8 +931,8 @@ opening or closing (changes are instant for now).
      same nesting choice (list is the inner split's "main" side, so it
      absorbs whatever the inspector frees), confirmed by a real
      double-click collapse in the demo show 2026-09-24. **Reversed
-     2026-09-25** (item 1, `ShowTools Feedback — Worklist for Next CC
-     Session.md`): Jason's own feedback the next day called this
+     2026-09-25** (item 1,
+     `spec/history/2026-09-25-feedback-worklist.md`): Jason's own feedback the next day called this
      wrong — the list column should stay put and the preview should
      grow, matching what `nearIsRigid` already did for a direct near|far
      drag. `PaneController.setOpen` now applies the same
@@ -954,7 +952,7 @@ opening or closing (changes are instant for now).
    session — its own prerequisite, so the panes have their state to take
    with them — is **done 2026-09-24** (`ShowSession.swift`). The Slide
    Editor and the library panel are both built (above). **Edit Show's
-   inspector, the first detachable area proper (`spec/windows.md`, "A
+   inspector, the first detachable area proper (`spec/history/2026-09-24-windows-before-panekit.md`, "A
    possible order," step 4): built 2026-09-25** (`EditColumnsLayout
    .threeColumns`, `far: Pane("inspector", ..., popOut: .panel)`; View ▸
    "Inspector in Its Own Window," `ShowToolsApp.swift`). `swift test`

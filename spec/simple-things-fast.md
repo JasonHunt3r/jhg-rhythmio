@@ -5,12 +5,47 @@
 questions (below). **Confirmed 2026-09-25: all three answers (the guided
 first run, Quick Show, and the levels) are to be built, not chosen
 among** — they work together, per "Three answers, which work together"
-above. **Left:** the one still-open question below, the Quick Show
-dialog's details, then a design with Jason.
+above. **Open work:** see `spec/backlog.md` (B-39 Quick Show, B-38 the
+levels, B-40 the guided first run).
 
 Names follow `spec/anatomy.md`. This was called "a simple way in" in the
 plan and status. Jason's own framing is the better name: the app does a
 lot, but it doesn't do simple things fast.
+
+## Where this started: Pan and Zoom (Jason, 2026-09-22; renamed 2026-09-24)
+
+Moved here from `spec/plan.md` on 2026-09-28, word for word.
+
+**"Ken Burns" was renamed "Pan and Zoom"** everywhere it was shown. The old
+name was a reference, not a description; the new one says what the
+control does. **Done 2026-09-23**, in one pass: the UI, the code
+(`PanAndZoom*` types and properties), the slide-settings JSON keys
+(`panAndZoom`, `panAndZoomSeed`) and the setlist TSV columns (`panzoom_*`,
+`default_panzoom`). Every show in the library was disposable test
+material, so no old spelling was kept decodable — confirmed by hand
+against a real setlist folder exported just before the rename: its old
+`kenBurns`/`kenburns_*` spellings come back unread and silent (no
+`problems` entry). See `spec/history/2026-09-23-pan-and-zoom-rename.md`.
+
+**It is an effect, and effects are not a slide's default state.** Phase 2a
+separated a slide's starting placement into the Transform section, which
+leaves Pan and Zoom as something applied *on top*. So it should not be on
+by default for a new slide. It belongs instead to a choice made when a
+show is started — "make me a slideshow that gently moves" — rather than a
+setting every slide quietly carries. **The show-level default was already
+`.off`** (`ShowDefaults.panAndZoom`). BGTools'
+`DesktopSettings.startingRandomDefaults` was the one default still set to
+`.auto` — flipped to `.off` the same day, since it's also the one that
+measurably costs CPU (`spec/backlog.md`, B-78).
+
+**The larger point, not yet designed:** this editor is deliberately
+detailed, and that makes a plain slideshow harder than it should be.
+There should be a simple way in (now **simple things fast**, its own
+spec: `spec/simple-things-fast.md`) — a way for the app to look easy for
+someone who just wants pictures in order with music, while everything
+underneath stays where it is. Related to the guided first run, but
+not the same thing: that teaches the app as it is, this changes what you
+meet first. **To be designed with Jason.**
 
 ## The problem (Jason, 2026-09-24)
 

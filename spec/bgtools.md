@@ -4,14 +4,9 @@
 (2026-09-24, below) is done: a Quit you can find and All same →
 Synchronize (**done 2026-09-24**), naming screens, a map view, and the
 window opening on your screen (**done 2026-09-25**, checked with axtool
-against a scratch settings file — see below). **Left, queued as its own
-list for after the ShowTools fixes** ("Next up," below): the Control
-Center launch icon (one click, better art), per-screen stop, and pan/
-zoom/length/transition parity with Quick Show (feedback items 23–25) —
-plus the still-outstanding hands-on pass (private unlock with Touch ID,
-the panel closing on a click elsewhere, Space-switch pausing, none
-re-done against the nested BGTools), the Pan and Zoom cost, and telling
-BGTools when a library moves.
+against a scratch settings file — see below). **Open work:** see
+`spec/backlog.md` (B-08, B-14–B-17, B-63, B-64, B-78); hands-on checks in
+`spec/shakedown.md`.
 
 Phase 5 of ShowTools (renamed 2026-09-22; it was "Live desktop"). This file
 holds BGTools' decisions and measurements; `spec/plan.md` points here. It
@@ -139,9 +134,8 @@ it; follow the library when it moves (a bookmark; ShowTools tells it).
 
 ## Still to test
 
-- **Power** (a curiosity, not a gate; Jason: BGTools may do both live
-  drawing and video): live Core Image drawing against a looping HEVC
-  video, per monitor
+Open work: see `spec/backlog.md` (B-64, power: live drawing against a
+looping HEVC video — a curiosity, not a gate).
 
 ## Settled (with Jason, one at a time)
 
@@ -317,17 +311,18 @@ From `spec/history/2026-09-24-work-order.md`. *Decided* is Jason's;
      on a screen's box, in the map or the list, moves the window to that
      monitor instead of dragging it across by hand.
 
-## Next up — queued 2026-09-25, after the ShowTools fixes
+## The 2026-09-25 feedback items: design notes
 
-From the 2026-09-25 feedback worklist (items 23–25); items 10, 21 and 22
-from the same list are already done (batch 4, `spec/status.md`). Jason's
-own call: this is its own list, picked up once the ShowTools side of that
-worklist is finished, not before.
+Open work: see `spec/backlog.md` (B-15, B-14, B-16 — items 23, 24, 25 of
+the 2026-09-25 feedback worklist; items 10, 21 and 22 from the same list
+are done, batch 4). Jason's own call: these are picked up once the
+ShowTools side of that worklist is finished, not before. What follows is
+the design for each.
 
 1. **Control Center launch icon: one click, not two, and a better icon**
    (item 23). Today's tile opens the quick panel on a second click; needs
    real hands on a Control Center tile to see why the first click doesn't
-   (`spec/status.md`'s reinstall note applies — the installed
+   (the reinstall note in `spec/status.md` applies — the installed
    `~/Applications/ShowTools.app` is what Control Center actually sees,
    not `build/`). The icon itself is art, not code — pairs with item 29
    (app icons) below.
@@ -348,12 +343,9 @@ worklist is finished, not before.
    itself firms up the shared field list, since the two are meant to
    converge.
 
-**Standing, from BGTools' own "Left" (above), still not re-done against
-the nested BGTools:** private-library unlock with Touch ID, the panel
-closing on a click elsewhere, and Space-switch pausing. Worth folding into
-the same hands-on pass as 23–25, since all of it needs Jason's actual
-Control Center and actual Spaces, not axtool against a scratch settings
-file.
+The hands-on checks not yet re-done against the nested BGTools (private
+unlock with Touch ID, the panel closing on a click elsewhere, Space-switch
+pausing) are rows in `spec/shakedown.md`.
 
 ## Build steps (proposed 2026-09-22)
 

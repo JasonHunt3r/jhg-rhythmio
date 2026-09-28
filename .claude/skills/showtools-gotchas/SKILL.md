@@ -82,7 +82,7 @@ never have guessed it. `VideoSlideTiming` now holds it for both — asked by
   container needs its own onAppear/onDisappear/task.
 - **A separate window's `\.undoManager` isn't the presenting window's**,
   and the *key* window's own `undoManager` is what ⌘Z asks. Full write-up
-  in `spec/macos_panels_guide.md` (in `jhg-cutcheck`).
+  in `jhg-cutcheck/spec/macos_panels_guide.md`.
 - **In a `List`, rows drag with `.itemProvider`, never `.onDrag`.**
   `.onDrag` turns a click on the row's content into drag tracking, so the
   row won't select or double-click (only its empty edges do), and a drag
@@ -109,6 +109,14 @@ never have guessed it. `VideoSlideTiming` now holds it for both — asked by
   elsewhere doesn't steal it. (Tying the List to a `@FocusState` set on
   selection change also works, but fires for selections from anywhere.)
 - **Harnesses first for AppKit questions.**
+- **`.background(SingleKeys)` is safe on a plain SwiftUI container, not
+  on a `List`** or anything else AppKit backs with its own
+  constraint-based layout. One on the sidebar `List` brought the
+  layout-loop crash back once (2026-09-24), after its first cause,
+  SwiftUI's `.inspector()`, was ported away
+  (`spec/edit-slides-inspector-port.md`). Check before adding one to Edit
+  Slides' or the storyline's own Lists. The story:
+  `spec/history/2026-09-23-crash-hunt*.md`.
 - **A right-click on a SwiftUI `List`'s empty space throws** on macOS 27
   ("Row index -1 out of row range", from `OutlineListCoordinator`'s
   `contextMenuForRow`) and shows nothing — whatever menu the list

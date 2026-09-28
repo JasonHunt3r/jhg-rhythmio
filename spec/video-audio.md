@@ -1,7 +1,7 @@
 # A video slide's own sound
 
-**Status:** Built 2026-09-22 (V1–V5). **Left:** V6, Jason's — it has not
-been listened to.
+**Status:** Built 2026-09-22 (V1–V5). **Open work:** V6, the listen, and
+the two looks below are rows in `spec/shakedown.md`.
 
 **Why now.** Video export has to do *something* with a video slide's
 audio, and today it does the wrong thing twice over: the sound plays at
@@ -156,6 +156,8 @@ shadow behind the soft badge. **Measure before concluding a view isn't
 rendering.**
 
 ### Left for Jason's eye
+
+Now rows in `spec/shakedown.md` ("A video slide's volume line"):
 
 - The outermost points sit at the block's very edges, so their diamonds
   are half-clipped by the rounded corners. Normal enough for an

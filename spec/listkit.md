@@ -10,8 +10,7 @@ included (Jason, 2026-09-27).
 outline) and Edit Show's browser (several at once): keyboard navigation
 with focus, outline chevrons and indents, type-to-select, inline rename,
 multiple selection, the rows' VoiceOver elements. Later, in the
-accessibility pass: the real outline role (`spec/status.md`, "What's
-next", item 0).
+accessibility pass: the real outline role (`spec/backlog.md`, B-57).
 
 Why it exists: `.withinWindow` vibrancy never composites over a `List`'s
 `NSTableView` (measured twice, 2026-09-27), so any list whose bars are
@@ -28,8 +27,8 @@ dates; the names are the current ones.)
 keys step the selection, and the newly-selected row scrolls into view.
 Built because `.withinWindow` vibrancy — the effect that makes the grid's
 own filter bar look genuinely transparent — never composites over a real
-`List`'s `NSTableView` backing at all (`spec/windows.md`, item 34's
-rework: measured twice, nested and as a true sibling, identical flat
+`List`'s `NSTableView` backing at all
+(`spec/history/2026-09-27-transparency-rework.md`: measured twice, nested and as a true sibling, identical flat
 result both times). The fix for a translucent sidebar isn't a different
 blending mode; it's not using `List` — but `List` was the only thing
 giving ShowTools' own Catalog its keyboard behaviour, so replacing it
@@ -162,7 +161,7 @@ API. A row that opens is SwiftUI's own disclosure element, whose value is
 its open state and can't be replaced, so its count and level ride in its
 label instead. What's still missing is the outline *role* itself, which
 SwiftUI gives only to `List`; parked for the accessibility pass
-(`spec/status.md`, "What's next", item 0).
+(`spec/backlog.md`, B-57).
 
 ## Several at once, and the browser (added 2026-09-27, late)
 
@@ -193,5 +192,5 @@ scroll view itself, where a row's own tap still wins.
 
 Not changed, on purpose: in Edit Show the timeline takes plain ↑ / ↓
 window-wide (its row navigation), before the browser — as it did before
-the `List` went. Which area owns the arrows is the planned talk
-(`spec/status.md`, Open questions).
+the `List` went. Which area owns the arrows: Jason decided 2026-09-28
+that they follow focus in Edit Show (`spec/backlog.md`, B-03).
