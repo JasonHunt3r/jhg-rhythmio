@@ -249,6 +249,11 @@ struct MainView: View {
                 // upgrade, but if one does, it still has a place.
                 ForEach(orphanShows) { show in showRow(show) }
             }
+            // `List` drew the chevrons and indents; a plain `ScrollView`
+            // doesn't (`PaneKit.PaneOutline`, 2026-09-27), and every row
+            // draws `PaneOutlineIndent` itself (`sidebarRowChrome`).
+            .disclosureGroupStyle(.paneOutline)
+            .padding(.horizontal, 8)
         }
         .paneListNavigation(selection: Binding(get: { model.sidebar }, set: { if let s = $0 { model.sidebar = s } }),
                             order: visibleSidebarOrder)
@@ -517,13 +522,16 @@ extension MainView {
     private func sidebarRowChrome(_ item: SidebarItem, icon: String, title: String, count: Int) -> some View {
         let selected = model.sidebar == item
         return HStack(spacing: 6) {
-            Label(title, systemImage: icon)
+            HStack(spacing: 0) {
+                PaneOutlineIndent()
+                Label(title, systemImage: icon)
+            }
             Spacer()
             Text("\(count)")
                 .font(.caption)
                 .foregroundStyle(selected ? .white.opacity(0.8) : .secondary)
         }
-        .padding(.horizontal, 8).padding(.vertical, 4)
+        .padding(.leading, 2).padding(.trailing, 8).padding(.vertical, 4)
         .background(selected ? AnyShapeStyle(Color.accentColor) : AnyShapeStyle(.clear),
                     in: RoundedRectangle(cornerRadius: 6))
         .foregroundStyle(selected ? .white : .primary)
