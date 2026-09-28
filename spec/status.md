@@ -162,11 +162,8 @@ rest below is open, not next, roughly in the order Jason raised them:
    setting, and the Transparency module with every bar that content
    scrolls under (the grid's filter bar, the sidebar's, Edit Show's
    browser) and the title bar. **Left**: Jason's tuning of the sensitivity
-   dials and the transparency values by feel; the filter-bar seam (a
-   sliver showing through at solid, not re-checked since the rework); a
-   DisclosureGroup random-collapse seen once while stress-testing the
-   sidebar (not diagnosed, not seen since its own disclosure style); then
-   the **"Smart View"** preference — its "timeline closes with no show"
+   dials and the transparency values by feel; then the **"Smart View"**
+   preference — its "timeline closes with no show"
    part already overruled (Open questions).
 3. **Slides as mini movies, the rest** (`spec/plan.md`): the Slide Editor
    as the Slide viewer's pop-out, maybe reordering in the viewer, and the
@@ -243,8 +240,7 @@ Not pressing; each wants a discussion or a plan before any code.
 - **The Transparency module, by eye** (Settings → Windows): the Panel and
   Title Bar values for Light and Dark, Include handles, and the hover
   handle row on an open drawer's divider — all checked by measurement on a
-  scratch copy, none yet by Jason's own eye. Also the filter-bar seam
-  (Where it stands, "What's next" item 2).
+  scratch copy, none yet by Jason's own eye.
 - **Edit Show's browser, by hand**: ⌘/⇧-click picks, a picked group
   dragged onto the timeline with a real mouse, and the bars' look as the
   list scrolls under them.
@@ -604,17 +600,7 @@ Not pressing; each wants a discussion or a plan before any code.
   `spec/history/2026-09-23-crash-hunt.md`,
   `spec/history/2026-09-23-crash-hunt-session2.md`,
   `spec/history/2026-09-23-crash-hunt-session3.md`.
-- **Pulling the inspector's divider far to the left breaks the layout**
-  ("smashes both sides out off the screen"). Seen once in a test copy
-  dragging from the right edge to x=300. `revealByDragging` is the obvious
-  suspect — it clamps the width it sets, but nothing re-checks the columns
-  as a whole. Needs reproducing before anything is changed.
-- **⌥⌘0 (Restore Default Layout) raised the layout-loop exception once**,
-  and killed the app, on 2026-09-23: *before* the cause was confirmed as
-  SwiftUI's `.inspector()` and fixed. Not seen since the fix; probably that
-  same crash. The Library pane was a suspect only by coincidence (Jason). Its
-  known bugs are display bugs. `DefaultLayout` still skips the Library pane on
-  that stale reasoning, which is worth retrying.
+
 - **A song lying wholly inside another** plays over it without crossfading
   (only a partial overlap crossfades). Level tops out at 100%.
 - **The last slide cuts to the background** when something runs past the
