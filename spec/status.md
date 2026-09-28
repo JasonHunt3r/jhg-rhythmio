@@ -721,6 +721,16 @@ Not pressing; each wants a discussion or a plan before any code.
 
 ## Known issues
 
+- **The Library grid's filter bar carries an empty title-bar-high band**
+  (~28 pt) at its top: `MainView`'s `Color.clear.frame(height:
+  titleBarHeight)` spacer in `ScrollBarBackground`, meant to sit under the
+  title bar. It never did — the detail pane doesn't reach under the title
+  bar in the real window (`spec/panekit.md`, "Corrected 2026-09-27"), and
+  with the viewer open the grid isn't at the top anyway. Making the
+  feature real means the root `PaneLayoutView` ignoring the top safe area,
+  then deciding how the detail pane's own SwiftUI content treats the
+  inset it would then get. Waiting on Jason.
+
 - **Right-click: places with no menu yet** show a greyed "No menu yet —
   place › area" note (`spec/conventions.md` §3; search `noMenuYet`,
   `ListEmptySpace`). Not covered yet: the timeline, the transport, the

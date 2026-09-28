@@ -48,10 +48,20 @@ public final class PaneContainerView: NSView {
 
     /// How much of this container's own height, at its top, is really the
     /// window's title bar rather than ordinary content — zero for an
-    /// ordinary window. Read from the window itself (`frame` vs.
-    /// `contentLayoutRect`, which already accounts for a toolbar too, not
-    /// just the bare title bar), not stored, so it's always current.
-    private var titleBarHeight: CGFloat { Self.titleBarHeight(of: window) }
+    /// ordinary window, and zero for a container that doesn't reach up
+    /// under the title bar at all. That's every nested container, and a
+    /// root one SwiftUI has already placed below the bar through its own
+    /// safe area. Reserving the window's whole strip regardless, as this
+    /// first did, stacked one empty title-bar-high band per container
+    /// down the window (Jason's screenshot, 2026-09-27: two above Edit
+    /// Show's picture, one above the Library pane). Measured against
+    /// `contentLayoutRect`, which already accounts for a toolbar, not
+    /// stored, so it's always current.
+    private var titleBarHeight: CGFloat {
+        guard let window, window.styleMask.contains(.fullSizeContentView) else { return 0 }
+        let top = convert(bounds, to: nil).maxY
+        return min(max(0, top - window.contentLayoutRect.maxY), Self.titleBarHeight(of: window))
+    }
 
     /// The same figure, for an app's own content to size a matching spacer
     /// or overlay against — a `scrollsUnderTitleBar` pane doesn't otherwise

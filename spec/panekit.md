@@ -226,8 +226,11 @@ Assistant). Not needed for our fix.
   reserves at least `mainReserveFraction` of the available space (default
   half), or the main side's own `minSize`, whichever is more. A stored
   size (a manual drag) is clamped into that same ceiling too, so it can
-  only ever shrink the content into a scroll, never grow past it.
-  `PaneLayout.sizedExtent`; `PaneLayoutTests`, 5 cases. ShowTools' own use
+  only ever shrink the content into a scroll, never grow past it — and,
+  since 2026-09-27, to the measured content itself: before that, only the
+  half-the-window ceiling applied, so a saved size above the content
+  survived and left an empty band under the timeline's rows.
+  `PaneLayout.sizedExtent`; `PaneLayoutTests`, 6 cases. ShowTools' own use
   (`AppModel.mainPanes`'s `"window"` split, `EditShowTimelinePane
   .contentHeight`/`.minContentHeight`) exercises both halves: the
   timeline pane's floor came down once `StorylineView` grew its own
@@ -456,6 +459,21 @@ marked) is unaffected at rest. Not yet checked: whether the 100%-opacity
 seam glitch already known on the filter bar (`spec/windows.md`) shows up
 the same way across this taller region, or a real hand's feel for the
 combined strip.
+
+**Corrected 2026-09-27 (evening): a container reserves only the title bar
+it actually sits under.** `titleBarHeight` was read off the window alone,
+so *every* `PaneContainerView` in it reserved the whole strip at its own
+top: the root one, which SwiftUI had already placed below the title bar
+through its safe area (so the Library pane sat one strip too low), and
+each nested one (Edit Show's columns, the preview's picture/frame-strip
+split: one more empty band apiece, two stacked above the picture). The
+instance figure is now the overlap between the container and the title
+bar (`contentLayoutRect`), zero for all of those. **Consequence to know:**
+in the real window the root container never reaches under the title bar,
+so `scrollsUnderTitleBar` has nothing to stretch into there — the Library
+grid's "combined strip" was only ever the filter bar's own spacer
+(`spec/status.md`, Known issues). The harness, whose container *is* the
+window's content view, is unaffected.
 
 **Runtime override, added 2026-09-27**: `scrollsUnderTitleBar` on the
 tree is static, right for a pane that always hosts the same kind of
