@@ -508,6 +508,25 @@ storyline all read as one flush layout now; the Library grid's own
 scroll-behind title bar, unaffected (the override only applies inside a
 show), still works exactly as it did before this fix.
 
+## Handle rows: translucency and hover (added 2026-09-27)
+
+**`PaneHandleAppearance`** — how every edge handle fills its background:
+solid by default; an app can supply an opacity (per dark/light) laid over
+the OS header material, and call `changed()` so every handle redraws —
+live, from a slider's preview. ShowTools feeds it from its Translucent
+Bars setting when "Include handles" is on. The handle's edge line and
+pill are drawn in their own view above that material (drawn in the
+handle's own `draw`, the material covered them — Jason caught it).
+
+**The handle row on hover** (Jason: "for dividers that hide the handle on
+open, let's add show handle row on mouseover"): an open `.edge` drawer
+shows only its divider; hovering the divider fades in the closed drawer's
+handle row along it, on the drawer's side, while the pointer is on the
+divider or the row. It drags like the divider; a double-click closes the
+drawer. `PaneContainerView.pointerEntered` / `pointerExited`; the exit
+asks where the pointer actually is a moment later rather than counting
+enter/exit events between the two views.
+
 ## Lists: moved to ListKit (2026-09-27)
 
 The hand-rolled list pieces built here on 2026-09-27 — keyboard
