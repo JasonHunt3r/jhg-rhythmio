@@ -457,6 +457,68 @@ seam glitch already known on the filter bar (`spec/windows.md`) shows up
 the same way across this taller region, or a real hand's feel for the
 combined strip.
 
+## Arrow-key navigation for a hand-rolled list (added 2026-09-27)
+
+`PaneListNavigation` gives a plain `ScrollView` the one thing
+`List(selection:)` provides for free that nothing else does: the arrow
+keys step the selection, and the newly-selected row scrolls into view.
+Built because `.withinWindow` vibrancy — the effect that makes the grid's
+own filter bar look genuinely transparent — never composites over a real
+`List`'s `NSTableView` backing at all (`spec/windows.md`, item 34's
+rework: measured twice, nested and as a true sibling, identical flat
+result both times). The fix for a translucent sidebar isn't a different
+blending mode; it's not using `List` — but `List` was the only thing
+giving ShowTools' own Catalog its keyboard behaviour, so replacing it
+meant rebuilding that one piece. Jason: "as long as we're making something
+reusable for future apps using PaneKit. We're basically writing this into
+PaneKit, right?" — yes.
+
+Deliberately narrow. It doesn't render rows, know about hierarchy, or
+handle Delete/Return/rename/drag — the app keeps building its own content
+exactly as it would inside a `List` (recursive `DisclosureGroup`s and
+all), and its own key handling for everything but the arrows. All it
+needs is `order`: the current, flat, *visible* row order, folded branches
+already excluded by the app (only it knows its own fold state), with each
+row already carrying a matching `.id(_:)` for `ScrollViewProxy.scrollTo`
+to find.
+
+```swift
+ScrollView { /* your own rows, each `.id(rowID)` */ }
+    .paneListNavigation(selection: $selection, order: visibleOrder)
+```
+
+The AppKit key-catching glue mirrors `PaneContainerView`'s own existing
+pointer-monitor pattern: only a `Bool` crosses the `MainActor
+.assumeIsolated` boundary, not the `NSEvent` itself, which the newer SDK's
+stricter Sendable checking on `NSEvent` doesn't allow (measured: returning
+`NSEvent?` from inside `assumeIsolated` failed to build at all).
+
+**Confirmed in the harness** ("A translucent, arrow-key-navigable
+sidebar," a new `Shape`): 25 and 35 consecutive Down presses from a fresh
+launch landed exactly on Row 25 and Row 35, auto-scrolling correctly both
+times.
+
+**Wired into ShowTools the same day**: the Catalog's `libraryList` is a
+`ScrollView` now, not a `List`. Every row (`collectionRow`, `groupRow`,
+`showRow`, `libraryRow`) carries its own `sidebarRowChrome` — a shared
+helper doing the selection highlight and tap-to-select that `List`'s
+`.tag`/selection binding and `.badge()` gave for free — and
+`visibleSidebarOrder` computes the fold-aware flat order. Everything else
+(the recursive `DisclosureGroup`s, context menus, rename-on-option-click,
+drag and drop) is unchanged: none of it was ever `List`-specific.
+`.onDeleteCommand` is gone as redundant — the window-wide `SingleKeys`
+fallback already covered every case once `firstResponder is NSTableView`
+can never be true for this pane again. Confirmed on a scratch copy: rows
+genuinely scroll behind a visibly translucent bar; arrow keys from launch
+land on Library first, then step through collections/groups/shows in
+drawn order; a click selects and updates the detail pane; Delete on a
+selected group raised the real confirmation dialog. **One real,
+unresolved side effect**: `LibraryGridView`'s own keyboard shortcuts are
+guarded by that same `firstResponder is NSTableView` check, meaning
+"suppress while the sidebar has focus" — a concept a plain `ScrollView`
+sidebar has no equivalent for, so the guard now reads as permanently
+true. Not checked by hand whether that's actually noticeable.
+
 ## Building a row (added 2026-09-24)
 
 The primitive is strictly two panes. Three or more independently-sized

@@ -332,16 +332,48 @@ Not pressing; each wants a discussion or a plan before any code.
   the top (`libraryList`'s own `.safeAreaInset`, not a `List` row any
   more — `libraryRow`, with its own manual selection highlight), the
   three Catalog bars carry `ScrollBarBackground.sidebar`
-  (`.behindWindow`). **Settled, not left open**: Jason asked for the
-  grid's own dramatic `.withinWindow` look on these bars too, matching
-  Notes' toolbar; measured that `.withinWindow` never composites over a
-  `List`'s `NSTableView` regardless of view-tree position (two real
-  structural attempts, `spec/windows.md`), and that Notes' actual look
-  comes from a genuine `NSToolbar`'s own privileged window-chrome
-  compositing, not a content-level effect view — a real architectural
-  step against PaneKit's whole reason for existing. Jason's call:
-  `.behindWindow` for now, real `NSToolbar` adoption left for later if it
-  still bothers him with use.
+  (`.behindWindow`). Jason asked for the grid's own dramatic
+  `.withinWindow` look on these bars too, matching Notes' toolbar;
+  measured that `.withinWindow` never composites over a `List`'s
+  `NSTableView` regardless of view-tree position (two real structural
+  attempts, `spec/windows.md`), and that Notes' actual look comes from a
+  genuine `NSToolbar`'s own privileged window-chrome compositing, not a
+  content-level effect view — a real architectural step against PaneKit's
+  whole reason for existing. Declined; his own follow-up instead: "why
+  can't we just add the transparency characteristic to any bar that is in
+  a scroll behind position?"
+
+  **Answer, built the same day**: the Catalog no longer uses `List` at
+  all. Jason: "as long as we're making something reusable for future apps
+  using PaneKit. We're basically writing this into PaneKit, right?" — yes:
+  `PaneKit.PaneListNavigation` (`spec/panekit.md`, "Arrow-key navigation
+  for a hand-rolled list") gives a plain `ScrollView` the one thing
+  `List(selection:)` gave for free that nothing else does — arrow keys
+  step the selection, scrolled into view — proven first in the harness (25
+  and 35 consecutive Down presses landed exactly on Row 25 and Row 35),
+  6 new PaneKit tests (65 total). `libraryList` is a `ScrollView` now;
+  every row carries `sidebarRowChrome` (manual selection highlight and
+  tap, replacing `.tag`/`.badge()`); `visibleSidebarOrder` computes the
+  fold-aware flat order. Context menus, rename-on-option-click, drag and
+  drop, the recursive `DisclosureGroup`s — all unchanged, none of it was
+  ever `List`-specific. `.onDeleteCommand` is gone, redundant: the
+  window-wide `SingleKeys` Delete/⌘Delete fallback already covered every
+  case unconditionally once `firstResponder is NSTableView` can never be
+  true here again.
+
+  **Confirmed on a scratch copy** (the seeded 25-collection library): rows
+  genuinely scroll behind a visibly translucent bar now; arrow keys from
+  launch land on Library first, then step through collections/groups/shows
+  in drawn order, auto-scrolling correctly; a click selects and updates
+  the detail pane; Delete on a selected group raised the real confirmation
+  dialog (in its own separate window — worth remembering to check for
+  next time nothing seems to happen). **One real, unresolved side
+  effect**: `LibraryGridView`'s own keyboard shortcuts are guarded by that
+  same `firstResponder is NSTableView` check (meaning "suppress while the
+  sidebar has focus"), which a plain `ScrollView` sidebar has no
+  equivalent for — the guard now reads as permanently true. Not checked
+  by hand whether grid shortcuts firing while clicking around the Catalog
+  is actually noticeable.
 - **The Set Up Triggers box, and the Responsiveness slider** (built,
   reversed twice, and floating by the end of 2026-09-27, `spec/windows.md`,
   "A reusable modal box"): confirmed with axtool against a scratch

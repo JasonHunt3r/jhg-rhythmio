@@ -214,43 +214,44 @@ struct MainView: View {
         // showing. There's always something to have selected here (the
         // Library row itself is selectable), so a nil write from that
         // background click is simply ignored rather than accepted.
-        List(selection: Binding(get: { model.sidebar }, set: { if let s = $0 { model.sidebar = s } })) {
-            // Library → Collection → Show, as Final Cut's Library → Event → Project.
-            // A collection's groups and its shows sit side by side, as
-            // siblings (Jason, 2026-09-24, "Groups inside collections").
-            // No Section/header here any more — both it and the Library row
-            // above moved into the pinned bar below (Jason, 2026-09-27:
-            // "the library and collections header should stay pinned to
-            // the top and the list should scroll behind them").
-            ForEach(model.collections) { c in
-                DisclosureGroup(isExpanded: foldBinding(c.id, in: $folded)) {
-                    collectionChildren(c)
-                } label: {
-                    collectionRow(c)
+        // A plain `ScrollView`, not a `List` any more (Jason, 2026-09-27:
+        // "why can't we just add the transparency characteristic to any
+        // bar that is in a scroll behind position?" — because `List` is a
+        // real `NSTableView`, and `.withinWindow` blending never
+        // composites over one, measured twice, `spec/windows.md`). Every
+        // row wires up its own selection and highlight now
+        // (`sidebarRowChrome`) instead of `List`'s `.tag`/selection
+        // binding, and `.paneListNavigation` (PaneKit) gives back the
+        // arrow-key stepping and scroll-into-view `List` gave for free.
+        // Delete/⌘Delete no longer has an `.onDeleteCommand` path here —
+        // the window-wide `SingleKeys` fallback below (`layout`) already
+        // covers every case unconditionally now that `NSApp.keyWindow?
+        // .firstResponder is NSTableView` can never be true for this pane.
+        ScrollView {
+            LazyVStack(alignment: .leading, spacing: 0) {
+                // Library → Collection → Show, as Final Cut's Library →
+                // Event → Project. A collection's groups and its shows sit
+                // side by side, as siblings (Jason, 2026-09-24, "Groups
+                // inside collections"). No Section/header here any more —
+                // both it and the Library row above moved into the pinned
+                // bar below (Jason, 2026-09-27: "the library and
+                // collections header should stay pinned to the top and
+                // the list should scroll behind them").
+                ForEach(model.collections) { c in
+                    DisclosureGroup(isExpanded: foldBinding(c.id, in: $folded)) {
+                        collectionChildren(c)
+                    } label: {
+                        collectionRow(c)
+                    }
+                    .id(SidebarItem.collection(c.id))
                 }
-            }
-            // Shows in no collection shouldn't exist after the
-            // upgrade, but if one does, it still has a place.
-            ForEach(orphanShows) { show in showRow(show) }
-        }
-        // Delete asks first (D1); ⌘Delete skips the question, as the
-        // grid's does (spec/conventions.md §Delete/⌘Delete). This
-        // `onDeleteCommand` fires when the List genuinely has the
-        // keyboard; the SingleKeys fallback for when it doesn't is
-        // attached to the whole PaneLayoutView, not here — a
-        // `.background(SingleKeys)` directly on this List (a real
-        // NSTableView, not the grid's plain ScrollView) hit AppKit's
-        // layout-loop guard and crashed on the very first check
-        // (2026-09-24, `~/Library/Logs/DiagnosticReports/`, a run of
-        // `NavigationPaneModifier`/`CellHostingView` layout frames).
-        .onDeleteCommand {
-            switch model.sidebar {
-            case .show(let id): if let s = model.show(id) { confirmDelete = s }
-            case .collection(let id): if let c = model.collection(id) { deleteCollectionAsking(c) }
-            case .group(let id): if let g = model.group(id) { deleteGroupAsking(g) }
-            default: break
+                // Shows in no collection shouldn't exist after the
+                // upgrade, but if one does, it still has a place.
+                ForEach(orphanShows) { show in showRow(show) }
             }
         }
+        .paneListNavigation(selection: Binding(get: { model.sidebar }, set: { if let s = $0 { model.sidebar = s } }),
+                            order: visibleSidebarOrder)
         .safeAreaInset(edge: .top) {
             VStack(alignment: .leading, spacing: 0) {
                 libraryRow
@@ -284,30 +285,19 @@ struct MainView: View {
 
     /// The Library row, pinned above the Collections list
     /// (`libraryList`'s `.safeAreaInset(edge: .top)`) rather than a normal
-    /// selectable `List` row any more, so it no longer scrolls away. Its
-    /// own tap sets the selection directly; `List`'s own selection styling
-    /// doesn't reach it, so it draws its own highlight instead. Losing:
-    /// `List`'s automatic keyboard selection reaching it by arrowing up
-    /// past the first collection — nothing asked for that specifically,
-    /// but worth knowing if it's missed.
+    /// selectable row inside the `ScrollView` — it's outside it entirely,
+    /// so `sidebarRowChrome`'s own tap sets the selection directly.
+    /// `.paneListNavigation`'s `order` still lists `.library` first
+    /// (`visibleSidebarOrder`), so the arrow keys reach it from the first
+    /// collection even though it's never scrolled to (there's nothing to
+    /// scroll — it's always on screen).
     private var libraryRow: some View {
-        let selected = model.sidebar == .library
-        return HStack(spacing: 6) {
-            Label(model.isOnMaster ? "Library" : model.libraryName,
-                  systemImage: model.libraryIsPrivate || model.locked != nil
-                      ? "lock.rectangle.stack" : "photo.on.rectangle.angled")
-            Spacer()
-            Text("\(model.items.count)")
-                .font(.caption)
-                .foregroundStyle(selected ? .white.opacity(0.8) : .secondary)
-        }
-        .padding(.horizontal, 8).padding(.vertical, 5)
-        .background(selected ? AnyShapeStyle(Color.accentColor) : AnyShapeStyle(.clear),
-                    in: RoundedRectangle(cornerRadius: 6))
-        .foregroundStyle(selected ? .white : .primary)
+        sidebarRowChrome(.library,
+                         icon: model.libraryIsPrivate || model.locked != nil
+                             ? "lock.rectangle.stack" : "photo.on.rectangle.angled",
+                         title: model.isOnMaster ? "Library" : model.libraryName,
+                         count: model.items.count)
         .padding(.horizontal, 8).padding(.top, 6)
-        .contentShape(Rectangle())
-        .onTapGesture { model.sidebar = .library }
         .contextMenu {
             Button("Import…") { runImportPanel(model) }
             Button("New Collection…") { startCreatingCollection() }
@@ -486,12 +476,57 @@ extension MainView {
         }
     }
 
+    /// Every row in the Catalog, in on-screen order, with a folded
+    /// collection's or group's own children left out — what
+    /// `.paneListNavigation`'s arrow keys step through
+    /// (`PaneKit.PaneListNavigation`). `.library` goes first: it isn't a
+    /// row inside the `ScrollView` any more (`libraryRow`, pinned above
+    /// it), so `scrollTo` silently does nothing for it, but the selection
+    /// itself still moves there correctly — Up from the first collection
+    /// reaches it, restoring a little of what `List`'s own keyboard
+    /// selection gave for free.
+    private var visibleSidebarOrder: [SidebarItem] {
+        var order: [SidebarItem] = [.library]
+        func addGroup(_ g: MediaGroup) {
+            order.append(.group(g.id))
+            guard !foldedGroups.contains(g.id) else { return }
+            for child in model.groups.filter({ $0.parentID == g.id }) { addGroup(child) }
+        }
+        for c in model.collections {
+            order.append(.collection(c.id))
+            guard !folded.contains(c.id) else { continue }
+            for g in model.topGroups(inCollection: c.id) { addGroup(g) }
+            for show in model.shows.filter({ $0.collectionID == c.id }) { order.append(.show(show.id)) }
+        }
+        for show in orphanShows { order.append(.show(show.id)) }
+        return order
+    }
+
+    /// A sidebar row's selection highlight and click-to-select — `List`'s
+    /// own selection binding and `.badge()` gave both for free before
+    /// (2026-09-27's rework off `List`, above). Shared by `libraryRow`,
+    /// `collectionRow`, `groupRow`'s label and `showRow`.
+    private func sidebarRowChrome(_ item: SidebarItem, icon: String, title: String, count: Int) -> some View {
+        let selected = model.sidebar == item
+        return HStack(spacing: 6) {
+            Label(title, systemImage: icon)
+            Spacer()
+            Text("\(count)")
+                .font(.caption)
+                .foregroundStyle(selected ? .white.opacity(0.8) : .secondary)
+        }
+        .padding(.horizontal, 8).padding(.vertical, 4)
+        .background(selected ? AnyShapeStyle(Color.accentColor) : AnyShapeStyle(.clear),
+                    in: RoundedRectangle(cornerRadius: 6))
+        .foregroundStyle(selected ? .white : .primary)
+        .contentShape(Rectangle())
+        .onTapGesture { model.sidebar = item }
+    }
+
     func collectionRow(_ c: MediaCollection) -> some View {
         // Solid folder for a collection, outline for a group inside it
         // (`groupRow`, below) — settled 2026-09-25, feedback item 12.
-        Label(c.name, systemImage: "folder.fill")
-            .badge(c.itemIDs.count)
-            .tag(SidebarItem.collection(c.id))
+        sidebarRowChrome(.collection(c.id), icon: "folder.fill", title: c.name, count: c.itemIDs.count)
             .contextMenu {
                 Button("New Show in “\(c.name)”") { model.newShow(in: c.id) }
                 Button("New Group in “\(c.name)”…") { startCreatingGroup(collectionID: c.id) }
@@ -533,9 +568,7 @@ extension MainView {
     /// define its own opaque return type in terms of itself.
     func groupRow(_ g: MediaGroup) -> AnyView {
         let children = model.groups.filter { $0.parentID == g.id }
-        let label = Label(g.name, systemImage: "folder")
-            .badge(g.itemIDs.count)
-            .tag(SidebarItem.group(g.id))
+        let label = sidebarRowChrome(.group(g.id), icon: "folder", title: g.name, count: g.itemIDs.count)
             .contextMenu {
                 Button("New Group in “\(g.name)”…") { startCreatingGroup(collectionID: g.collectionID, parentID: g.id) }
                 Divider()
@@ -566,20 +599,20 @@ extension MainView {
                 return true
             }
         if children.isEmpty {
-            return AnyView(label)
+            return AnyView(label.id(SidebarItem.group(g.id)))
         } else {
             return AnyView(DisclosureGroup(isExpanded: foldBinding(g.id, in: $foldedGroups)) {
                 ForEach(children) { child in groupRow(child) }
             } label: {
                 label
-            })
+            }
+            .id(SidebarItem.group(g.id)))
         }
     }
 
     func showRow(_ show: Show) -> some View {
-        Label(show.name, systemImage: "play.rectangle")
-            .badge(show.slides.count)
-            .tag(SidebarItem.show(show.id))
+        sidebarRowChrome(.show(show.id), icon: "play.rectangle", title: show.name, count: show.slides.count)
+            .id(SidebarItem.show(show.id))
             .contextMenu {
                 Button("Play") { Player.open(show: show, model: model, fullScreen: false) }
                     .disabled(show.slides.isEmpty)

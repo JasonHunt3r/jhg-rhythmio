@@ -972,13 +972,52 @@ header bar reads "Drawer Sensitivity: Set Up Triggers." "It's good."
    backing at all, independent of where the effect view sits in the
    SwiftUI view tree — tried nested (`.safeAreaInset`) and sibling
    (`.overlay`), identical flat result both times. This reads as a real
-   platform limitation, not a mistake in either structure. Getting the
-   grid's own dramatic look over the Catalog specifically would mean
-   either living with `.behindWindow`'s fainter, more typical Mac-sidebar
-   vibrancy, or replacing the Catalog's native `List` with hand-built
-   scrolling content (losing native row selection, animation and
-   accessibility for real `.withinWindow` compositing) — a much bigger
-   change, not attempted. Left for Jason to weigh.
+   platform limitation, not a mistake in either structure.
+
+   **Jason: "why can't we just add the transparency characteristic to any
+   bar that is in a scroll behind position?"** Explained the real
+   distinction (a genuine `NSToolbar`'s privileged window-chrome
+   compositing, which Notes' own look actually depends on, versus an
+   ordinary content-level effect view, which is all `ScrollBarBackground`
+   ever was and all `.withinWindow` can drive) and the two paths: adopt a
+   real `NSToolbar` (declined — see above), or replace the Catalog's
+   `List` with hand-built scrolling content, matching how the grid already
+   solves the identical problem. **Chosen and built the same day**, once
+   Jason asked for it to be a genuinely reusable PaneKit piece, not a
+   ShowTools-only patch: `PaneKit.PaneListNavigation`
+   (`spec/panekit.md`, "Arrow-key navigation for a hand-rolled list") gives
+   a plain `ScrollView` the one thing `List(selection:)` provided that
+   nothing else does — arrow keys step the selection, and the new
+   selection scrolls into view. Proven first in the harness (25 and 35
+   consecutive Down presses landed exactly on Row 25 and Row 35), then the
+   Catalog itself was rebuilt on it: `libraryList` is a `ScrollView` now,
+   every row carries its own `sidebarRowChrome` (manual selection highlight
+   and tap-to-select, replacing `List`'s `.tag`/selection binding and
+   `.badge()`), and `visibleSidebarOrder` computes the flat, fold-aware
+   row order the arrow keys step through. Everything else — the recursive
+   `DisclosureGroup`s, context menus, rename-on-option-click, drag and
+   drop — is unchanged code, since none of it was ever `List`-specific.
+   `.onDeleteCommand` is gone (redundant): the window-wide `SingleKeys`
+   fallback (`layout`) already covered every Delete/⌘Delete case
+   unconditionally once `NSApp.keyWindow?.firstResponder is NSTableView`
+   can never be true for this pane again.
+
+   **Confirmed on a scratch copy, the seeded 25-collection library**: real
+   photos… no, real *rows* now genuinely scroll behind a visibly
+   translucent Library/Collections bar and New+ footer; arrow keys from a
+   fresh launch land on Library first, then step through collections,
+   groups and shows exactly in the order they're drawn, auto-scrolling
+   correctly; clicking a row selects it and updates the detail pane;
+   Delete on a selected group raised the real confirmation dialog (in its
+   own window — easy to miss checking for, worth remembering next time
+   nothing seems to have happened). **One real, unresolved side effect**:
+   `LibraryGridView`'s own keyboard shortcuts (⌘A and others) are guarded
+   by `!(NSApp.keyWindow?.firstResponder is NSTableView)`, meaning "only
+   fire while the sidebar doesn't have focus" — a `List` made that a real,
+   checkable AppKit state; a plain `ScrollView` sidebar has no equivalent,
+   so that guard now reads as permanently true. Whether grid shortcuts
+   firing while clicking around the Catalog is actually noticeable hasn't
+   been checked by hand.
 3. The "Smart View" preference (panes open and close by context — on by
    default — or keep your own choices; `spec/plan.md`, "Slides as mini
    movies") — **wants fleshing out**: today it's a one-paragraph sketch,
