@@ -591,10 +591,6 @@ Not pressing; each wants a discussion or a plan before any code.
   explained — suspect `UndoMenuState`'s tracking of the key window
   rather than the rating code, but that's unproven.
 
-- **Undo registered outside an event stays invisible to Edit ▸ Undo
-  until the next event** (AppKit's automatic group stays open). Fixed for
-  drag-to-reorder by an explicit undo group; other paths that register
-  undo from a `Task` or after an `await` haven't been checked.
 - **The layout-loop crash — fixed 2026-09-23, and its 2026-09-24
   recurrence also fixed.** `NSGenericException` from AppKit's layout-loop
   guard; root cause was SwiftUI's `.inspector()` modifier, fixed by

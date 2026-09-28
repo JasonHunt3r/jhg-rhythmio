@@ -374,7 +374,8 @@ struct EditSlidesView: View {
         .onDrop(of: ItemDrag.accepted, isTargeted: $dropTargeted) { providers in
             Task {
                 let ids = await model.itemIDs(from: providers)
-                model.append(ids, to: show.id, undo: undoManager)
+                // After an `await`: outside any event (`inOwnUndoGroup`).
+                inOwnUndoGroup(undoManager) { model.append(ids, to: show.id, undo: undoManager) }
             }
             return true
         }
@@ -410,19 +411,22 @@ struct EditSlidesView: View {
         let showID = show.id
         Task {
             let ids = model.pictures(await model.itemIDs(from: providers))
-            guard !ids.isEmpty, model.bringIntoCollection(ids, forShow: showID) else { return }
-            switch zone {
-            case .replace where ids.count == 1:
-                SlideActions.replaceImage(slideID, with: ids[0], mutate: mutate)
-            case .replace, .insertAfter:
-                guard let i = show.slides.firstIndex(where: { $0.id == slideID }) else { return }
-                mutate(ids.count == 1 ? "Insert Slide" : "Insert Slides") { s in
-                    s.slides.insert(contentsOf: ids.map { Slide(id: 0, itemID: $0) }, at: i + 1)
-                }
-            case .insertBefore:
-                guard let i = show.slides.firstIndex(where: { $0.id == slideID }) else { return }
-                mutate(ids.count == 1 ? "Insert Slide" : "Insert Slides") { s in
-                    s.slides.insert(contentsOf: ids.map { Slide(id: 0, itemID: $0) }, at: i)
+            // After an `await`: outside any event (`inOwnUndoGroup`).
+            inOwnUndoGroup(undoManager) {
+                guard !ids.isEmpty, model.bringIntoCollection(ids, forShow: showID) else { return }
+                switch zone {
+                case .replace where ids.count == 1:
+                    SlideActions.replaceImage(slideID, with: ids[0], mutate: mutate)
+                case .replace, .insertAfter:
+                    guard let i = show.slides.firstIndex(where: { $0.id == slideID }) else { return }
+                    mutate(ids.count == 1 ? "Insert Slide" : "Insert Slides") { s in
+                        s.slides.insert(contentsOf: ids.map { Slide(id: 0, itemID: $0) }, at: i + 1)
+                    }
+                case .insertBefore:
+                    guard let i = show.slides.firstIndex(where: { $0.id == slideID }) else { return }
+                    mutate(ids.count == 1 ? "Insert Slide" : "Insert Slides") { s in
+                        s.slides.insert(contentsOf: ids.map { Slide(id: 0, itemID: $0) }, at: i)
+                    }
                 }
             }
         }

@@ -44,6 +44,20 @@ struct ShowToolsApp: App {
     }
 }
 
+/// Records whatever undo steps `body` registers in a group of their own,
+/// closed straight away. For changes made outside any event — after an
+/// `await`, once a drop's files have loaded: a step registered there sits
+/// in AppKit's automatic group, which stays open until the next event, so
+/// Edit ▸ Undo stays disabled and the first ⌘Z only closes the group
+/// (measured on drag-to-reorder, 2026-09-25). Closing our own group tells
+/// `UndoMenuState` at once.
+@MainActor
+func inOwnUndoGroup(_ undo: UndoManager?, _ body: () -> Void) {
+    undo?.beginUndoGrouping()
+    body()
+    undo?.endUndoGrouping()
+}
+
 /// Tracks the key window's own `UndoManager`, so Edit ▸ Undo/Redo work
 /// from any window a pane can pop out into. SwiftUI's own automatic
 /// Undo/Redo commands are scoped to its `Scene` graph, which a PaneKit

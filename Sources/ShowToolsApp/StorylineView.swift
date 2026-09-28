@@ -1244,22 +1244,26 @@ struct StorylineView: View {
         Task {
             // Songs go in the music row, at the time they were dropped.
             let all = await model.itemIDs(from: providers)
-            let songs = model.songs(all), ids = model.pictures(all)
-            if !songs.isEmpty, model.bringIntoCollection(songs, forShow: showID) {
-                MusicRow.place(songs, at: max(0, Double(x - Self.inset) / pps), model: model, mutate: mutate)
-            }
-            guard !ids.isEmpty, model.bringIntoCollection(ids, forShow: showID) else { return }
-            if case .replace(let slideID, _, _) = target, ids.count == 1 {
-                SlideActions.replaceImage(slideID, with: ids[0], mutate: mutate)
-                return
-            }
-            let index: Int
-            switch target {
-            case .replace(let slideID, _, _): index = show.slides.firstIndex { $0.id == slideID } ?? show.slides.count
-            case .insert(let i, _): index = i
-            }
-            mutate(ids.count == 1 ? "Insert Slide" : "Insert Slides") { s in
-                s.slides.insert(contentsOf: ids.map { Slide(id: 0, itemID: $0) }, at: min(index, s.slides.count))
+            // After an `await`: outside any event (`inOwnUndoGroup`) — and one
+            // step for the whole drop, songs and slides together.
+            inOwnUndoGroup(undoManager) {
+                let songs = model.songs(all), ids = model.pictures(all)
+                if !songs.isEmpty, model.bringIntoCollection(songs, forShow: showID) {
+                    MusicRow.place(songs, at: max(0, Double(x - Self.inset) / pps), model: model, mutate: mutate)
+                }
+                guard !ids.isEmpty, model.bringIntoCollection(ids, forShow: showID) else { return }
+                if case .replace(let slideID, _, _) = target, ids.count == 1 {
+                    SlideActions.replaceImage(slideID, with: ids[0], mutate: mutate)
+                    return
+                }
+                let index: Int
+                switch target {
+                case .replace(let slideID, _, _): index = show.slides.firstIndex { $0.id == slideID } ?? show.slides.count
+                case .insert(let i, _): index = i
+                }
+                mutate(ids.count == 1 ? "Insert Slide" : "Insert Slides") { s in
+                    s.slides.insert(contentsOf: ids.map { Slide(id: 0, itemID: $0) }, at: min(index, s.slides.count))
+                }
             }
         }
     }

@@ -638,7 +638,11 @@ extension MainView {
             // the top; a different one, add its files there, after asking.
             .onDrop(of: ItemDrag.accepted + [GroupDrag.type], isTargeted: nil) { providers in
                 Task {
-                    if let gid = await GroupDrag.id(from: providers) { dropGroup(gid, onCollection: c); return }
+                    // After an `await`: outside any event (`inOwnUndoGroup`).
+                    if let gid = await GroupDrag.id(from: providers) {
+                        inOwnUndoGroup(undoManager) { dropGroup(gid, onCollection: c) }
+                        return
+                    }
                     let ids = await model.itemIDs(from: providers)
                     model.addToCollection(ids, c.id)
                 }
@@ -685,7 +689,8 @@ extension MainView {
                 Task {
                     if let dragged = await GroupDrag.id(from: providers) {
                         guard dragged != g.id else { return }
-                        model.moveGroup(dragged, toParent: g.id, undo: undoManager)
+                        // After an `await`: outside any event (`inOwnUndoGroup`).
+                        inOwnUndoGroup(undoManager) { model.moveGroup(dragged, toParent: g.id, undo: undoManager) }
                         return
                     }
                     let ids = await model.itemIDs(from: providers)
@@ -736,7 +741,8 @@ extension MainView {
             .onDrop(of: ItemDrag.accepted, isTargeted: nil) { providers in
                 Task {
                     let ids = await model.itemIDs(from: providers)
-                    model.append(ids, to: show.id, undo: undoManager)
+                    // After an `await`: outside any event (`inOwnUndoGroup`).
+                    inOwnUndoGroup(undoManager) { model.append(ids, to: show.id, undo: undoManager) }
                 }
                 return true
             }
@@ -2380,7 +2386,8 @@ func runImportIntoShowPanel(_ model: AppModel, showID: Int64, undo: UndoManager?
     Task {
         let ids = await model.importFiles(urls)
         guard !ids.isEmpty else { return }
-        model.append(ids, to: showID, undo: undo)
+        // After an `await`: outside any event (`inOwnUndoGroup`).
+        inOwnUndoGroup(undo) { model.append(ids, to: showID, undo: undo) }
     }
 }
 
