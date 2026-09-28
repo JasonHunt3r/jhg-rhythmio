@@ -53,23 +53,19 @@ final class ScrollBarTranslucency: ObservableObject {
 /// A bar's own tunable background: the native `.headerView` material at
 /// amount 0, crossfading to a flat, fully opaque backing at 1.
 ///
-/// `blending` isn't one fixed choice: `.withinWindow` (the filter bar's own
-/// default) samples real content drawn directly behind it in the *same*
-/// window — right for the grid, a plain SwiftUI `ScrollView`. Measured
-/// 2026-09-27: it renders completely flat, with no vibrancy at all, over
-/// the Catalog's own `List` — a real `NSTableView`, not a `ScrollView` —
-/// whose own row content apparently doesn't composite into whatever
-/// `.withinWindow` samples. `.behindWindow` (the Catalog bars' own default,
-/// `ScrollBarBackground.sidebar`) *does* show real, if faint, vibrancy
-/// there — confirmed side by side — sampling the desktop instead, same as
-/// any ordinary Mac sidebar.
+/// `blending` defaults to `.withinWindow`, which samples real content drawn
+/// directly behind it in the *same* window — right for any plain SwiftUI
+/// `ScrollView` (the grid's filter bar, the Catalog's own rows since
+/// 2026-09-27's migration off `List`). It's kept as a parameter, not
+/// hardcoded, only because of what it took to find that out: measured
+/// 2026-09-27 that `.withinWindow` renders completely flat, with no
+/// vibrancy at all, over a real `NSTableView` (`List`) — the Catalog's
+/// short-lived `.sidebar`/`.behindWindow` convenience existed only to work
+/// around that, and was removed once the migration made it moot.
 struct ScrollBarBackground: View {
     @Environment(\.colorScheme) private var colorScheme
     @ObservedObject private var setting = ScrollBarTranslucency.shared
     var blending: NSVisualEffectView.BlendingMode = .withinWindow
-
-    /// For a bar over the Catalog's own `List`, not a plain `ScrollView`.
-    static var sidebar: ScrollBarBackground { ScrollBarBackground(blending: .behindWindow) }
 
     var body: some View {
         let amount = setting.value(for: colorScheme)

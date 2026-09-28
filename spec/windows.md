@@ -1017,7 +1017,26 @@ header bar reads "Drawer Sensitivity: Set Up Triggers." "It's good."
    checkable AppKit state; a plain `ScrollView` sidebar has no equivalent,
    so that guard now reads as permanently true. Whether grid shortcuts
    firing while clicking around the Catalog is actually noticeable hasn't
-   been checked by hand.
+   been checked by hand. **Confirmed live in a later session**: pressing
+   an arrow key sometimes moved the *grid's* own selection instead of the
+   sidebar's — the two arrow-key monitors (`PaneArrowKeys` and the grid's
+   own) both watch the same keys unconditionally, and whichever installed
+   first on a given launch wins; not just theoretical, reproduced.
+
+   **A real bug in the fix itself, found right after installing**: Jason —
+   "no transparency from the library headers with scrollbehind content."
+   The two Catalog bars were still calling the now-deleted
+   `ScrollBarBackground.sidebar` convenience (`.behindWindow`) — left over
+   from before the migration and never updated to the plain
+   `ScrollBarBackground()` default (`.withinWindow`) the whole migration
+   was for. Fixed; `.sidebar` itself removed from `ScrollBarTranslucency
+   .swift` since nothing needs it any more. Not yet re-confirmed visually
+   after the fix — synthetic clicks and arrow keys landed inconsistently
+   in the sidebar this same session (sometimes hitting the grid instead,
+   the same monitor race above), so this one is reasoned from the code
+   (identical mechanism to the grid's own already-proven filter bar and
+   the PaneKit harness demo) rather than screenshotted again. Worth Jason's
+   own look before calling it done.
 3. The "Smart View" preference (panes open and close by context — on by
    default — or keep your own choices; `spec/plan.md`, "Slides as mini
    movies") — **wants fleshing out**: today it's a one-paragraph sketch,

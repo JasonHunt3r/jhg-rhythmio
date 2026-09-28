@@ -368,12 +368,26 @@ Not pressing; each wants a discussion or a plan before any code.
   the detail pane; Delete on a selected group raised the real confirmation
   dialog (in its own separate window — worth remembering to check for
   next time nothing seems to happen). **One real, unresolved side
-  effect**: `LibraryGridView`'s own keyboard shortcuts are guarded by that
-  same `firstResponder is NSTableView` check (meaning "suppress while the
-  sidebar has focus"), which a plain `ScrollView` sidebar has no
-  equivalent for — the guard now reads as permanently true. Not checked
-  by hand whether grid shortcuts firing while clicking around the Catalog
-  is actually noticeable.
+  effect, confirmed**: `LibraryGridView`'s own keyboard shortcuts are
+  guarded by that same `firstResponder is NSTableView` check (meaning
+  "suppress while the sidebar has focus"), which a plain `ScrollView`
+  sidebar has no equivalent for — an arrow key sometimes moved the
+  *grid's* own selection instead of the sidebar's, a real monitor race
+  between `PaneArrowKeys` and the grid's own, not just a theoretical gap.
+
+  **A real bug in the fix, found immediately after installing**: Jason —
+  "no transparency from the library headers with scrollbehind content."
+  Both Catalog bars were still calling the now-deleted
+  `ScrollBarBackground.sidebar` (`.behindWindow`) — left over from before
+  the migration, never switched to the plain `ScrollBarBackground()`
+  default (`.withinWindow`) the whole migration was *for*. Fixed;
+  `.sidebar` removed from `ScrollBarTranslucency.swift` entirely, nothing
+  needs it any more. **Not yet re-confirmed visually** — synthetic clicks
+  and arrow keys landed inconsistently in the sidebar in this same
+  session (the monitor race above), so this is reasoned from the code
+  (the identical mechanism already proven twice: the grid's own filter
+  bar, and the PaneKit harness demo) rather than screenshotted again.
+  Worth Jason's own look.
 - **The Set Up Triggers box, and the Responsiveness slider** (built,
   reversed twice, and floating by the end of 2026-09-27, `spec/windows.md`,
   "A reusable modal box"): confirmed with axtool against a scratch

@@ -262,7 +262,15 @@ struct MainView: View {
                     .padding(.top, 8).padding(.bottom, 4)
                     .noMenuYet("Library pane › Collections heading")
             }
-            .background(ScrollBarBackground.sidebar)
+            // `.withinWindow`, not `.sidebar`/`.behindWindow` any more:
+            // the Catalog is a plain `ScrollView` now (2026-09-27's
+            // migration off `List`), so it can finally sample its own
+            // scrolled rows directly, the same as the grid's filter bar
+            // — left on `.sidebar` by mistake through that whole
+            // migration, which is why nothing looked different
+            // (Jason: "no transparency from the library headers with
+            // scrollbehind content").
+            .background(ScrollBarBackground())
         }
         .safeAreaInset(edge: .bottom) {
             HStack {
@@ -279,7 +287,7 @@ struct MainView: View {
                 Spacer()
             }
             .padding(8)
-            .background(ScrollBarBackground.sidebar)
+            .background(ScrollBarBackground())
         }
     }
 
