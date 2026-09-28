@@ -1037,6 +1037,53 @@ header bar reads "Drawer Sensitivity: Set Up Triggers." "It's good."
    (identical mechanism to the grid's own already-proven filter bar and
    the PaneKit harness demo) rather than screenshotted again. Worth Jason's
    own look before calling it done.
+
+   **A second real regression, found the same day from a screenshot**:
+   Jason annotated a screenshot of Edit Show with four boxes — red
+   (alignment off across the Browser row), yellow (an empty bar that
+   "just shouldn't exist"), green (extra space that shouldn't be there),
+   blue (the collection picker + item count + Search + "In this show"
+   label, which "should all be affected the same by the scroll behind") —
+   and asked to leave the thin grip/divider strip solid for now. Root
+   cause, confirmed with Jason before fixing ("Yes, that's it"): `detail`
+   carries `scrollsUnderTitleBar: true` unconditionally, right for the
+   plain Library grid (whose own translucent strip stands in for a title
+   bar), but wrong the instant a show is open — `ShowView` has a genuine
+   native `.toolbar`/`.navigationTitle` (the Edit Slides/Edit Show
+   picker, Play buttons) claiming real window-chrome space of its own, so
+   stretching `detail` up into that same strip doubled up: the toolbar's
+   own reserved height plus the pane's extra height, producing exactly
+   the gap and misalignment in the screenshot.
+
+   **Fixed by making `scrollsUnderTitleBar` runtime-toggleable in
+   PaneKit**, not just a static per-pane flag on the tree — the same
+   pattern as `contentExtent`/`setContentExtent`
+   (`PaneController.swift`): a new `scrollsUnderTitleBarOverride:
+   [String: Bool]` dictionary, `nil` for a pane meaning "use the tree's
+   own static value," and `setScrollsUnderTitleBar(_:for:)` to set or
+   clear it, each one a `container?.needsLayout = true`, never saved.
+   `PaneLayout.layout(...)` takes the override as a parameter now and
+   consults it (`scrollsUnderTitleBarOverride[pane.id] ?? pane
+   .scrollsUnderTitleBar`) in its post-process loop instead of reading
+   the tree directly; `PaneContainerView.layout()` passes `controller
+   .scrollsUnderTitleBarOverride` through. Two new PaneKit unit tests
+   cover both directions (a statically-true pane suppressed, a
+   statically-false one extended). `ShowView` calls `model.mainPanes
+   .setScrollsUnderTitleBar(false, for: "detail")` in `.onAppear` and
+   clears it (`nil`) in `.onDisappear`, so the override applies for
+   exactly as long as a show is open in either mode and the plain grid
+   gets its title-bar extension back the moment the show closes.
+
+   **Confirmed on a scratch copy**: Edit Show now has no empty gap and no
+   misaligned Browser row — the toolbar, the Browser's collection picker/
+   Search/"In this show" row and the storyline below all read as one
+   flush layout. The plain Library grid's own scroll-behind title bar
+   (unaffected by the override, since it's cleared outside a show) still
+   works exactly as before. The blue-box translucency treatment itself
+   (giving that Browser cluster the same scroll-behind material the
+   filter bar and Catalog bars use) and the grip-strip exclusion are
+   **not done** — this fix only settles the alignment regression, per
+   Jason's "leave the handle bar solid for now."
 3. The "Smart View" preference (panes open and close by context — on by
    default — or keep your own choices; `spec/plan.md`, "Slides as mini
    movies") — **wants fleshing out**: today it's a one-paragraph sketch,

@@ -210,7 +210,33 @@ rest below is open, not next, roughly in the order Jason raised them:
    window. The three-channel engine is kept, unwired, as the seed for a
    future Slide Editor tool. **One known glitch, unresolved**: a thin
    sliver of content still peeks through at 100% opacity, right at the
-   bar/grid seam. Left, in the order Jason chose to take them: his own
+   bar/grid seam. The header bar got the same real scroll-under treatment
+   after all (`Pane.scrollsUnderTitleBar`, PaneKit), and the Catalog's own
+   bars (Library/Collections header, New+ footer) were pinned and given
+   the same translucency once the sidebar migrated off `List` to a plain
+   `ScrollView` with a new, genuinely reusable PaneKit primitive
+   (`PaneListNavigation`, arrow-key stepping + scroll-into-view for any
+   `List`-free selection list) — `.withinWindow` blending measured flat
+   with **zero** vibrancy over a real `NSTableView`, confirmed two
+   independent ways, which is why the migration was necessary rather than
+   a quick fix. A leftover `.sidebar`/`.behindWindow` call site from
+   before that migration caused a real "no transparency" bug, fixed (the
+   convenience itself removed, nothing needs it now). **A second real
+   regression, found the same day from an annotated screenshot**: Edit
+   Show's alignment broke because `detail`'s `scrollsUnderTitleBar` static
+   flag fought with `ShowView`'s own genuine `.toolbar` — fixed by making
+   the flag runtime-toggleable in PaneKit (`PaneController
+   .setScrollsUnderTitleBar`, an override consulted by `PaneLayout.layout`
+   alongside the tree's static value), off for as long as a show is open,
+   restored the moment it closes. Confirmed on a scratch copy: Edit Show's
+   Browser row reads flush now, the Library grid's own scroll-behind title
+   bar is unaffected. **Left**: applying the same scroll-behind
+   translucency to Edit Show's own Browser cluster (collection picker,
+   item count, Search, "In this show" label — Jason's blue box), while
+   keeping the thin grip/divider strip solid ("leave the handle bar solid
+   for now"); a DisclosureGroup random-collapse bug found while stress-
+   testing the migration (documented, not diagnosed); an arrow-key monitor
+   race between the sidebar and the grid (documented, not fixed); his own
    tuning of the drawer-sensitivity dials by feel; the filter-bar seam
    glitch and his own tuning of that slider; then fleshing out the
    **"Smart View"** preference.

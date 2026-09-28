@@ -367,4 +367,19 @@ final class PaneLayoutTests: XCTestCase {
         XCTAssertEqual(r.panes["files"], CGRect(x: 201, y: 40, width: 799, height: 560))
         XCTAssertEqual(r.dividers["window"], CGRect(x: 200, y: 40, width: 1, height: 560))
     }
+
+    func testScrollsUnderTitleBarOverrideReplacesTheStaticFlag() {
+        let tree: PaneNode = .split("window", .horizontal, sized: .first, size: 200, range: 150...300,
+                                    .pane("sidebar", title: "Sidebar", scrollsUnderTitleBar: true),
+                                    .pane("files", title: "Files"))
+        // false overrides a statically-true pane back to not extending —
+        // Edit Show's own native toolbar over `detail`, say.
+        let suppressed = PaneLayout.layout(tree, in: rect, state: PaneKitState(), titleBarHeight: 40,
+                                           scrollsUnderTitleBarOverride: ["sidebar": false])
+        XCTAssertEqual(suppressed.panes["sidebar"], CGRect(x: 0, y: 40, width: 200, height: 560))
+        // true overrides a statically-false pane to extend.
+        let extended = PaneLayout.layout(tree, in: rect, state: PaneKitState(), titleBarHeight: 40,
+                                         scrollsUnderTitleBarOverride: ["files": true])
+        XCTAssertEqual(extended.panes["files"], CGRect(x: 201, y: 0, width: 799, height: 600))
+    }
 }

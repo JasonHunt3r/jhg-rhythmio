@@ -457,6 +457,39 @@ seam glitch already known on the filter bar (`spec/windows.md`) shows up
 the same way across this taller region, or a real hand's feel for the
 combined strip.
 
+**Runtime override, added 2026-09-27**: `scrollsUnderTitleBar` on the
+tree is static, right for a pane that always hosts the same kind of
+content — wrong for one that doesn't. `AppModel.mainPanes`' `detail` pane
+hosts the plain Library grid (extend: its own translucent strip stands in
+for a title bar) or a `ShowView` (don't: it has a genuine native
+`.toolbar` of its own, and stretching `detail` up into the same strip on
+top of that toolbar produced an empty gap and a misaligned Browser row —
+found from a screenshot Jason annotated). Fixed the same way
+`contentExtent` already handles a split's own runtime state
+(`PaneController`, never saved, one small dictionary):
+
+- `PaneController.scrollsUnderTitleBarOverride: [String: Bool]` — `nil`
+  for a pane not in it means "use the tree's own static value."
+- `PaneController.setScrollsUnderTitleBar(_ on: Bool?, for: String)` —
+  sets or clears one pane's entry, `container?.needsLayout = true`.
+- `PaneLayout.layout`'s new `scrollsUnderTitleBarOverride` parameter: the
+  post-process loop reads `scrollsUnderTitleBarOverride[pane.id] ?? pane
+  .scrollsUnderTitleBar` instead of the tree's flag directly.
+  `PaneContainerView.layout()` passes `controller
+  .scrollsUnderTitleBarOverride` through. Two unit tests
+  (`testScrollsUnderTitleBarOverrideReplacesTheStaticFlag`) pin both
+  directions: `false` suppressing a statically-true pane, `true`
+  extending a statically-false one.
+
+`ShowView` calls `setScrollsUnderTitleBar(false, for: "detail")` in
+`.onAppear` and clears it (`nil`) in `.onDisappear`, so the override holds
+for exactly as long as a show is open, in either Edit Slides or Edit
+Show, and the grid gets its title-bar extension back the instant the show
+closes. Confirmed on a scratch copy: Edit Show's toolbar, Browser row and
+storyline all read as one flush layout now; the Library grid's own
+scroll-behind title bar, unaffected (the override only applies inside a
+show), still works exactly as it did before this fix.
+
 ## Arrow-key navigation for a hand-rolled list (added 2026-09-27)
 
 `PaneListNavigation` gives a plain `ScrollView` the one thing

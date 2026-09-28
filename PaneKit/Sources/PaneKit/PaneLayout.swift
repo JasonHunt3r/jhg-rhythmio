@@ -42,17 +42,25 @@ public enum PaneLayout {
     /// that reserved strip afterward — a pure post-process, kept out of
     /// `place`'s own recursion the same way `Split.linkedAncestor` and
     /// `nearIsRigid` are (`PaneContainerView.enableContentUnderTitleBar`).
+    /// `scrollsUnderTitleBarOverride`: a pane's own entry, if present,
+    /// replaces its static `scrollsUnderTitleBar` for this one pass — for a
+    /// pane that hosts different content at different times, some of which
+    /// has its own real title-bar toolbar already and shouldn't also have
+    /// the pane extending under it (`PaneController.setScrollsUnderTitleBar`,
+    /// 2026-09-27).
     public static func layout(_ node: PaneNode, in rect: CGRect, state: PaneKitState,
                               peek: [String: CGFloat] = [:],
                               contentExtent: [String: CGFloat] = [:],
-                              titleBarHeight: CGFloat = 0) -> PaneLayoutResult {
+                              titleBarHeight: CGFloat = 0,
+                              scrollsUnderTitleBarOverride: [String: Bool] = [:]) -> PaneLayoutResult {
         let placeRect = titleBarHeight > 0
             ? CGRect(x: rect.minX, y: rect.minY + titleBarHeight, width: rect.width, height: rect.height - titleBarHeight)
             : rect
         var result = PaneLayoutResult()
         place(node, in: placeRect, state: state, peek: peek, contentExtent: contentExtent, into: &result)
         if titleBarHeight > 0 {
-            for pane in node.panes where pane.scrollsUnderTitleBar {
+            for pane in node.panes
+            where scrollsUnderTitleBarOverride[pane.id] ?? pane.scrollsUnderTitleBar {
                 guard let frame = result.panes[pane.id] else { continue }
                 result.panes[pane.id] = CGRect(x: frame.minX, y: frame.minY - titleBarHeight,
                                                width: frame.width, height: frame.height + titleBarHeight)

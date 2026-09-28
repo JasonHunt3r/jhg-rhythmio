@@ -41,6 +41,16 @@ public final class PaneController {
     /// saved — the app remeasures it whenever its content's natural size
     /// changes and calls `setContentExtent`.
     @ObservationIgnored private(set) var contentExtent: [String: CGFloat] = [:]
+    /// Overrides a pane's own static `scrollsUnderTitleBar` at runtime, for
+    /// whichever pane hosts different content at different times — some of
+    /// which has its own real title-bar toolbar already (`ShowTools
+    /// .ShowView`'s native `.toolbar`), and shouldn't also have the pane
+    /// extending under it (found 2026-09-27: an empty gap and a cascade of
+    /// misaligned content, Edit Show's own toolbar and the pane's extra
+    /// height both claiming the same strip). `nil` for a pane not in this
+    /// dictionary means "use the tree's own static value" — set once, most
+    /// panes never need this at all. Never saved.
+    @ObservationIgnored private(set) var scrollsUnderTitleBarOverride: [String: Bool] = [:]
     @ObservationIgnored private let store: UserDefaults
     private var storeKey: String { "PaneKit.\(id)" }
 
@@ -135,6 +145,14 @@ public final class PaneController {
     public func setContentExtent(_ value: CGFloat, for splitID: String) {
         guard contentExtent[splitID] != value else { return }
         contentExtent[splitID] = value
+        container?.needsLayout = true
+    }
+
+    /// See `scrollsUnderTitleBarOverride`. `nil` clears the override,
+    /// falling back to the pane's own static value from the tree.
+    public func setScrollsUnderTitleBar(_ on: Bool?, for paneID: String) {
+        guard scrollsUnderTitleBarOverride[paneID] != on else { return }
+        scrollsUnderTitleBarOverride[paneID] = on
         container?.needsLayout = true
     }
 

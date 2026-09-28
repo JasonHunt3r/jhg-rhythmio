@@ -124,7 +124,8 @@ public final class PaneContainerView: NSView {
         super.layout()
         let result = PaneLayout.layout(controller.root, in: bounds, state: controller.displayState,
                                        peek: controller.peek, contentExtent: controller.contentExtent,
-                                       titleBarHeight: titleBarHeight)
+                                       titleBarHeight: titleBarHeight,
+                                       scrollsUnderTitleBarOverride: controller.scrollsUnderTitleBarOverride)
         lastLayout = result
         // A drawer sliding (`PaneClutch`): its pane's content keeps the
         // size it's heading for and slides, flush with the divider.

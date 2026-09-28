@@ -88,6 +88,14 @@ struct ShowView: View {
         .focusedSceneValue(\.requestSlideGetInfo, requestSlideGetInfo)
         .onAppear {
             if let id = model.devSelection { session.selection = [id]; model.devSelection = nil }
+            // `detail`'s own `scrollsUnderTitleBar` is right for the plain
+            // Library grid, whose own translucent strip stands in for a
+            // title bar — but a show has its own native `.toolbar` above
+            // (the Edit Slides/Edit Show picker, right here), and stretching
+            // `detail` up into that same strip on top of it produced the
+            // misalignment and empty gap Jason found 2026-09-27. Off for as
+            // long as a show's open; `onDisappear` gives it back.
+            model.mainPanes.setScrollsUnderTitleBar(false, for: "detail")
         }
         // The show's engine lives as long as the show is open, in either
         // mode (item 33, Jason 2026-09-26): Edit Slides' timeline pane
@@ -123,7 +131,10 @@ struct ShowView: View {
                   let first = firstSelectedIndex else { return }
             engine.go(to: first)
         }
-        .onDisappear { model.closeShowSession() }
+        .onDisappear {
+            model.closeShowSession()
+            model.mainPanes.setScrollsUnderTitleBar(nil, for: "detail")
+        }
     }
 
     private var firstSelectedIndex: Int? {
