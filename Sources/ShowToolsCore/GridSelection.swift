@@ -65,9 +65,23 @@ public enum GridSelection {
     /// stay put and the range unions to the new position, exactly as
     /// `shiftClick` there would — so a run of ⇧-arrows grows or shrinks
     /// the same range a run of ⇧-clicks would.
+    ///
+    /// `selected`, when given, is the selection now. If the cursor isn't in
+    /// it, the selection was made some other way (⌘A, Show in Library,
+    /// another view's click) and the step starts from its first item in
+    /// `items` instead, re-anchored there — not from a stale cursor, or from
+    /// nowhere, which jumped to the first item (found 2026-10-02).
     public static func step<ID: Hashable>(from cursor: ID?, by delta: Int, anchor: ID?, base: Set<ID>,
-                                           in items: [ID], extend: Bool) -> Result<ID> {
+                                           in items: [ID], extend: Bool, selected: Set<ID>? = nil) -> Result<ID> {
         guard !items.isEmpty else { return Result(selected: [], anchor: nil, base: [], cursor: nil) }
+        var cursor = cursor, anchor = anchor, base = base
+        if let selected, !selected.isEmpty, !(cursor.map(selected.contains) ?? false) {
+            cursor = items.first(where: selected.contains)
+            if !(anchor.map(selected.contains) ?? false) {
+                anchor = cursor
+                base = selected
+            }
+        }
         let from = cursor.flatMap { items.firstIndex(of: $0) }
         let to: Int
         if let from {

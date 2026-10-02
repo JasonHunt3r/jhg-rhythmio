@@ -244,7 +244,8 @@ struct EditShowTimelinePane: View {
         case .slides:
             let items = timeline.slides.map(\.slide.id)
             let r = GridSelection.step(from: session.slideCursor, by: delta, anchor: session.slideAnchor,
-                                       base: session.slideAnchorBase, in: items, extend: extend)
+                                       base: session.slideAnchorBase, in: items, extend: extend,
+                                       selected: session.selection)
             session.selection = r.selected
             session.slideAnchor = r.anchor
             session.slideAnchorBase = r.base

@@ -116,4 +116,33 @@ final class GridSelectionTests: XCTestCase {
         let r = GridSelection.step(from: 5, by: 1, anchor: nil, base: [], in: items, extend: true)
         XCTAssertEqual(r.selected, [6])
     }
+
+    /// 2026-10-02: slide 2 selected by something other than the arrows (no
+    /// cursor) — → went to slide 1, the first item, not slide 3.
+    func testStepStartsFromASelectionMadeElsewhere() {
+        XCTAssertEqual(GridSelection.step(from: nil, by: 1, anchor: nil, base: [], in: items,
+                                          extend: false, selected: [2]).selected, [3])
+        // A stale cursor, left from before the selection changed.
+        XCTAssertEqual(GridSelection.step(from: 8, by: -1, anchor: 8, base: [8], in: items,
+                                          extend: false, selected: [5]).selected, [4])
+        // ⇧ extends from it, re-anchored there.
+        let r = GridSelection.step(from: 8, by: 1, anchor: 8, base: [8], in: items,
+                                   extend: true, selected: [5])
+        XCTAssertEqual(r.selected, [5, 6])
+        XCTAssertEqual(r.anchor, 5)
+    }
+
+    /// ⌘A then ⇧→ keeps everything (the base is the whole selection).
+    func testExtendingAfterSelectAllKeepsIt() {
+        let all = Set(items)
+        let r = GridSelection.step(from: nil, by: 1, anchor: nil, base: all, in: items,
+                                   extend: true, selected: all)
+        XCTAssertEqual(r.selected, all)
+    }
+
+    /// A cursor still in the selection is used as before.
+    func testStepKeepsACursorStillSelected() {
+        XCTAssertEqual(GridSelection.step(from: 5, by: 1, anchor: 3, base: [3], in: items,
+                                          extend: false, selected: [3, 4, 5]).selected, [6])
+    }
 }

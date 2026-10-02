@@ -2274,7 +2274,7 @@ struct LibraryGridView: View {
         let items = visible.map(\.id)
         guard !items.isEmpty else { return false }
         let r = GridSelection.step(from: cursor, by: delta, anchor: anchor, base: selectionBase,
-                                    in: items, extend: extend)
+                                    in: items, extend: extend, selected: selection)
         selection = r.selected
         anchor = r.anchor
         selectionBase = r.base
