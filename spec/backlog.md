@@ -25,7 +25,6 @@ where it came from.
 
 Claude can do these.
 
-- **B-01** · P0 · PaneKit — Popping a pane out, then closing its window, loses the content: the inspector's drawer comes back empty, and the timeline never comes back. Likely one root cause; fix both together. `spec/panekit.md`, "Pane ⇄ panel". (Shakedown 2026-09-28.)
 - **B-02** · P1 · Range — Dragging a range end (I or O) runs faster than the mouse, so the marker zips away. Real, not the tool artifact the old status suspected. `spec/range-and-ruler.md`. (Shakedown 2026-09-28.)
 - **B-03** · P1 · Keys — In Edit Show the arrow keys go to the area last clicked, or the active area; they're no longer reserved for the timeline (Jason, 2026-09-28, reversing 2026-09-24). Includes the race found 2026-09-27: window-wide key handlers (the grid's, the timeline's, the browser's, `PaneArrowKeys`) claim the arrows before the focused list, so the grid's selection sometimes moved instead of the sidebar's, and the grid's `firstResponder is NSTableView` guard is now always true since the sidebar left `List`. Also the talk Jason asked for 2026-09-27: which area owns the arrows when, and how you can tell. `spec/conventions.md` §2; `spec/window-behavior.md`, "The Transparency module"; `spec/listkit.md`, "Known limits".
 - **B-04** · P1 · Inspector — The inspector shows nothing for a selected file that isn't in the show (the stars still work). (Shakedown 2026-09-28.)

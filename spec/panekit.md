@@ -638,7 +638,9 @@ app gets it.
   - a menu command (View ▸ Show Inspector in Window, say);
   - a button on the edge handle;
   - **putting it back:** the window's own button, the menu command, or
-    closing the window, if the pane asks for that.
+    closing the window, if the pane asks for that. Closing the window
+    returns the content in `windowClosed` itself, before the state
+    changes (B-01, fixed 2026-10-02: it used to stay in the closed window).
   - Dragging a pane out by its edge handle, and back in, is a candidate
     to try in the harness.
 - **Remembered between launches:** which panes are out, and where their

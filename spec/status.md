@@ -14,7 +14,7 @@ Repo: `~/Projects/ShowTools`, pushed to **github.com/JasonHunt3r/jhg-showtools**
 ## Where it stands
 
 **Everything planned is built**, and more has come from Jason's use of it.
-**350 tests** (337 core + 13 BGTools); PaneKit has its own 55, ListKit its
+**350 tests** (337 core + 13 BGTools); PaneKit has its own 56, ListKit its
 own 24. **Library schema 14.**
 
 | Phase | State | Spec |
@@ -60,14 +60,14 @@ B-33, B-34.
 
 ## What's next
 
-**Not chosen yet since the 2026-09-28 shakedown.** By priority, Claude's
-suggestion:
+B-01 (a popped-out pane losing its content when its window closes) is
+fixed and checked in a test copy, not yet installed; the two shakedown
+rows that found it wait for Jason. By priority, Claude's suggestion next:
 
-1. **B-01** (P0): a popped-out pane loses its content when its window closes.
-2. **B-03** (P1): arrow keys follow focus in Edit Show.
-3. **B-04** (P1): the inspector for a file that isn't in the show.
-4. **The range, B-02, B-05, B-06** (P1), then B-11.
-5. **BGTools, B-14 to B-16** (P1).
+1. **B-03** (P1): arrow keys follow focus in Edit Show.
+2. **B-04** (P1): the inspector for a file that isn't in the show.
+3. **The range, B-02, B-05, B-06** (P1), then B-11.
+4. **BGTools, B-14 to B-16** (P1).
 
 Everything else: `spec/backlog.md`.
 
@@ -89,7 +89,7 @@ items, so they are left alone.
 
 ```sh
 swift test                                  # 337 core + 13 BGTools tests
-(cd PaneKit && swift test)                  # 55 PaneKit tests
+(cd PaneKit && swift test)                  # 56 PaneKit tests
 (cd ListKit && swift test)                  # 24 ListKit tests
 ./make-app.sh                               # → build/ShowTools.app (signed, team P82S39V2KJ)
 tools/make-test-library.sh <scratch>/STTest # scratch library + generated media
