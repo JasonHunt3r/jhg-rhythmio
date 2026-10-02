@@ -90,7 +90,7 @@ Every schema upgrade is additive and tested by opening a library of the
 version before. Before an upgrade the database is copied to
 `Library.sqlite.v<N>.bak`.
 
-**Installed:** `~/Applications/RhythmIO.app` from the rename (`rename/rhythmio`),
+**Installed:** `~/Applications/RhythmIO.app` at `88aa89b` (the inspector batch),
 signed with Jason's team. Every reinstall (`install.sh`) quits the real
 RhythmBG and doesn't restart it: start it again from RhythmBG ▸ Desktop Show….
 
