@@ -4,8 +4,8 @@
 //
 // A window laid out by PaneKit with coloured dummy panes, in three shapes
 // (the Layout menu): Finder's two panes, Mail's three columns, and
-// ShowTools' own layout, the demanding example. Nothing here knows about
-// ShowTools beyond that one tree; PaneKit is meant for any Mac app.
+// RhythmIO' own layout, the demanding example. Nothing here knows about
+// RhythmIO beyond that one tree; PaneKit is meant for any Mac app.
 //
 // What to check (Claude Code on the Mac runs it; Jason feels it):
 // - Dragging each divider resizes only the two panes beside it; a window
@@ -14,7 +14,7 @@
 //   stays on the edge. Drag the handle out, or double-click it, to reopen.
 //   Double-clicking a divider closes its pane.
 // - View ▸ "<pane> in Its Own Window" pops a pane out (panels float;
-//   ShowTools' Timeline is an ordinary window). The main window closes up.
+//   RhythmIO' Timeline is an ordinary window). The main window closes up.
 //   Closing the pane's window puts it back in its slot, at its old size.
 // - Quit and relaunch: sizes, closed panes, popped-out panes and their
 //   window positions all come back.
@@ -56,13 +56,13 @@ enum Keep {
 
 /// The three shapes: one primitive, nested three ways.
 enum Shape: String, CaseIterable {
-    case finder, mail, showTools, headerHandle, titleBar
+    case finder, mail, rhythmIO, headerHandle, titleBar
 
     var title: String {
         switch self {
         case .finder: "Finder: two panes"
         case .mail: "Mail: three columns"
-        case .showTools: "ShowTools: timeline under everything"
+        case .rhythmIO: "RhythmIO: timeline under everything"
         case .headerHandle: "A header bar as the handle"
         case .titleBar: "A pane under the title bar"
         }
@@ -91,7 +91,7 @@ enum Shape: String, CaseIterable {
                    .split("reading", .horizontal, sized: .first, size: 340, range: 240...520, title: "Message List",
                           .pane("list", title: "Message List", popOut: .panel),
                           .pane("message", title: "Message", minSize: 300)))
-        case .showTools:
+        case .rhythmIO:
             .split("window", .vertical, sized: .second, size: 240, range: 120...600, title: "Timeline",
                    .split("top", .horizontal, sized: .first, size: 219, range: 180...360, title: "Library",
                           .pane("library", title: "Library", popOut: .panel),
@@ -102,7 +102,7 @@ enum Shape: String, CaseIterable {
                                farSize: 320, farRange: 260...480)),
                    .pane("timeline", title: "Timeline", popOut: .window))
         case .headerHandle:
-            // ShowTools' viewer drawer over a grid: the grid's own header
+            // RhythmIO' viewer drawer over a grid: the grid's own header
             // bar is the drawer's handle (`PaneHandleStyle.external`).
             .split("drawer", .vertical, sized: .first, size: 220, range: 80...500, title: "Viewer",
                    handle: .external,
@@ -134,7 +134,7 @@ final class HarnessDelegate: NSObject, NSApplicationDelegate {
         window.setFrameAutosaveName("PaneHarnessMain")
         if window.frame.origin == .zero { window.center() }
         buildMenus()
-        let saved = UserDefaults.standard.string(forKey: "PaneHarness.shape").flatMap(Shape.init) ?? .showTools
+        let saved = UserDefaults.standard.string(forKey: "PaneHarness.shape").flatMap(Shape.init) ?? .rhythmIO
         show(saved)
         window.makeKeyAndOrderFront(nil)
         NSApp.activate()

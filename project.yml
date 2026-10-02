@@ -1,25 +1,25 @@
 # One Xcode project for both app bundles (spec/xcode-port.md).
 #
-# Everything real stays SwiftPM — ShowToolsCore, ShowToolsPlayback,
-# BGToolsCore, stcli and the tests are built and tested with `swift test`.
+# Everything real stays SwiftPM — RhythmIOCore, RhythmIOPlayback,
+# RhythmBGCore, mio and the tests are built and tested with `swift test`.
 # Only the bundles are built here, because a Control Center extension has
 # to be a real Xcode target to register:
 #
-#   ShowTools.app
-#     Contents/PlugIns/BGToolsControls.appex   the tiles
-#     Contents/Library/LoginItems/BGTools.app  the desktop player
+#   RhythmIO.app
+#     Contents/PlugIns/RhythmBGControls.appex   the tiles
+#     Contents/Library/LoginItems/RhythmBG.app  the desktop player
 #     Contents/Resources/Fonts/Bravura.otf
 #
 # Nesting was measured with tools/nest-probe: a tile in the host reaches
 # the nested helper by URL, and SMAppService registers it at login.
-#   ./make-app.sh   → build/ShowTools.app
-name: ShowTools
+#   ./make-app.sh   → build/RhythmIO.app
+name: RhythmIO
 options:
   bundleIdPrefix: com.jhg
   deploymentTarget:
     macOS: "14.0"
 packages:
-  ShowTools:
+  RhythmIO:
     path: .
   PaneKit:
     path: PaneKit
@@ -40,48 +40,48 @@ settings:
     ENABLE_HARDENED_RUNTIME: NO
     # Bump when a tile is added or renamed: Control Center caches them
     # (spec/xcode-port.md, "Caches lie").
-    CURRENT_PROJECT_VERSION: "3"
+    CURRENT_PROJECT_VERSION: "4"
     MARKETING_VERSION: "0.1"
 targets:
-  # The app. Its sources are the package's ShowToolsApp target, built here
+  # The app. Its sources are the package's RhythmIOApp target, built here
   # instead of by SwiftPM so the bundle is a real one.
-  ShowTools:
+  RhythmIO:
     type: application
     platform: macOS
     sources:
-      - path: Sources/ShowToolsApp
+      - path: Sources/RhythmIOApp
       - path: Resources/Fonts
         type: folder
         buildPhase: resources
       # The app icon: an Icon Composer document (open it in Icon Composer
-      # to edit). Its three layers were cut from Resources/AppIcon.svg.
-      - path: Resources/AppIcon.icon
+      # to edit), made by Jason for the rename to RhythmIO.
+      - path: Resources/RhythmIO.icon
     dependencies:
-      - package: ShowTools
-        product: ShowToolsCore
-      - package: ShowTools
-        product: ShowToolsPlayback
+      - package: RhythmIO
+        product: RhythmIOCore
+      - package: RhythmIO
+        product: RhythmIOPlayback
       - package: PaneKit
         product: PaneKit
       - package: ListKit
         product: ListKit
-      - target: BGToolsControls
+      - target: RhythmBGControls
         embed: true
-      - target: BGTools
+      - target: RhythmBG
         embed: true
         copy:
           destination: wrapper
           subpath: Contents/Library/LoginItems
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.jhg.showtools
-        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        PRODUCT_BUNDLE_IDENTIFIER: com.jhg.rhythmio
+        ASSETCATALOG_COMPILER_APPICON_NAME: RhythmIO
         GENERATE_INFOPLIST_FILE: YES
         MACOSX_DEPLOYMENT_TARGET: "14.0"
     info:
-      path: Sources/ShowToolsApp/Info.plist
+      path: Sources/RhythmIOApp/Info.plist
       properties:
-        CFBundleDisplayName: ShowTools
+        CFBundleDisplayName: RhythmIO
         LSMinimumSystemVersion: "14.0"
         NSHighResolutionCapable: true
         NSSupportsAutomaticTermination: false
@@ -89,59 +89,59 @@ targets:
         ATSApplicationFontsPath: Fonts
         # Files dragged within the app (from the Collection Browser).
         UTExportedTypeDeclarations:
-          - UTTypeIdentifier: com.jhg.showtools.items
-            UTTypeDescription: ShowTools library files
+          - UTTypeIdentifier: com.jhg.rhythmio.items
+            UTTypeDescription: RhythmIO library files
             UTTypeConformsTo: [public.data]
 
-  # The desktop player, nested in ShowTools above (spec/bgtools.md).
-  BGTools:
+  # The desktop player, nested in RhythmIO above (spec/rhythmbg.md).
+  RhythmBG:
     type: application
     platform: macOS
-    sources: [BGTools/App]
+    sources: [RhythmBG/App]
     dependencies:
-      - package: ShowTools
-        product: ShowToolsCore
-      - package: ShowTools
-        product: ShowToolsPlayback
-      - package: ShowTools
-        product: BGToolsCore
+      - package: RhythmIO
+        product: RhythmIOCore
+      - package: RhythmIO
+        product: RhythmIOPlayback
+      - package: RhythmIO
+        product: RhythmBGCore
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.jhg.showtools.bgtools
+        PRODUCT_BUNDLE_IDENTIFIER: com.jhg.rhythmbg
         GENERATE_INFOPLIST_FILE: YES
         MACOSX_DEPLOYMENT_TARGET: "26.0"
     info:
-      path: BGTools/App/Info.plist
+      path: RhythmBG/App/Info.plist
       properties:
-        CFBundleDisplayName: BGTools
+        CFBundleDisplayName: RhythmBG
         LSUIElement: true
         CFBundleURLTypes:
-          - CFBundleURLName: com.jhg.showtools.bgtools
-            CFBundleURLSchemes: [bgtools]
+          - CFBundleURLName: com.jhg.rhythmbg
+            CFBundleURLSchemes: [rhythmbg]
 
   # The Control Center tiles. An extension's id must sit under its host's,
-  # so this is com.jhg.showtools.bgcontrols, not …bgtools.controls; the
+  # so this is com.jhg.rhythmio.bgcontrols, not …rhythmbg.controls; the
   # tiles' `kind` strings are unchanged, so their state carries over.
-  BGToolsControls:
+  RhythmBGControls:
     type: app-extension
     platform: macOS
-    sources: [BGTools/Controls]
+    sources: [RhythmBG/Controls]
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.jhg.showtools.bgcontrols
+        PRODUCT_BUNDLE_IDENTIFIER: com.jhg.rhythmio.bgcontrols
         GENERATE_INFOPLIST_FILE: YES
-        INFOPLIST_KEY_CFBundleDisplayName: BGTools
+        INFOPLIST_KEY_CFBundleDisplayName: RhythmBG
         MACOSX_DEPLOYMENT_TARGET: "26.0"
     info:
-      path: BGTools/Controls/Info.plist
+      path: RhythmBG/Controls/Info.plist
       properties:
-        CFBundleDisplayName: BGTools
+        CFBundleDisplayName: RhythmBG
         NSExtension:
           NSExtensionPointIdentifier: com.apple.widgetkit-extension
     entitlements:
-      path: BGTools/Controls/BGToolsControls.entitlements
+      path: RhythmBG/Controls/RhythmBGControls.entitlements
       properties:
         com.apple.security.app-sandbox: true
-        # Reads the on/off state BGTools writes for the tiles; nothing else.
+        # Reads the on/off state RhythmBG writes for the tiles; nothing else.
         com.apple.security.temporary-exception.files.home-relative-path.read-only:
-          - /Library/Application Support/BGTools/
+          - /Library/Application Support/RhythmBG/

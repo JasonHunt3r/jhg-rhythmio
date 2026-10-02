@@ -38,7 +38,7 @@ final class PaneWindowController: NSObject, NSWindowDelegate {
             // `isFloatingPanel` panel floats over other apps too (measured:
             // it sat on top of a text editor). "Floats above the app's own
             // other windows" isn't a level AppKit offers directly; drop to
-            // `.normal` whenever ShowTools isn't the active app, and back to
+            // `.normal` whenever RhythmIO isn't the active app, and back to
             // `.floating` when it is, so it only out-ranks its own siblings.
             panel.level = NSApp.isActive ? .floating : .normal
         case .window, .none:

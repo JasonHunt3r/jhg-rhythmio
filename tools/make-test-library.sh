@@ -2,24 +2,24 @@
 # Build a scratch library with generated media and one show, for testing
 # without touching the real library in ~/Pictures.
 #
-#   tools/make-test-library.sh [dir]       (default: /tmp/ShowToolsTest)
+#   tools/make-test-library.sh [dir]       (default: /tmp/RhythmIOTest)
 #
-# Then:  open -n --env SHOWTOOLS_LIBRARY="$dir/TestLib.noindex" build/ShowTools.app
+# Then:  open -n --env RHYTHMIO_LIBRARY="$dir/TestLib.noindex" build/RhythmIO.app
 #
 # Media: 8 numbered photos in assorted sizes and orientations, a HEIC, a
 # 6-frame GIF and a 4-second video, all with a grid so Pan and Zoom motion shows.
 set -euo pipefail
 cd "$(dirname "$0")/.."
-DIR="${1:-/tmp/ShowToolsTest}"
+DIR="${1:-/tmp/RhythmIOTest}"
 mkdir -p "$DIR/media" "$DIR/bin"
 
 swiftc -O tools/gen-test-media.swift -o "$DIR/bin/gen-test-media"
 "$DIR/bin/gen-test-media" "$DIR/media"
 
-swift build --product stcli >/dev/null
+swift build --product mio >/dev/null
 rm -rf "$DIR/TestLib.noindex"
-.build/debug/stcli ingest "$DIR/TestLib.noindex" "$DIR/media"
-.build/debug/stcli show "$DIR/TestLib.noindex" "Test Show"
+.build/debug/mio ingest "$DIR/TestLib.noindex" "$DIR/media"
+.build/debug/mio show "$DIR/TestLib.noindex" "Test Show"
 
 # A different transition on most slides, and Auto Pan and Zoom, so a play-through
 # exercises the renderer.

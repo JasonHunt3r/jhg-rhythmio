@@ -45,11 +45,11 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.jhg.BGControlProbe.BGControls
         GENERATE_INFOPLIST_FILE: YES
-        INFOPLIST_KEY_CFBundleDisplayName: BGTools
+        INFOPLIST_KEY_CFBundleDisplayName: RhythmBG
     info:
       path: Controls/Info.plist
       properties:
-        CFBundleDisplayName: BGTools
+        CFBundleDisplayName: RhythmBG
         NSExtension:
           NSExtensionPointIdentifier: com.apple.widgetkit-extension
     entitlements:

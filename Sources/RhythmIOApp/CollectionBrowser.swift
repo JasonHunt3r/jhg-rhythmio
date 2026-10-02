@@ -1,0 +1,686 @@
+import SwiftUI
+import RhythmIOCore
+import RhythmIOPlayback
+import PaneKit
+import ListKit
+
+/// Edit Show's right-hand column: the show's collection, its files to build
+/// the show from (plan, 2b; Final Cut's browser). The show's own order lives
+/// in the storyline.
+///
+/// A bar at the top: the collection, a search field, a filter menu, and an
+/// arrow that opens (→) or closes (←) the inspector column. Files the show
+/// uses come first, in the order they first appear (so they reorder with
+/// the storyline), then a divider and the rest of the collection. Used
+/// files carry an orange line, as Final Cut marks used media. The top
+/// section lists *uses*: a file used more than once has an entry at each
+/// use, numbered (1, 2, 3…), because each use has its own settings.
+/// Selecting a use selects it in the show (the slide in the storyline, with
+/// its inspector, or the lane image with its bar), and the storyline's
+/// selection shows here in turn.
+/// With the list focused, Final Cut's keys add the selected files: **E**
+/// appends them to the show, **W** inserts them at the join nearest the
+/// playhead (splitting a still would only repeat it), **Q** places the first
+/// in the lane's images row at the playhead.
+struct CollectionBrowser: View {
+    let show: Show
+    let timeline: ShowTimeline
+    let engine: PlaybackEngine
+    let mutate: ShowMutator
+    @Binding var inspectorShown: Bool
+    /// The show's own selections: slides (storyline), lane images and songs.
+    @Binding var selection: Set<Int64>
+    @Binding var selectedOverlay: UUID?
+    @Binding var selectedSong: UUID?
+    @Environment(AppModel.self) private var model
+
+    /// What's picked in the list: uses in the show, or files not in it.
+    enum Pick: Hashable {
+        case slide(Int64)
+        case overlay(UUID)
+        case song(UUID)
+        case file(Int64)
+
+        /// A use of a file in the show, versus a file not (yet) in it.
+        var isUse: Bool { if case .file = self { false } else { true } }
+        var isSlide: Bool { if case .slide = self { true } else { false } }
+        var isOverlay: Bool { if case .overlay = self { true } else { false } }
+    }
+    @State private var picked: Set<Pick> = []
+    /// The pick added last: the viewer drawer's outlined file.
+    @State private var lastPicked: Pick?
+    @AppStorage(ViewerPlace.browser.modeKey) private var viewerMode: ViewerMode = .sideBySide
+    @Environment(\.undoManager) private var undoManager
+    /// ⌘Delete's question: files to delete from the library.
+    @State private var confirmDelete: [Int64]?
+    /// Whether the list has the keyboard (`ListNavigation`'s report).
+    @State private var listFocused = false
+    @State private var search = ""
+    @AppStorage("browserUse") private var use: UseFilter = .all
+    @AppStorage("browserMinRating") private var minRating = 0
+    /// View ▸ Show Ratings (U), shared with the Library grids.
+    @AppStorage("showRatings") private var showRatings = true
+
+    enum UseFilter: String, CaseIterable {
+        case all, used, unused
+        var title: String {
+            switch self {
+            case .all: "All Files"
+            case .used: "In This Show"
+            case .unused: "Not in This Show"
+            }
+        }
+    }
+
+    /// The show's own collection (`Show.collectionID`) — never changed by
+    /// the browser's switcher, only by whatever actually reassigns a show.
+    private var collection: MediaCollection? { show.collectionID.flatMap(model.collection) }
+    /// The collection the browser is actually listing (item 38's wider
+    /// switch, `spec/status.md`, "What's next"): the show's own by
+    /// default, or another one picked from the header — a transient view
+    /// choice like `groupFilter`, saved with the show's editor state but
+    /// never touching which collection the show belongs to. Falls back to
+    /// the show's own if the picked one's gone (deleted since).
+    private var browsingCollection: MediaCollection? {
+        show.editor.browserCollectionID.flatMap(model.collection) ?? collection
+    }
+    /// The browser's group filter (plan, "Groups inside collections"): view
+    /// state, saved with the show's editor state, not undoable. Scoped to
+    /// `browsingCollection`, not necessarily the show's own — ignored if it
+    /// names a group from some other collection (the browsed collection
+    /// changed since it was set).
+    private var groupFilter: MediaGroup? {
+        guard let id = show.editor.browserGroupID, let g = model.group(id), g.collectionID == browsingCollection?.id
+        else { return nil }
+        return g
+    }
+
+    /// Files the show uses: slides, lane images and songs alike.
+    private var used: Set<Int64> {
+        Set(show.slides.map(\.itemID) + show.overlays.map(\.itemID) + show.music.map(\.itemID))
+    }
+
+    /// One use of a file in the show: a slide (at its join), a lane image or
+    /// a song (at its start).
+    struct Use: Identifiable {
+        let item: MediaItem
+        /// The slide or lane image this use is.
+        let pick: Pick
+        /// 1 for its first appearance, 2 for the next…
+        let number: Int
+        /// How many times the show uses this file in all.
+        var of: Int
+        let time: Double
+        var id: Pick { pick }
+    }
+
+    /// Every use of every file, in the order they appear on screen.
+    private var uses: [Use] {
+        let songs = show.music.compactMap { c in model.itemsByID[c.itemID].map { ($0, Pick.song(c.id), c.start) } }
+        let appearances = (timeline.slides.map { ($0.item, Pick.slide($0.slide.id), $0.start) }
+                           + timeline.overlays.map { ($0.item, Pick.overlay($0.clip.id), $0.start) }
+                           + songs)
+            .sorted { $0.2 < $1.2 }
+        var seen: [Int64: Int] = [:]
+        var out: [Use] = appearances.map { item, pick, t in
+            seen[item.id, default: 0] += 1
+            return Use(item: item, pick: pick, number: seen[item.id]!, of: 0, time: t)
+        }
+        for i in out.indices { out[i].of = seen[out[i].item.id] ?? 1 }
+        return out
+    }
+
+    private func passes(_ item: MediaItem) -> Bool {
+        let needle = search.trimmingCharacters(in: .whitespaces).lowercased()
+        return (needle.isEmpty || item.fileName.lowercased().contains(needle))
+            && Rating.Filter.matches(item.rating, filter: minRating)
+    }
+
+    /// The show's uses of the browsed collection's files, in order of
+    /// appearance. Browsing a collection other than the show's own
+    /// (item 38) narrows this to whichever of the show's uses happen to
+    /// also be in that collection — most of the time none, since a show's
+    /// slides usually all come from its own collection.
+    private var usedEntries: [Use] {
+        guard use != .unused, let c = browsingCollection else { return [] }
+        let inCollection = Set(c.itemIDs)
+        let inGroup = groupFilter.map { Set($0.itemIDs) }
+        return uses.filter { inCollection.contains($0.item.id) && (inGroup?.contains($0.item.id) ?? true) && passes($0.item) }
+    }
+
+    /// The show's files, once each, in the order they first appear.
+    private var usedFiles: [MediaItem] { usedEntries.filter { $0.number == 1 }.map(\.item) }
+
+    /// The rest of the browsed collection, in the order the files were added.
+    private var unusedFiles: [MediaItem] {
+        guard use != .used, let c = browsingCollection else { return [] }
+        let used = used
+        let inGroup = groupFilter.map { Set($0.itemIDs) }
+        return c.itemIDs.filter { !used.contains($0) && (inGroup?.contains($0) ?? true) }
+            .compactMap { model.itemsByID[$0] }.filter(passes)
+    }
+
+    private var files: [MediaItem] { usedFiles + unusedFiles }
+
+    var body: some View {
+        // The viewer drawer above the list, its handle the grip strip under
+        // the bar (`spec/plan.md`, "The viewer drawer", step 4).
+        let viewer = model.browserViewer
+        PaneLayoutView(controller: viewer, content: [
+            "viewer": AnyView(SelectionViewer(
+                items: ordered(picked).compactMap { model.itemsByID[$0] },
+                primary: lastPicked.flatMap(itemID), mode: $viewerMode, model: model)),
+            "grid": AnyView(Group {
+                if collection == nil {
+                    VStack(spacing: 0) {
+                        topStack
+                        ContentUnavailableView("Not in a collection", systemImage: "rectangle.stack",
+                                               description: Text("This show doesn't belong to a collection."))
+                            .noMenuYet("Edit Show › Browser › empty (no collection)")
+                    }
+                } else {
+                    list
+                }
+            }
+            .environment(model)),
+        ])
+        // Y and ⇧Y anywhere in Edit Show but a text field: nothing else there
+        // uses them, and this is its only viewer. ← / → step the outline
+        // only while the list has the keyboard — elsewhere they're the
+        // timeline's.
+        .background(SingleKeys { event in
+            if event.charactersIgnoringModifiers?.lowercased() == "y" {
+                switch event.plainModifiers {
+                case []: viewer.toggle(ViewerLayout.split, animated: true); return true
+                case [.shift]: viewerMode = viewerMode.other; return true
+                default: return false
+                }
+            }
+            guard listFocused, viewer.isOpen(ViewerLayout.split), picked.count > 1,
+                  event.plainModifiers == [], event.keyCode == 123 || event.keyCode == 124 else { return false }
+            let picks = orderedPicks
+            lastPicked = Viewer.step(picks, from: lastPicked, by: event.keyCode == 123 ? -1 : 1)
+            return true
+        }.opacity(0).allowsHitTesting(false))
+    }
+
+    /// The picks in the list's own order (uses first, then files).
+    private var orderedPicks: [Pick] {
+        (usedEntries.map(\.pick) + unusedFiles.map { Pick.file($0.id) }).filter(picked.contains)
+    }
+
+    // MARK: The bar
+
+    private var bar: some View {
+        VStack(spacing: 6) {
+            HStack(spacing: 6) {
+                collectionSwitcher
+                Text("\(files.count)").foregroundStyle(.secondary).monospacedDigit()
+                Spacer(minLength: 4)
+                Button { inspectorShown.toggle() } label: {
+                    Image(systemName: inspectorShown ? "chevron.backward.2" : "chevron.forward.2")
+                        .frame(width: 18, height: 18)
+                }
+                .buttonStyle(.borderless)
+                .help(inspectorShown ? "Close the inspector (⌥⌘I)" : "Open the inspector (⌥⌘I)")
+            }
+            // Not the search row: its field keeps the text menu.
+            .noMenuYet("Edit Show › Browser › header (the collection's name)")
+            HStack(spacing: 6) {
+                HStack(spacing: 4) {
+                    Image(systemName: "magnifyingglass").foregroundStyle(.secondary)
+                    TextField("Search", text: $search)
+                        .textFieldStyle(.plain)
+                    if !search.isEmpty {
+                        Button { search = "" } label: { Image(systemName: "xmark.circle.fill") }
+                            .buttonStyle(.borderless)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                .padding(.horizontal, 6).padding(.vertical, 3)
+                .background(RoundedRectangle(cornerRadius: 5).fill(.quaternary.opacity(0.6)))
+                filterMenu
+            }
+        }
+        .font(.callout)
+        .padding(.horizontal, 10).padding(.vertical, 8)
+    }
+
+    /// The header, which list the browser is showing (item 38,
+    /// `spec/status.md`, "What's next": "the browser's header as a
+    /// switcher... clicked, a dropdown of which list to show" — the
+    /// worklist's own "Collections list column dropdown"). Built in two
+    /// passes, both 2026-09-26: first the show's own collection and its
+    /// groups (promoting the old, separate `groupFilterMenu` folder-icon
+    /// control into the title itself — "A show can draw from a group: the
+    /// browser gets a drop-down in its title to filter by group," plan,
+    /// decided); then every other collection in the library too, under
+    /// "Other Collections" — a transient view switch, like the group
+    /// filter (`browsingCollection`): it changes what the browser lists,
+    /// never which collection the show itself belongs to
+    /// (`Show.collectionID`, decided with Jason rather than guessed, since
+    /// the other reading — rebinding the show — would have made this an
+    /// undoable edit instead of a view choice). Plain text, no menu, when
+    /// there's nothing to switch to (no groups and no other collections).
+    @ViewBuilder private var collectionSwitcher: some View {
+        if let c = collection {
+            let browsing = browsingCollection ?? c
+            let groups = model.groups(inCollection: browsing.id)
+            let others = model.collections.filter { $0.id != browsing.id }
+            if groups.isEmpty && others.isEmpty {
+                Image(systemName: "rectangle.stack").foregroundStyle(.secondary)
+                Text(browsing.name).fontWeight(.semibold).lineLimit(1).truncationMode(.middle)
+            } else {
+                Menu {
+                    Button(browsing.name) { engine.updateEditor { $0.browserGroupID = nil } }
+                    if !groups.isEmpty {
+                        Divider()
+                        ForEach(groups) { g in
+                            Button(g.name) { engine.updateEditor { $0.browserGroupID = g.id } }
+                        }
+                    }
+                    if !others.isEmpty {
+                        Divider()
+                        Menu("Other Collections") {
+                            ForEach(others) { other in
+                                Button(other.name) {
+                                    engine.updateEditor {
+                                        $0.browserCollectionID = other.id == c.id ? nil : other.id
+                                        $0.browserGroupID = nil
+                                    }
+                                }
+                            }
+                        }
+                    }
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: groupFilter != nil ? "folder" : "rectangle.stack")
+                        Text(groupFilter?.name ?? browsing.name)
+                            .fontWeight(.semibold).lineLimit(1).truncationMode(.middle)
+                        Image(systemName: "chevron.down").font(.caption2).foregroundStyle(.secondary)
+                    }
+                }
+                .menuStyle(.borderlessButton)
+                .fixedSize()
+                .foregroundStyle(.primary)
+                .help("Switch which list the browser shows")
+            }
+        } else {
+            Image(systemName: "rectangle.stack").foregroundStyle(.secondary)
+            Text("No collection").fontWeight(.semibold)
+        }
+    }
+
+    private var filterMenu: some View {
+        let active = use != .all || Rating.Filter.isActive(minRating)
+        return Menu {
+            Picker("Show", selection: $use) {
+                ForEach(UseFilter.allCases, id: \.self) { Text($0.title).tag($0) }
+            }
+            .pickerStyle(.inline)
+            RatingFilterPicker(selection: $minRating)
+        } label: {
+            Image(systemName: active ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle")
+        }
+        .menuStyle(.borderlessButton)
+        .fixedSize()
+        .foregroundStyle(active ? Color.accentColor : .secondary)
+        .help("Filter the list")
+    }
+
+    // MARK: The list
+
+    /// The bar, the drawer's handle and their dividers: pinned over the top
+    /// of the list, which scrolls up under them (Jason, 2026-09-27), on the
+    /// same translucent background as the grid's filter bar — the handle
+    /// too, when Settings says "Include handles".
+    private var topStack: some View {
+        VStack(spacing: 0) {
+            bar
+            Divider()
+            // The drawer's handle: a slim strip with the pill, not the
+            // bar, whose controls take clicks (Jason, 2026-09-26).
+            DrawerGripStrip(controller: model.browserViewer, split: ViewerLayout.split, inStack: true)
+            Divider()
+        }
+        .background(ScrollBarBackground())
+    }
+
+    /// A plain `ScrollView`, not a `List`, since 2026-09-27: a `List`'s
+    /// `NSTableView` never shows through translucent bars laid over it
+    /// (`spec/listkit.md`), and Jason wanted the rows scrolling up under
+    /// the bar and the section headers. ListKit gives back what `List`
+    /// did: picking several (⌘/⇧-click, ⇧-arrows, ⌘A), the keys, a
+    /// double-click, the empty space picking nothing.
+    private var list: some View {
+        let top = usedEntries, rest = unusedFiles
+        return ScrollView {
+            LazyVStack(alignment: .leading, spacing: 0, pinnedViews: [.sectionHeaders]) {
+                if !top.isEmpty {
+                    Section {
+                        ForEach(top) { u in
+                            browserRow(u.item, pick: u.pick, used: true, use: u.of > 1 ? u.number : nil)
+                        }
+                    } header: {
+                        sectionHeader("In this show")
+                    }
+                }
+                if !rest.isEmpty {
+                    Section {
+                        ForEach(rest) { item in browserRow(item, pick: .file(item.id), used: false) }
+                    } header: {
+                        sectionHeader("Not in this show")
+                    }
+                }
+            }
+        }
+        .contextMenu {
+            NoMenuYetItems(place: "Edit Show › Browser › empty space", planned: "Import…, Add from Library…")
+        }
+        .listNavigation(selection: $picked, order: usedEntries.map(\.pick) + unusedFiles.map { .file($0.id) },
+                        primaryAction: { picks in
+                            // Double-clicking a use toggles the inspector, as
+                            // the order list before this did. A file not in
+                            // the show has nothing to inspect.
+                            if picks.contains(where: \.isUse) { inspectorShown.toggle() }
+                        },
+                        onFocusChange: { listFocused = $0 }, accessibilityLabel: "Browser")
+        // Outside the list's keyboard handling, so typing in the bar's
+        // search field never reaches the list's own keys (E appends).
+        .safeAreaInset(edge: .top, spacing: 0) { topStack }
+        // Delete by context (plan, Phase 3b): Delete takes the picked files
+        // out of this collection (undoable); ⌘Delete deletes them from the
+        // library, and asks first.
+        .onDeleteCommand {
+            guard let cid = collection?.id else { return }
+            let files = ordered(picked)
+            guard !files.isEmpty else { return }
+            model.removeFromCollection(files, cid, undo: undoManager)
+        }
+        // ⌘Delete never reaches onKeyPress inside a List; take it before
+        // AppKit does, as the Library grid does, while the list has the keys.
+        .background(SingleKeys { event in
+            guard listFocused, event.keyCode == 51, event.plainModifiers == [.command], !picked.isEmpty
+            else { return false }
+            confirmDelete = ordered(picked)
+            return true
+        }.opacity(0).allowsHitTesting(false))
+        .confirmationDialog(deleteTitle,
+                            isPresented: Binding(get: { confirmDelete != nil }, set: { if !$0 { confirmDelete = nil } }),
+                            presenting: confirmDelete) { ids in
+            Button(ids.count == 1 ? "Move to Trash" : "Move \(ids.count) Items to Trash", role: .destructive) {
+                model.deleteItems(ids, undo: undoManager)
+                picked = []
+            }
+        } message: { ids in
+            Text(deleteMessage(ids))
+        }
+        .onKeyPress(keys: ["e", "w", "q"]) { press in
+            guard press.modifiers.isEmpty, !picked.isEmpty,
+                  !(NSApp.keyWindow?.firstResponder is NSText) else { return .ignored }
+            let chosen = ordered(picked)
+            switch press.key {
+            case "e": append(chosen)
+            case "w": insertAtPlayhead(chosen)
+            default: placeAtPlayhead(chosen)
+            }
+            return .handled
+        }
+        // Item 20, Aperture's keys, as in the Library grid: 1–5, 0, 9, −
+        // and = rate the picked files. (U is MainView's, window-wide.)
+        .onKeyPress(characters: CharacterSet(charactersIn: "0123459-=")) { press in
+            guard press.modifiers.isEmpty, !(NSApp.keyWindow?.firstResponder is NSText) else { return .ignored }
+            guard let key = Rating.Key(press.characters), !picked.isEmpty else { return .ignored }
+            model.applyRatingKey(key, to: ordered(picked), undo: undoManager)
+            return .handled
+        }
+        // Picking one use selects it in the show; the show's selection comes
+        // back here. Each side only changes the other when they differ.
+        // A plain click only selects (item 6, `RhythmIO Feedback —
+        // Worklist for Next CC Session.md`); ⌥-click keeps the old jump-
+        // the-viewer behavior. `List(selection:)` gives no click info of
+        // its own, so this reads the modifier flags live, right after the
+        // click that changed `picked` set them — the same trick
+        // `StorylineView` and `EditShowView` already use for their own
+        // ⌥-click checks.
+        .onChange(of: picked) { old, p in
+            // The viewer's outline: the pick just added, or none once it's gone.
+            let added = p.subtracting(old)
+            if added.count == 1 { lastPicked = added.first }
+            else if let last = lastPicked, !p.contains(last) { lastPicked = nil }
+            // Deselecting here (a click on the list's empty space) lets go
+            // of the show's side too, or the inspector kept showing — and
+            // editing — a slide nothing looked selected any more (Jason,
+            // 2026-09-26).
+            if p.isEmpty {
+                if old.contains(where: \.isSlide), !selection.isEmpty { selection = [] }
+                if old.contains(where: \.isOverlay), selectedOverlay != nil { selectedOverlay = nil }
+                return
+            }
+            guard p.count == 1, let only = p.first else { return }
+            switch only {
+            case .slide(let id):
+                if selection != [id] { selection = [id] }
+                if NSEvent.modifierFlags.contains(.option), !engine.isPlaying { engine.showSlide(id: id) }
+            case .overlay(let id):
+                if selectedOverlay != id { selectedOverlay = id }
+            case .file, .song:
+                break
+            }
+        }
+        .onChange(of: selection, initial: true) { _, s in
+            // And the other way: slides deselected in the timeline drop
+            // their uses' highlight here.
+            guard !s.isEmpty else {
+                if picked.contains(where: \.isSlide) { picked = [] }
+                return
+            }
+            let want = Set(s.map { Pick.slide($0) })
+            if picked != want { picked = want }
+        }
+        .onChange(of: selectedOverlay) { _, o in
+            if let o, picked != [.overlay(o)] { picked = [.overlay(o)] }
+            if o == nil, picked.contains(where: \.isOverlay) { picked = [] }
+        }
+    }
+
+    /// The right-click menu for some picks: the whole pick when the row
+    /// clicked is in it, else just that row (as `NSTableView` does — the
+    /// pick itself doesn't change).
+    @ViewBuilder
+    private func menuItems(_ picks: Set<Pick>) -> some View {
+        let chosen = ordered(picks)
+        let pictureIDs = model.pictures(chosen)
+        let audioIDs = chosen.filter { model.itemsByID[$0]?.kind == .audio }
+        // The add items first (settled, spec/conventions.md §3, item 5).
+        if !pictureIDs.isEmpty {
+            Button("Append to Show  (E)") { append(chosen) }
+            Button("Insert at Playhead  (W)") { insertAtPlayhead(chosen) }
+            Button("Place in Images Row at Playhead  (Q)") { placeAtPlayhead(chosen) }
+        }
+        if !audioIDs.isEmpty {
+            Button("Place at Playhead") {
+                MusicRow.place(audioIDs, at: timeline.wrap(engine.now), model: model, mutate: mutate)
+            }
+        }
+        // A single use gets its own actions, distinct from the file
+        // picker actions above.
+        if picks.count == 1, let pick = picks.first, pick.isUse {
+            Divider()
+            Button("Select in Timeline") { selectInTimeline(pick) }
+            Button("Play from Here") { playFromHere(pick) }
+            Button("Remove from Show") { removeUse(pick) }
+        }
+        Divider()
+        if let id = chosen.first { Button("Show in Library") { showInLibrary(id, model: model, undoManager: undoManager) } }
+        if let cid = collection?.id {
+            Button("Remove from Collection") { model.removeFromCollection(chosen, cid, undo: undoManager) }
+        }
+        Button(chosen.count == 1 ? "Move to Trash…" : "Move \(chosen.count) Items to Trash…") {
+            confirmDelete = chosen
+        }
+    }
+
+    /// One row: the file's own `row`, as a ListKit row — picked by the
+    /// list's clicks, dragged as the whole pick when it's in it.
+    private func browserRow(_ item: MediaItem, pick: Pick, used: Bool, use: Int? = nil) -> some View {
+        row(item, used: used, use: use)
+            .padding(.horizontal, 8).padding(.vertical, 4)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .listRow(id: pick, label: item.fileName,
+                     value: used ? (use.map { "use \($0) in this show" } ?? "in this show") : "not in this show")
+            .padding(.horizontal, 6)
+            .id(pick)
+            .onDrag { ItemDrag.provider(picked.contains(pick) ? ordered(picked) : itemID(pick).map { [$0] } ?? []) }
+            .contextMenu { menuItems(picked.contains(pick) ? picked : [pick]) }
+    }
+
+    /// "In this show" / "Not in this show": pinned at the top as the rows
+    /// scroll under it, on the bars' translucent background.
+    private func sectionHeader(_ title: String) -> some View {
+        Text(title)
+            .font(.subheadline.weight(.semibold))
+            .foregroundStyle(.secondary)
+            .padding(.horizontal, 14).padding(.vertical, 5)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(ScrollBarBackground())
+            .accessibilityAddTraits(.isHeader)
+    }
+
+    /// `use` is which use of the file this entry is, shown when it has more
+    /// than one.
+    private func row(_ item: MediaItem, used: Bool, use: Int? = nil) -> some View {
+        // A song has no pixel size: its waveform tile is wide.
+        let aspect = item.kind == .audio ? 16 / 9 : CGFloat(item.pixelWidth) / CGFloat(max(item.pixelHeight, 1))
+        return HStack(spacing: 8) {
+            ThumbnailView(item: item, url: model.url(for: item))
+                .frame(width: aspect >= 1 ? 40 : 30 * aspect, height: aspect >= 1 ? 40 / aspect : 30)
+                .clipShape(RoundedRectangle(cornerRadius: 2))
+                .frame(width: 40, height: 30)
+                .overlay(alignment: .bottom) {
+                    if used {
+                        Rectangle().fill(Color.orange).frame(height: 3)
+                            .help("Used in this show")
+                    }
+                }
+            VStack(alignment: .leading, spacing: 1) {
+                Text(item.fileName).lineLimit(1).truncationMode(.middle)
+                if showRatings { RatingBadge(rating: item.rating) }
+            }
+            if let use {
+                Spacer(minLength: 4)
+                Text("\(use)")
+                    .font(.caption.weight(.bold)).monospacedDigit()
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 6).padding(.vertical, 1)
+                    .background(Capsule().fill(Color.orange))
+                    .help("Use \(use) of this file in the show")
+            }
+        }
+    }
+
+    private var deleteTitle: String {
+        guard let ids = confirmDelete else { return "" }
+        if ids.count == 1, let item = model.itemsByID[ids[0]] { return "Move “\(item.fileName)” to the Trash?" }
+        return "Move \(ids.count) items to the Trash?"
+    }
+
+    private func deleteMessage(_ ids: [Int64]) -> String {
+        let them = ids.count == 1 ? "it" : "them"
+        let n = model.showsUsing(Set(ids)).count
+        var text = "This deletes \(them) from the library, not just this collection. "
+        if n > 0 {
+            let shows = n == 1 ? "1 show" : "\(n) shows"
+            text += "Used in \(shows): every slide and lane image using \(them) will be removed. "
+        }
+        return text + "You can undo this."
+    }
+
+    /// The files behind the picked entries, once each, in the order the list
+    /// shows them (E, W and Q add files).
+    private func ordered(_ picks: Set<Pick>) -> [Int64] {
+        let ids = Set(picks.compactMap(itemID))
+        return files.map(\.id).filter(ids.contains)
+    }
+
+    private func itemID(_ pick: Pick) -> Int64? {
+        switch pick {
+        case .file(let id): id
+        case .slide(let id): show.slides.first { $0.id == id }?.itemID
+        case .overlay(let id): show.overlays.first { $0.id == id }?.itemID
+        case .song(let id): show.music.first { $0.id == id }?.itemID
+        }
+    }
+
+    /// A use's own actions (`spec/conventions.md` §3, item 5): selecting it
+    /// here also drives the storyline and lane, via the same bindings
+    /// `onChange(of: picked)` already keeps in step.
+    private func selectInTimeline(_ pick: Pick) {
+        switch pick {
+        case .slide(let id): selection = [id]
+        case .overlay(let id): selectedOverlay = id
+        case .song(let id): selectedSong = id
+        case .file: break
+        }
+    }
+
+    private func playFromHere(_ pick: Pick) {
+        guard let use = uses.first(where: { $0.pick == pick }) else { return }
+        engine.seek(use.time)
+        engine.play()
+    }
+
+    /// Removes just this one use, not every use of the file (Delete's own
+    /// broader meaning elsewhere in this list is unaffected).
+    private func removeUse(_ pick: Pick) {
+        switch pick {
+        case .slide(let id): SlideActions.remove([id], selection: $selection, mutate: mutate)
+        case .overlay(let id): mutate("Remove Image") { $0.overlays.removeAll { $0.id == id } }
+        case .song(let id): mutate("Remove Audio Clip") { $0.music.removeAll { $0.id == id } }
+        case .file: break
+        }
+    }
+
+    // MARK: Adding to the show
+
+    private func append(_ ids: [Int64]) {
+        let ids = model.pictures(ids)
+        guard !ids.isEmpty else { return }
+        mutate(ids.count == 1 ? "Append Slide" : "Append Slides") { s in
+            s.slides += ids.map { Slide(id: 0, itemID: $0) }
+        }
+    }
+
+    /// At the join nearest the playhead: before the slide under it if the
+    /// playhead is in its first half, after it if in the second.
+    private func insertAtPlayhead(_ ids: [Int64]) {
+        let ids = model.pictures(ids)
+        guard !ids.isEmpty else { return }
+        var at = show.slides.count
+        if !timeline.slides.isEmpty {
+            let t = timeline.wrap(engine.now)
+            let i = timeline.index(at: engine.now)
+            let r = timeline.slides[i]
+            let resolvedIndex = t - r.start < r.length / 2 ? i : i + 1
+            // Timeline indices skip slides whose file is missing; map back.
+            if resolvedIndex < timeline.slides.count,
+               let j = show.slides.firstIndex(where: { $0.id == timeline.slides[resolvedIndex].slide.id }) {
+                at = j
+            }
+        }
+        mutate(ids.count == 1 ? "Insert Slide" : "Insert Slides") { s in
+            s.slides.insert(contentsOf: ids.map { Slide(id: 0, itemID: $0) }, at: min(at, s.slides.count))
+        }
+    }
+
+    private func placeAtPlayhead(_ ids: [Int64]) {
+        guard let id = ids.first, let kind = model.itemsByID[id]?.kind, kind.isPicture, kind != .video else { return }
+        let t = timeline.wrap(engine.now)
+        guard var clip = OverlayPlacement.place(itemID: id, at: t, length: ImagesRow.newLength,
+                                                in: show.overlays, duration: ImagesRow.open,
+                                                shortest: ImagesRow.shortest)
+        else { NSSound.beep(); return }
+        clip.transform.scale = 0.5
+        mutate("Place Image") { $0.overlays.append(clip) }
+    }
+}

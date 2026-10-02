@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_2" data-name="Layer 2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1335.99 158.92">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #6885a3;
+      }
+
+      .cls-2 {
+        fill: #9e9e9e;
+      }
+    </style>
+  </defs>
+  <g id="Layer_1-2" data-name="Layer 1">
+    <g id="Tick_Marks" data-name="Tick Marks">
+      <rect class="cls-2" x="1184.91" y="93.2" width="19.42" height="65.73"/>
+      <rect class="cls-2" x="1053.25" y="93.2" width="19.42" height="65.73"/>
+      <rect class="cls-2" x="131.66" y="93.2" width="19.42" height="65.73"/>
+      <rect class="cls-2" y="93.2" width="19.42" height="65.73"/>
+      <rect class="cls-1" x="921.6" y="93.2" width="19.42" height="65.73"/>
+      <rect class="cls-1" x="658.28" y="93.2" width="19.42" height="65.73"/>
+      <rect class="cls-1" x="526.63" y="93.2" width="19.42" height="65.73"/>
+      <rect class="cls-1" x="394.97" y="93.2" width="19.42" height="65.73"/>
+      <rect class="cls-1" x="789.94" width="19.42" height="158.92"/>
+      <rect class="cls-2" x="1316.57" width="19.42" height="158.92"/>
+      <rect class="cls-2" x="263.31" width="19.42" height="158.92"/>
+    </g>
+  </g>
+</svg>

@@ -1,9 +1,9 @@
-// Phase 5 test program, part 4: can BGTools read a library while ShowTools
+// Phase 5 test program, part 4: can RhythmBG read a library while RhythmIO
 // writes to it? Two processes on a scratch copy of a library, never the
 // real one:
 //
 //   library-probe writer <library> <seconds>
-//       saves the first show over and over through ShowTools' own Library
+//       saves the first show over and over through RhythmIO' own Library
 //       code, as the app does. Each save changes slide lengths, and adds or
 //       removes a slide, and stamps the show's name with
 //       "probe <n> <slide count> <time>" in the same transaction.
@@ -11,7 +11,7 @@
 //       opens Library.sqlite READ-ONLY with plain SQLite (never Library.init,
 //       which migrates and writes), polls PRAGMA data_version every 50 ms,
 //       and on each change reads the show and its slides inside one read
-//       transaction, decoding them with ShowToolsCore's own types.
+//       transaction, decoding them with RhythmIOCore's own types.
 //
 // The reader reports: saves seen, torn reads (stamp's slide count ≠ slides
 // read), busy/locked errors, undecodable settings, and how long after a save

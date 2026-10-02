@@ -228,7 +228,7 @@ public indirect enum PaneNode: Sendable, Equatable {
     /// `far` hands the space to `main` instead** (`PaneController.setOpen`),
     /// matching what a direct drag already did — found wrong the other way
     /// on Edit Show's own list column (item 1,
-    /// `ShowTools Feedback — Worklist for Next CC Session.md`, 2026-09-25):
+    /// `RhythmIO Feedback — Worklist for Next CC Session.md`, 2026-09-25):
     /// closing the inspector grew the list, when list was meant to stay
     /// fixed-width and only the divider it owns should ever resize it.
     ///

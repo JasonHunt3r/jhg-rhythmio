@@ -3,7 +3,7 @@
 # worth checking happens on its own, one at a time, with nothing else going
 # on to confuse it. Made for Jason's alpha test drive (spec/history/2026-09-22-alpha-test.md).
 #
-#   tools/make-demo-show.sh [dir]        (default: ~/ShowTools Demo)
+#   tools/make-demo-show.sh [dir]        (default: ~/RhythmIO Demo)
 #
 # Open it from the app: File ▸ Open Library… → <dir>/Shorty.noindex
 #
@@ -18,7 +18,7 @@
 #          all while the song keeps playing underneath
 set -euo pipefail
 cd "$(dirname "$0")/.."
-DIR="${1:-$HOME/ShowTools Demo}"
+DIR="${1:-$HOME/RhythmIO Demo}"
 LIB="$DIR/Shorty.noindex"
 mkdir -p "$DIR/media" "$DIR/bin"
 
@@ -69,33 +69,33 @@ for f in song-low song-high video-tone; do
     rm "$DIR/media/$f.wav"
 done
 
-swift build --product stcli >/dev/null
+swift build --product mio >/dev/null
 
 # The video slide needs a real video that has sound AND a picture that
 # visibly moves, so it's obvious whether it plays or holds one frame.
-# Easiest honest way to make one: export a small show with ShowTools' own
+# Easiest honest way to make one: export a small show with RhythmIO' own
 # exporter. (It also dogfoods the thing being tested.)
 echo "==> building a 10s video with sound"
 SRC="$DIR/src.noindex"
 rm -rf "$SRC"
-.build/debug/stcli ingest "$SRC" "$DIR/media/photo_01.jpg" "$DIR/media/photo_02.jpg" \
+.build/debug/mio ingest "$SRC" "$DIR/media/photo_01.jpg" "$DIR/media/photo_02.jpg" \
     "$DIR/media/photo_03.jpg" "$DIR/media/photo_04.jpg" "$DIR/media/photo_05.jpg" \
     "$DIR/media/video-tone.m4a" >/dev/null
-.build/debug/stcli show "$SRC" "src" >/dev/null
+.build/debug/mio show "$SRC" "src" >/dev/null
 SRCDB="$SRC/Library.sqlite"
 # Five 2-second slides, hard cuts, and the warble over all of it.
 sqlite3 "$SRCDB" "DELETE FROM slides WHERE item_id = 6;"
 sqlite3 "$SRCDB" "UPDATE slides SET settings='{\"length\":{\"seconds\":{\"_0\":2}},\"transition\":{\"style\":\"cut\",\"duration\":0},\"fit\":\"fill\"}';"
 sqlite3 "$SRCDB" "UPDATE shows SET music='[{\"itemID\":6,\"start\":0,\"length\":10,\"volume\":1}]';"
 rm -f "$DIR/media/talking-clip.mp4"
-.build/debug/stcli movie "$SRC" 1 640x400 "$DIR/media/talking-clip.mp4" 30 h264 >/dev/null
+.build/debug/mio movie "$SRC" 1 640x400 "$DIR/media/talking-clip.mp4" 30 h264 >/dev/null
 rm -rf "$SRC"
 rm "$DIR/media/video-tone.m4a"
 
 echo "==> building the Shorty library"
 rm -rf "$LIB"
-.build/debug/stcli ingest "$LIB" "$DIR/media" >/dev/null
-.build/debug/stcli show "$LIB" "Shorty" >/dev/null
+.build/debug/mio ingest "$LIB" "$DIR/media" >/dev/null
+.build/debug/mio show "$LIB" "Shorty" >/dev/null
 DB="$LIB/Library.sqlite"
 
 id_of() { sqlite3 "$DB" "SELECT id FROM items WHERE rel_path LIKE '%$1%' LIMIT 1;"; }

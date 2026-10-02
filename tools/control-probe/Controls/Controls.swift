@@ -5,7 +5,7 @@ import WidgetKit
 @main
 struct BGControls: WidgetBundle {
     var body: some Widget {
-        OpenBGToolsControl()
+        OpenRhythmBGControl()
         DesktopShowControl()
         ColourAControl()
         ColourBControl()
@@ -13,15 +13,15 @@ struct BGControls: WidgetBundle {
     }
 }
 
-struct OpenBGToolsControl: ControlWidget {
+struct OpenRhythmBGControl: ControlWidget {
     var body: some ControlWidgetConfiguration {
         StaticControlConfiguration(kind: "com.jhg.BGControlProbe.open") {
-            ControlWidgetButton(action: OpenBGToolsIntent()) {
-                Label("BGTools", systemImage: "photo.on.rectangle.angled")
+            ControlWidgetButton(action: OpenRhythmBGIntent()) {
+                Label("RhythmBG", systemImage: "photo.on.rectangle.angled")
             }
         }
-        .displayName("Open BGTools")
-        .description("Opens BGTools' window.")
+        .displayName("Open RhythmBG")
+        .description("Opens RhythmBG' window.")
     }
 }
 

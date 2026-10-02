@@ -2,31 +2,31 @@
 import PackageDescription
 
 let package = Package(
-    name: "ShowTools",
+    name: "RhythmIO",
     platforms: [.macOS(.v14)],
     products: [
-        .library(name: "ShowToolsCore", targets: ["ShowToolsCore"]),
-        .library(name: "ShowToolsPlayback", targets: ["ShowToolsPlayback"]),
-        .library(name: "BGToolsCore", targets: ["BGToolsCore"]),
-        .executable(name: "ShowToolsApp", targets: ["ShowToolsApp"]),
-        .executable(name: "stcli", targets: ["stcli"]),
+        .library(name: "RhythmIOCore", targets: ["RhythmIOCore"]),
+        .library(name: "RhythmIOPlayback", targets: ["RhythmIOPlayback"]),
+        .library(name: "RhythmBGCore", targets: ["RhythmBGCore"]),
+        .executable(name: "RhythmIOApp", targets: ["RhythmIOApp"]),
+        .executable(name: "mio", targets: ["mio"]),
     ],
     dependencies: [
         .package(name: "PaneKit", path: "PaneKit"),
         .package(name: "ListKit", path: "ListKit"),
     ],
     targets: [
-        .target(name: "ShowToolsCore", linkerSettings: [.linkedLibrary("sqlite3")]),
-        .target(name: "ShowToolsPlayback", dependencies: ["ShowToolsCore"]),
-        .target(name: "BGToolsCore", dependencies: ["ShowToolsCore"]),
+        .target(name: "RhythmIOCore", linkerSettings: [.linkedLibrary("sqlite3")]),
+        .target(name: "RhythmIOPlayback", dependencies: ["RhythmIOCore"]),
+        .target(name: "RhythmBGCore", dependencies: ["RhythmIOCore"]),
         // Info.plist is generated into the sources folder by XcodeGen (the app
         // bundle is built by Xcode; see project.yml), so SwiftPM must be told
         // it isn't a resource.
-        .executableTarget(name: "ShowToolsApp",
-                          dependencies: ["ShowToolsCore", "ShowToolsPlayback", "PaneKit", "ListKit"],
+        .executableTarget(name: "RhythmIOApp",
+                          dependencies: ["RhythmIOCore", "RhythmIOPlayback", "PaneKit", "ListKit"],
                           exclude: ["Info.plist"]),
-        .executableTarget(name: "stcli", dependencies: ["ShowToolsCore"]),
-        .testTarget(name: "ShowToolsCoreTests", dependencies: ["ShowToolsCore"]),
-        .testTarget(name: "BGToolsCoreTests", dependencies: ["BGToolsCore", "ShowToolsCore"]),
+        .executableTarget(name: "mio", dependencies: ["RhythmIOCore"]),
+        .testTarget(name: "RhythmIOCoreTests", dependencies: ["RhythmIOCore"]),
+        .testTarget(name: "RhythmBGCoreTests", dependencies: ["RhythmBGCore", "RhythmIOCore"]),
     ]
 )

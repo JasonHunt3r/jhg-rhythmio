@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_2" data-name="Layer 2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 251.47 278.67">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #ef464a;
+      }
+    </style>
+  </defs>
+  <g id="Layer_1-2" data-name="Layer 1">
+    <path id="Playhead" class="cls-1" d="M134.43,273.04L250.63,13.41C253.45,7.11,248.84,0,241.94,0H9.53C2.63,0-1.98,7.11.84,13.41l116.21,259.63c3.36,7.51,14.02,7.51,17.38,0Z"/>
+  </g>
+</svg>

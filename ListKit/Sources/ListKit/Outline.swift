@@ -7,7 +7,7 @@ import AppKit
 /// `DisclosureGroup` hangs its chevron in a margin *left* of the row,
 /// which nothing supplies, and doesn't indent its content at all: the
 /// chevrons were clipped at the pane's edge and a child row sat left of
-/// its own parent's name (ShowTools' Catalog, Jason's screenshot,
+/// its own parent's name (RhythmIO' Catalog, Jason's screenshot,
 /// 2026-09-27).
 ///
 /// Drawn the way `NSOutlineView` draws it: the row itself spans the full

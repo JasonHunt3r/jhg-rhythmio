@@ -92,10 +92,10 @@ final class PaneLayoutTests: XCTestCase {
         XCTAssertEqual(r.panes["files"], rect)
     }
 
-    /// ShowTools' shape, the demanding example: a timeline pane edge to edge
+    /// RhythmIO' shape, the demanding example: a timeline pane edge to edge
     /// under a Library pane, and three columns beside it — built from
     /// `.row(…)`, the same recipe Edit Show's preview/list/inspector uses.
-    static let showTools: PaneNode =
+    static let rhythmIO: PaneNode =
         .split("window", .vertical, sized: .second, size: 240, range: 120...600, title: "Timeline",
                .split("top", .horizontal, sized: .first, size: 219, range: 180...360, title: "Library",
                       .pane("library", title: "Library", popOut: .panel),
@@ -106,9 +106,9 @@ final class PaneLayoutTests: XCTestCase {
                            farSize: 320, farRange: 260...480)),
                .pane("timeline", title: "Timeline", popOut: .window))
 
-    func testShowToolsShape() {
+    func testRhythmIOShape() {
         let window = CGRect(x: 0, y: 0, width: 1376, height: 835)
-        let r = PaneLayout.layout(Self.showTools, in: window, state: PaneKitState())
+        let r = PaneLayout.layout(Self.rhythmIO, in: window, state: PaneKitState())
         // The timeline runs the whole width, under everything.
         XCTAssertEqual(r.panes["timeline"], CGRect(x: 0, y: 595, width: 1376, height: 240))
         XCTAssertEqual(r.panes["library"], CGRect(x: 0, y: 0, width: 219, height: 594))
@@ -123,7 +123,7 @@ final class PaneLayoutTests: XCTestCase {
     /// its 566.
     func testClosingTheInspectorKeepsTheOtherSizes() {
         let window = CGRect(x: 0, y: 0, width: 1376, height: 835)
-        let r = PaneLayout.layout(Self.showTools, in: window,
+        let r = PaneLayout.layout(Self.rhythmIO, in: window,
                                   state: PaneKitState(splits: ["columns.near": SplitState(collapsed: true)]))
         XCTAssertNil(r.panes["inspector"])
         XCTAssertEqual(r.panes["viewer"]?.width, 589)
@@ -138,7 +138,7 @@ final class PaneLayoutTests: XCTestCase {
         var s = PaneKitState()
         s.panes["browser"] = PaneWindowState(poppedOut: true)
         s.panes["inspector"] = PaneWindowState(poppedOut: true)
-        let r = PaneLayout.layout(Self.showTools, in: window, state: s)
+        let r = PaneLayout.layout(Self.rhythmIO, in: window, state: s)
         XCTAssertEqual(r.panes["viewer"], CGRect(x: 220, y: 0, width: 1156, height: 594))
         XCTAssertNil(r.dividers["columns"])
         XCTAssertNil(r.dividers["right"])
@@ -147,10 +147,10 @@ final class PaneLayoutTests: XCTestCase {
     func testMinimumExtentOfANestedTree() {
         // Across: library's range minimum (180) + 1 + the columns' own floor
         // (browser's 80 + 1 + inspector's 260, `.row`'s own arithmetic) + 1 + viewer's 300.
-        XCTAssertEqual(PaneLayout.minExtent(Self.showTools, along: .horizontal, state: PaneKitState()),
+        XCTAssertEqual(PaneLayout.minExtent(Self.rhythmIO, along: .horizontal, state: PaneKitState()),
                        180 + 1 + (80 + 1 + 260) + 1 + 300)
         // Down: the timeline's minimum (120) + 1 + the top's tallest minimum.
-        XCTAssertEqual(PaneLayout.minExtent(Self.showTools, along: .vertical, state: PaneKitState()),
+        XCTAssertEqual(PaneLayout.minExtent(Self.rhythmIO, along: .vertical, state: PaneKitState()),
                        120 + 1 + 300)
     }
 
@@ -175,10 +175,10 @@ final class PaneLayoutTests: XCTestCase {
     }
 
     func testEdges() {
-        XCTAssertEqual(Self.showTools.split("window")?.edge, .bottom)
-        XCTAssertEqual(Self.showTools.split("top")?.edge, .leading)
-        XCTAssertEqual(Self.showTools.split("columns.near")?.edge, .trailing)
-        XCTAssertEqual(Self.showTools.split("columns.near")?.sizedTitle, "Inspector")
+        XCTAssertEqual(Self.rhythmIO.split("window")?.edge, .bottom)
+        XCTAssertEqual(Self.rhythmIO.split("top")?.edge, .leading)
+        XCTAssertEqual(Self.rhythmIO.split("columns.near")?.edge, .trailing)
+        XCTAssertEqual(Self.rhythmIO.split("columns.near")?.sizedTitle, "Inspector")
     }
 
     // MARK: `.row` — three independently-sized siblings from two nested splits

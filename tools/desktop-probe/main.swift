@@ -1,6 +1,6 @@
-// Phase 5 (BGTools) test program, part 1; see spec/bgtools.md.
+// Phase 5 (RhythmBG) test program, part 1; see spec/rhythmbg.md.
 // Throwaway: proves a live window can sit beneath the desktop icons on every
-// monitor and Space, with clicks passing through, before BGTools is built.
+// monitor and Space, with clicks passing through, before RhythmBG is built.
 // It never opens a library.
 //
 //   tools/desktop-probe/build.sh            → build/DesktopProbe.app
@@ -101,7 +101,7 @@ final class LiveView: NSView {
         let bottom = NSColor(hue: (hue + 0.15).truncatingRemainder(dividingBy: 1), saturation: 0.6, brightness: 0.3, alpha: 1)
         NSGradient(starting: top, ending: bottom)?.draw(in: bounds, angle: -90)
         let clock = DateFormatter.localizedString(from: Date(), dateStyle: .none, timeStyle: .medium)
-        let text = "BGTools probe · \(name) · \(clock)\(paused ? " · paused" : "")"
+        let text = "RhythmBG probe · \(name) · \(clock)\(paused ? " · paused" : "")"
         let attrs: [NSAttributedString.Key: Any] = [
             .font: NSFont.monospacedDigitSystemFont(ofSize: 22, weight: .semibold),
             .foregroundColor: NSColor.white.withAlphaComponent(0.85)]
@@ -145,7 +145,7 @@ final class Probe: NSObject, NSApplicationDelegate, NSWindowDelegate {
             w.ignoresMouseEvents = true
             w.isReleasedWhenClosed = false
             w.hasShadow = false
-            w.title = "BGTools probe \(screen.localizedName)"
+            w.title = "RhythmBG probe \(screen.localizedName)"
             w.contentView = LiveView(frame: NSRect(origin: .zero, size: screen.frame.size), name: screen.localizedName, index: NSScreen.screens.firstIndex(of: screen) ?? 0)
             w.delegate = self
             w.setFrame(screen.frame, display: true)
@@ -171,7 +171,7 @@ final class Probe: NSObject, NSApplicationDelegate, NSWindowDelegate {
                 w.isReleasedWhenClosed = false
                 w.hasShadow = false
                 let label = "\(screen.localizedName) · Space \(space.index)"
-                w.title = "BGTools probe \(label)"
+                w.title = "RhythmBG probe \(label)"
                 w.contentView = LiveView(frame: NSRect(origin: .zero, size: screen.frame.size), name: label, index: colour)
                 w.delegate = self
                 w.setFrame(screen.frame, display: true)

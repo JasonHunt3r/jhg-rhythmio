@@ -1,6 +1,6 @@
 // swift-tools-version: 6.0
 // ListKit: pro-level lists for Mac apps that can't be a SwiftUI `List`
-// (spec/listkit.md in ShowTools) — keyboard navigation, outline chevrons
+// (spec/listkit.md in RhythmIO) — keyboard navigation, outline chevrons
 // and indents, inline rename, and the rows' accessibility. Its own package,
 // beside PaneKit, so an app can have either without the other.
 //

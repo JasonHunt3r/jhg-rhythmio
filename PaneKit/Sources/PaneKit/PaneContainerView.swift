@@ -265,7 +265,7 @@ public final class PaneContainerView: NSView {
 }
 
 /// Holds one pane's content, and takes the mouse **only inside its own
-/// frame** (ShowTools' `ColumnHost`): a SwiftUI hosting view hit-tests all
+/// frame** (RhythmIO' `ColumnHost`): a SwiftUI hosting view hit-tests all
 /// its content, clipped or not, and would steal a neighbour's clicks.
 @MainActor
 final class PaneHostView: NSView {
@@ -382,7 +382,7 @@ final class PaneDividerView: NSView, PaneResizeCursorView {
 
 /// How every drawer's edge handle (`PaneEdgeHandleView`) fills its
 /// background: solid, as always, unless the app says otherwise. An app
-/// with its own translucent bars can have the handles match them (ShowTools'
+/// with its own translucent bars can have the handles match them (RhythmIO'
 /// "Include handles", Jason 2026-09-27: "There are many handle rows, on
 /// each drawer"). `translucency` gives, for dark or light, how opaque the
 /// window's background is laid over the OS's own header material — 0 the
@@ -601,7 +601,7 @@ func trackResize(_ split: Split, in container: PaneContainerView, from event: NS
         NSCursor.arrow.set()
         // Tap-to-drag with drag lock: the trackpad driver itself keeps the
         // button down until the next tap, and nothing an app does ends it —
-        // measured 2026-09-26 in ShowTools with Accessibility granted: a
+        // measured 2026-09-26 in RhythmIO with Accessibility granted: a
         // posted system mouse-up cleared the button state, but 15–90 drags
         // still arrived in the next 3 s. Posting it only ended this loop
         // early and let those drags reach the views underneath, so it isn't

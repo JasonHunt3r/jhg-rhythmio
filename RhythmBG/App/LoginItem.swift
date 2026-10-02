@@ -1,0 +1,25 @@
+import Foundation
+import ServiceManagement
+
+/// Starting at login. RhythmBG is nested inside RhythmIO
+/// (`Contents/Library/LoginItems`), so it registers as that host's login
+/// item by identifier, not as `mainApp`. RhythmIO registers it when the
+/// desktop is first turned on (`RhythmBGHelper.registerAtLogin`); this is
+/// the same registration, flipped by the "Open at login" switch, and it
+/// shows in System Settings ▸ General ▸ Login Items.
+enum LoginItem {
+    static let bundleID = "com.jhg.rhythmbg"
+
+    private static var service: SMAppService { .loginItem(identifier: bundleID) }
+
+    static var isOn: Bool { service.status == .enabled }
+
+    static func setOn(_ on: Bool) {
+        do {
+            if on { try service.register() } else { try service.unregister() }
+            Log.write("login item \(on ? "registered" : "removed"): \(service.status.rawValue)")
+        } catch {
+            Log.write("login item \(on ? "register" : "remove") failed: \(error)")
+        }
+    }
+}

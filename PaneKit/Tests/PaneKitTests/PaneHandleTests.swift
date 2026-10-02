@@ -3,7 +3,7 @@ import AppKit
 @testable import PaneKit
 
 /// `PaneHandleStyle.external`: the app's own view is the handle (Jason,
-/// 2026-09-26 — a grid's header bar under ShowTools' viewer drawer).
+/// 2026-09-26 — a grid's header bar under RhythmIO' viewer drawer).
 @MainActor
 final class PaneHandleTests: XCTestCase {
     /// A drawer on top (the viewer), main below (the grid, its bar at the top).

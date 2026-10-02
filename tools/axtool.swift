@@ -21,8 +21,8 @@
 //                                        tab, left, right, up, down, or a letter
 //
 // Screen points, top-left origin, as `dump` prints them. click, drag, type
-// and key refuse to run unless ShowTools is the frontmost app (or BGTools, with
-// AXTOOL_APP=bgtools), and click and
+// and key refuse to run unless RhythmIO is the frontmost app (or RhythmBG, with
+// AXTOOL_APP=rhythmbg), and click and
 // drag refuse any point outside its windows.
 import ApplicationServices
 import AppKit
@@ -133,13 +133,13 @@ func type(_ text: String) {
     }
 }
 
-/// Events go to whatever app is in front, not to ShowTools. Every click,
-/// drag and key checks first, and refuses if ShowTools isn't frontmost:
+/// Events go to whatever app is in front, not to RhythmIO. Every click,
+/// drag and key checks first, and refuses if RhythmIO isn't frontmost:
 /// on 2026-09-21 typed paths landed in Jason's editor when it came forward.
-/// `AXTOOL_APP=bgtools` drives BGTools instead (the only other app allowed).
-let targetBundle = ProcessInfo.processInfo.environment["AXTOOL_APP"] == "bgtools" ? "com.jhg.showtools.bgtools" : "com.jhg.showtools"
+/// `AXTOOL_APP=rhythmbg` drives RhythmBG instead (the only other app allowed).
+let targetBundle = ProcessInfo.processInfo.environment["AXTOOL_APP"] == "rhythmbg" ? "com.jhg.rhythmbg" : "com.jhg.rhythmio"
 
-func requireShowToolsInFront() {
+func requireRhythmIOInFront() {
     let front = NSWorkspace.shared.frontmostApplication
     guard front?.bundleIdentifier == targetBundle else {
         print("REFUSED: \(front?.localizedName ?? "another app") is in front, not \(targetBundle)")
@@ -147,34 +147,34 @@ func requireShowToolsInFront() {
     }
 }
 
-/// A click or drag must also land inside one of ShowTools' windows: being in
+/// A click or drag must also land inside one of RhythmIO' windows: being in
 /// front isn't enough (a bad coordinate once clicked another app's window).
-func requireInsideShowTools(_ points: [CGPoint]) {
+func requireInsideRhythmIO(_ points: [CGPoint]) {
     let pid = NSWorkspace.shared.frontmostApplication?.processIdentifier ?? 0
     let wins = (attr(AXUIElementCreateApplication(pid), kAXWindowsAttribute) as? [AXUIElement] ?? []).compactMap(frame)
     for p in points where !wins.contains(where: { $0.contains(p) }) {
-        print("REFUSED: \(Int(p.x)),\(Int(p.y)) is outside ShowTools' windows")
+        print("REFUSED: \(Int(p.x)),\(Int(p.y)) is outside RhythmIO' windows")
         exit(2)
     }
 }
 
 let a = CommandLine.arguments
 guard a.count >= 2 else { print("see the header of axtool.swift"); exit(1) }
-if ["click", "drag", "type", "key", "scroll", "move"].contains(a[1]) { requireShowToolsInFront() }
+if ["click", "drag", "type", "key", "scroll", "move"].contains(a[1]) { requireRhythmIOInFront() }
 if a[1] == "move", a.count >= 4, let x = Double(a[2]), let y = Double(a[3]) {
-    requireInsideShowTools([CGPoint(x: x, y: y)])
+    requireInsideRhythmIO([CGPoint(x: x, y: y)])
 }
 if a[1] == "scroll", a.count >= 5, let x = Double(a[2]), let y = Double(a[3]) {
-    requireInsideShowTools([CGPoint(x: x, y: y)])
+    requireInsideRhythmIO([CGPoint(x: x, y: y)])
 }
 if (a[1] == "click" && a.count < 4) || (a[1] == "drag" && a.count < 6) {
     print("REFUSED: missing coordinates"); exit(2)
 }
 if a[1] == "click", a.count >= 4, let x = Double(a[2]), let y = Double(a[3]) {
-    requireInsideShowTools([CGPoint(x: x, y: y)])
+    requireInsideRhythmIO([CGPoint(x: x, y: y)])
 }
 if a[1] == "drag", a.count >= 6, let x1 = Double(a[2]), let y1 = Double(a[3]), let x2 = Double(a[4]), let y2 = Double(a[5]) {
-    requireInsideShowTools([CGPoint(x: x1, y: y1), CGPoint(x: x2, y: y2)])
+    requireInsideRhythmIO([CGPoint(x: x1, y: y1), CGPoint(x: x2, y: y2)])
 }
 if ["click", "drag"].contains(a[1]), a.count >= 4, Double(a[2]) == nil || Double(a[3]) == nil {
     print("REFUSED: bad coordinates \(a[2...].joined(separator: " "))"); exit(2)

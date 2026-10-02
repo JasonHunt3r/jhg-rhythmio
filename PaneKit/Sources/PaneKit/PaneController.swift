@@ -43,7 +43,7 @@ public final class PaneController {
     @ObservationIgnored private(set) var contentExtent: [String: CGFloat] = [:]
     /// Overrides a pane's own static `scrollsUnderTitleBar` at runtime, for
     /// whichever pane hosts different content at different times — some of
-    /// which has its own real title-bar toolbar already (`ShowTools
+    /// which has its own real title-bar toolbar already (`RhythmIO
     /// .ShowView`'s native `.toolbar`), and shouldn't also have the pane
     /// extending under it (found 2026-09-27: an empty gap and a cascade of
     /// misaligned content, Edit Show's own toolbar and the pane's extra
@@ -98,7 +98,7 @@ public final class PaneController {
     /// A `linkedAncestor` split (`.row`'s `nearIsRigid`) now also keeps
     /// `near` unmoved when `far` collapses or reopens, not just on a direct
     /// drag: the freed space goes to `main` instead — item 1,
-    /// `ShowTools Feedback — Worklist for Next CC Session.md`. Before this,
+    /// `RhythmIO Feedback — Worklist for Next CC Session.md`. Before this,
     /// a collapse skipped the link (`PaneModel.row`'s own doc comment said
     /// so), so closing the inspector grew the list column, not the preview.
     public func setOpen(_ splitID: String, _ open: Bool) {

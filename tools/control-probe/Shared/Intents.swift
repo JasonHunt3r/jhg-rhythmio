@@ -1,14 +1,14 @@
 import AppIntents
 import AppKit
 
-/// The "Open BGTools" tile: runs in the app, bringing its window forward.
-struct OpenBGToolsIntent: AppIntent {
-    static let title: LocalizedStringResource = "Open BGTools"
+/// The "Open RhythmBG" tile: runs in the app, bringing its window forward.
+struct OpenRhythmBGIntent: AppIntent {
+    static let title: LocalizedStringResource = "Open RhythmBG"
     static let openAppWhenRun = true
 
     @MainActor
     func perform() async throws -> some IntentResult {
-        ProbeLog.write("Open BGTools tile ran")
+        ProbeLog.write("Open RhythmBG tile ran")
         return .result()
     }
 }

@@ -3,8 +3,8 @@
 # anything already in it.
 #
 #   tools/add-demo-show.sh [library] [media-dir]
-#     library    default: ~/Pictures/ShowTools Library.noindex (the real one)
-#     media-dir  default: ~/ShowTools Demo/media
+#     library    default: ~/Pictures/RhythmIO Library.noindex (the real one)
+#     media-dir  default: ~/RhythmIO Demo/media
 #
 # Unlike tools/make-demo-show.sh, this never deletes a library — it ingests
 # the demo's media and adds one show. Run it with **the app quit**: the app
@@ -14,21 +14,21 @@
 # What the show is, second by second: spec/history/2026-09-22-alpha-test.md
 set -euo pipefail
 cd "$(dirname "$0")/.."
-LIB="${1:-$HOME/Pictures/ShowTools Library.noindex}"
-MEDIA="${2:-$HOME/ShowTools Demo/media}"
+LIB="${1:-$HOME/Pictures/RhythmIO Library.noindex}"
+MEDIA="${2:-$HOME/RhythmIO Demo/media}"
 
 [ -f "$LIB/Library.sqlite" ] || { echo "error: no library at $LIB" >&2; exit 1; }
 [ -d "$MEDIA" ] || { echo "error: no media at $MEDIA — run tools/make-demo-show.sh first" >&2; exit 1; }
-if pgrep -f "ShowTools.app/Contents/MacOS" >/dev/null; then
-    echo "error: ShowTools is running. Quit it first (⌘Q), then run this again." >&2
+if pgrep -f "RhythmIO.app/Contents/MacOS" >/dev/null; then
+    echo "error: RhythmIO is running. Quit it first (⌘Q), then run this again." >&2
     exit 1
 fi
 
-swift build --product stcli >/dev/null
+swift build --product mio >/dev/null
 DB="$LIB/Library.sqlite"
 
 echo "==> ingesting the demo media (already-present files are skipped)"
-.build/debug/stcli ingest "$LIB" \
+.build/debug/mio ingest "$LIB" \
     "$MEDIA/photo_01.jpg" "$MEDIA/photo_02.jpg" "$MEDIA/photo_03.jpg" \
     "$MEDIA/photo_06.jpg" "$MEDIA/spinner.gif" \
     "$MEDIA/song-low.m4a" "$MEDIA/song-high.m4a" "$MEDIA/talking-clip.mp4" | sed 's/^/    /'
@@ -43,10 +43,10 @@ done
 
 # Replace any earlier copy of this demo, so running twice is safe.
 sqlite3 "$DB" "DELETE FROM shows WHERE name = 'Shorty';"
-.build/debug/stcli show "$LIB" "Shorty" >/dev/null
+.build/debug/mio show "$LIB" "Shorty" >/dev/null
 SHOW=$(sqlite3 "$DB" "SELECT id FROM shows WHERE name = 'Shorty' ORDER BY id DESC LIMIT 1;")
 
-# stcli show builds from every item in the library; this show wants five
+# mio show builds from every item in the library; this show wants five
 # particular slides, so its own are cleared and written by hand.
 #
 # NOTE: a slide's length is a synthesized Swift enum, so its value is
@@ -72,4 +72,4 @@ sqlite3 "$DB" "UPDATE shows SET overlays='[
 
 echo
 echo "Added “Shorty” (24s) to $LIB"
-echo "Open ShowTools and it's in the sidebar. What to look for: spec/history/2026-09-22-alpha-test.md"
+echo "Open RhythmIO and it's in the sidebar. What to look for: spec/history/2026-09-22-alpha-test.md"

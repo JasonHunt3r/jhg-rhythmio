@@ -1,5 +1,5 @@
 // swift-tools-version: 6.0
-// PaneKit: our own pane system for Mac apps (spec/panekit.md in ShowTools).
+// PaneKit: our own pane system for Mac apps (spec/panekit.md in RhythmIO).
 // Its own package, so it builds and tests on its own, and any app can add
 // it as a local or git package dependency.
 //

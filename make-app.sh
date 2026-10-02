@@ -1,9 +1,9 @@
 #!/bin/bash
-# Build build/ShowTools.app with Xcode (spec/xcode-port.md).
+# Build build/RhythmIO.app with Xcode (spec/xcode-port.md).
 #
 # One app holds everything: the Control Center tiles in Contents/PlugIns,
-# BGTools nested in Contents/Library/LoginItems, Bravura in Resources.
-# The libraries, stcli and the tests stay SwiftPM — `swift test` is
+# RhythmBG nested in Contents/Library/LoginItems, Bravura in Resources.
+# The libraries, mio and the tests stay SwiftPM — `swift test` is
 # unchanged; only the bundles are built here, because a Control Center
 # extension only registers if it was built and signed as a real Xcode
 # target.
@@ -23,9 +23,9 @@ command -v xcodegen >/dev/null 2>&1 || {
 }
 xcodegen generate --quiet
 
-xcodebuild -project ShowTools.xcodeproj -scheme ShowTools \
+xcodebuild -project RhythmIO.xcodeproj -scheme RhythmIO \
     -configuration "$CONFIG" -derivedDataPath build/xcode -quiet build
 
-rm -rf build/ShowTools.app
-cp -R "build/xcode/Build/Products/$CONFIG/ShowTools.app" build/
-echo "built build/ShowTools.app"
+rm -rf build/RhythmIO.app
+cp -R "build/xcode/Build/Products/$CONFIG/RhythmIO.app" build/
+echo "built build/RhythmIO.app"

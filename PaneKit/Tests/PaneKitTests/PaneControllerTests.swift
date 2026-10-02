@@ -19,7 +19,7 @@ final class PaneControllerTests: XCTestCase {
         PaneController(id: "test.\(UUID())", root: Self.rigidRow, store: UserDefaults(suiteName: #function + UUID().uuidString)!)
     }
 
-    /// Item 1, `ShowTools Feedback — Worklist for Next CC Session.md`:
+    /// Item 1, `RhythmIO Feedback — Worklist for Next CC Session.md`:
     /// closing `far` under `nearIsRigid` must hand its space to `main`, not
     /// `near` — the reverse of `.row`'s own default (`testRowClosingFarGrowsNear`
     /// in `PaneLayoutTests`), which is what a plain `.row` (without

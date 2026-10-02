@@ -1,0 +1,358 @@
+{
+  "features" : [
+    "refractivity"
+  ],
+  "fill" : "automatic",
+  "groups" : [
+    {
+      "blur-material" : null,
+      "layers" : [
+        {
+          "image-name" : "Stylized I marque.svg",
+          "name" : "Stylized I marque",
+          "position" : {
+            "scale" : 1,
+            "translation-in-points" : [
+              -245.43653024614525,
+              236.49000000000024
+            ]
+          }
+        },
+        {
+          "fill" : {
+            "linear-gradient" : [
+              "display-p3:0.98110,1.00000,0.98862,1.00000",
+              "display-p3:0.85509,0.86319,0.84700,1.00000"
+            ],
+            "orientation" : {
+              "start" : {
+                "x" : 0.5,
+                "y" : 1
+              },
+              "stop" : {
+                "x" : 0.5,
+                "y" : 0
+              }
+            }
+          },
+          "image-name" : "I of IO marque.svg",
+          "name" : "I of IO marque",
+          "position" : {
+            "scale" : 1,
+            "translation-in-points" : [
+              -245.43653024614525,
+              236.49000000000024
+            ]
+          }
+        },
+        {
+          "hidden" : true,
+          "image-name" : "Playhead.svg",
+          "name" : "Playhead",
+          "position" : {
+            "scale" : 1,
+            "translation-in-points" : [
+              -120.17999999999995,
+              -303.9599999999998
+            ]
+          }
+        },
+        {
+          "hidden" : true,
+          "image-name" : "Playhead Strip.svg",
+          "name" : "Playhead Strip",
+          "position" : {
+            "scale" : 1,
+            "translation-in-points" : [
+              -120.17999999999995,
+              337.0450000000002
+            ]
+          }
+        },
+        {
+          "image-name" : "Image 8.png",
+          "name" : "Position",
+          "position" : {
+            "scale" : 0.36,
+            "translation-in-points" : [
+              -120,
+              257.99999999999955
+            ]
+          }
+        },
+        {
+          "fill" : {
+            "linear-gradient" : [
+              "display-p3:0.77220,0.76910,0.75979,1.00000",
+              "display-p3:0.96746,0.98745,1.00000,1.00000"
+            ],
+            "orientation" : {
+              "start" : {
+                "x" : 0.5,
+                "y" : 0
+              },
+              "stop" : {
+                "x" : 0.5,
+                "y" : 0.7462330572289153
+              }
+            }
+          },
+          "image-name" : "O Compound.svg",
+          "name" : "O Compound",
+          "position" : {
+            "scale" : 1,
+            "translation-in-points" : [
+              169.72000000000025,
+              241
+            ]
+          }
+        },
+        {
+          "fill" : {
+            "linear-gradient" : [
+              "display-p3:0.94756,0.94375,0.93233,1.00000",
+              "display-p3:0.68661,0.68833,0.65125,1.00000"
+            ],
+            "orientation" : {
+              "start" : {
+                "x" : 0.5,
+                "y" : 1
+              },
+              "stop" : {
+                "x" : 0.5,
+                "y" : 0
+              }
+            }
+          },
+          "image-name" : "O of IO marque.svg",
+          "name" : "O of IO marque",
+          "position" : {
+            "scale" : 1,
+            "translation-in-points" : [
+              169.70000000000027,
+              241
+            ]
+          }
+        }
+      ],
+      "refractivity" : {
+        "depth" : 0,
+        "enabled" : false,
+        "strength" : 0.5
+      },
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.5
+      },
+      "specular" : true,
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.3
+      }
+    },
+    {
+      "layers" : [
+        {
+          "image-name" : "One.svg",
+          "name" : "One",
+          "position" : {
+            "scale" : 1,
+            "translation-in-points" : [
+              318,
+              -190.43999999999983
+            ]
+          }
+        },
+        {
+          "image-name" : "Zero.svg",
+          "name" : "Zero",
+          "position" : {
+            "scale" : 1,
+            "translation-in-points" : [
+              396,
+              -190.43999999999983
+            ]
+          }
+        }
+      ],
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.5
+      },
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.3
+      }
+    },
+    {
+      "layers" : [
+        {
+          "image-name" : "In Marker.svg",
+          "name" : "In Marker",
+          "position" : {
+            "scale" : 1,
+            "translation-in-points" : [
+              -344,
+              -35.84500000000003
+            ]
+          }
+        },
+        {
+          "image-name" : "Out Marker.svg",
+          "name" : "Out Marker",
+          "position" : {
+            "scale" : 1,
+            "translation-in-points" : [
+              207.72500000000002,
+              -35.84500000000003
+            ]
+          }
+        },
+        {
+          "image-name" : "In Stripe.svg",
+          "name" : "In Stripe",
+          "position" : {
+            "scale" : 1,
+            "translation-in-points" : [
+              -390.68,
+              486.47500000000036
+            ]
+          }
+        },
+        {
+          "image-name" : "Out Stripe.svg",
+          "name" : "Out Stripe",
+          "position" : {
+            "scale" : 1,
+            "translation-in-points" : [
+              254.4050000000001,
+              486.47500000000036
+            ]
+          }
+        },
+        {
+          "image-name" : "Tick Marks.svg",
+          "name" : "Tick Marks",
+          "position" : {
+            "scale" : 1.03,
+            "translation-in-points" : [
+              -62.951530246145126,
+              -38.12660000000028
+            ]
+          }
+        }
+      ],
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.5
+      },
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.3
+      }
+    },
+    {
+      "blur-material" : null,
+      "layers" : [
+        {
+          "image-name" : "Zero blue.svg",
+          "name" : "Zero blue",
+          "position" : {
+            "scale" : 1,
+            "translation-in-points" : [
+              177.76999999999998,
+              -190.43999999999983
+            ]
+          }
+        },
+        {
+          "image-name" : "Colon blue.svg",
+          "name" : "Colon blue",
+          "position" : {
+            "scale" : 1,
+            "translation-in-points" : [
+              241,
+              -190.43999999999983
+            ]
+          }
+        },
+        {
+          "image-name" : "Range Ruler.svg",
+          "name" : "Range Ruler",
+          "position" : {
+            "scale" : 1.02,
+            "translation-in-points" : [
+              -67.95153024614524,
+              -134.6800000000003
+            ]
+          }
+        },
+        {
+          "image-name" : "Top BG - 1.svg",
+          "name" : "Top BG - 1",
+          "position" : {
+            "scale" : 1,
+            "translation-in-points" : [
+              -82.04000000000019,
+              -604.3199999999999
+            ]
+          }
+        },
+        {
+          "image-name" : "Timeline Header Strip - 2.svg",
+          "name" : "Timeline Header Strip - 2",
+          "position" : {
+            "scale" : 1,
+            "translation-in-points" : [
+              -120.17999999999995,
+              -423.29499999999985
+            ]
+          }
+        },
+        {
+          "image-name" : "Ruler BG - 3.svg",
+          "name" : "Ruler BG - 3",
+          "position" : {
+            "scale" : 1,
+            "translation-in-points" : [
+              -120.17999999999995,
+              -156.90999999999963
+            ]
+          }
+        },
+        {
+          "image-name" : "Timeline Bottom BG - 4.svg",
+          "name" : "Timeline Bottom BG - 4",
+          "position" : {
+            "scale" : 1,
+            "translation-in-points" : [
+              37.00000000000006,
+              328
+            ]
+          }
+        }
+      ],
+      "lighting" : "combined",
+      "refractivity" : {
+        "depth" : 0.49347656250000005,
+        "enabled" : true,
+        "strength" : 0.0141015625
+      },
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.5
+      },
+      "specular" : true,
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.3
+      }
+    }
+  ],
+  "supported-platforms" : {
+    "circles" : [
+      "watchOS"
+    ],
+    "squares" : "shared"
+  }
+}
