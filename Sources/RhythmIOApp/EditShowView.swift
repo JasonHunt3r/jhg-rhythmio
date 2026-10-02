@@ -45,11 +45,12 @@ struct EditShowView: View {
                                                       mutate: mutate, inspectorShown: $inspectorShown,
                                                       selection: $session.selection,
                                                       selectedOverlay: $session.selectedOverlay,
-                                                      selectedSong: $session.selectedSong)
+                                                      selectedSong: $session.selectedSong,
+                                                      inspectedFiles: $session.inspectedFiles)
                         .environment(model)),
                     "inspector": AnyView(SlideInspector(show: show, timeline: timeline, selection: session.selection,
                                                         mutate: mutate, close: { inspectorShown = false },
-                                                        engine: engine).environment(model)),
+                                                        engine: engine, files: session.inspectedFiles).environment(model)),
                 ])
                 .onAppear { model.editShowColumns.setOpen(EditColumnsLayout.inspectorSplit, inspectorShown) }
                 .onChange(of: inspectorShown) { _, shown in model.editShowColumns.setOpen(EditColumnsLayout.inspectorSplit, shown) }
@@ -60,10 +61,11 @@ struct EditShowView: View {
                     if !s.isEmpty {
                         session.selectedTransition = nil; session.selectedOverlay = nil
                         session.selectedSong = nil; session.selectedMarkers = []
+                        session.inspectedFiles = []
                     }
                 }
                 .onChange(of: session.selectedOverlay) { _, o in
-                    if o != nil { session.selectedTransition = nil; session.selectedSong = nil; session.selectedMarkers = [] }
+                    if o != nil { session.selectedTransition = nil; session.selectedSong = nil; session.selectedMarkers = []; session.inspectedFiles = [] }
                 }
                 .onChange(of: session.selectedSong) { _, o in if o != nil { session.selectedMarkers = [] } }
                 .onChange(of: session.selectedTransition) { _, o in if o != nil { session.selectedMarkers = [] } }

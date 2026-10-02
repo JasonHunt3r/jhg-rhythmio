@@ -17,6 +17,9 @@ struct SlideInspector: View {
     /// engine; without one the sliders behave as they always did and show
     /// their value on release.
     var engine: PlaybackEngine? = nil
+    /// Files picked in Edit Show's browser that aren't in the show: with no
+    /// slides selected, the inspector shows their info instead (B-04).
+    var files: [Int64] = []
     @Environment(AppModel.self) private var model
     @Environment(\.undoManager) private var undoManager
     /// Replace Image… (item 8, work order): only offered for one slide.
@@ -64,14 +67,31 @@ struct SlideInspector: View {
                 VStack(spacing: 0) {
                     bar(close)
                     Divider()
-                    content
+                    column(showingFiles: showsFiles)
                 }
             } else {
-                content
+                column(showingFiles: showsFiles)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        .overlay { if selected.isEmpty { emptyMessage } }
+        .overlay { if selected.isEmpty && !showsFiles { emptyMessage } }
+    }
+
+    private var showsFiles: Bool { selected.isEmpty && !files.isEmpty }
+
+    @ViewBuilder private func column(showingFiles: Bool) -> some View {
+        if showingFiles {
+            // The Info window's own view: the file's picture, details,
+            // rating and tags. It has no slide settings, so nothing else.
+            VStack(alignment: .leading, spacing: 0) {
+                Text(files.count == 1 ? "Not in this show" : "None of these are in this show")
+                    .font(.callout).foregroundStyle(.secondary)
+                    .padding(.horizontal, 16).padding(.top, 12)
+                InfoPanelContent(undoManager: undoManager, files: files)
+            }
+        } else {
+            content
+        }
     }
 
     // MARK: The bar
@@ -133,6 +153,8 @@ struct SlideInspector: View {
 
     private var barTitle: String {
         switch selected.count {
+        case 0 where files.count == 1: model.itemsByID[files[0]]?.fileName ?? "File"
+        case 0 where files.count > 1: "\(files.count) files"
         case 0: "Inspector"
         case 1: model.itemsByID[selected[0].itemID]?.fileName ?? "Slide"
         default: "\(selected.count) slides"

@@ -309,6 +309,7 @@ transitions and audio clips are one at a time.
 | Selected | Its settings show in |
 |---|---|
 | slides (from the timeline, the browser, or the viewer's image) | the **inspector** |
+| files not in the show (the browser's "Not in this show") | the **inspector**, as the file's info: picture, details, rating, tags (the Info window's view); picking them lets go of the slides |
 | a lane image | a **bar over the viewer** |
 | a transition | a **bar over the viewer**; selecting one also pauses and moves the playhead to it |
 | an audio clip | *nowhere*: its level line and context menu only |

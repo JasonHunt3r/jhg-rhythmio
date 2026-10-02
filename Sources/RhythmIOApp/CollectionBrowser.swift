@@ -32,6 +32,8 @@ struct CollectionBrowser: View {
     @Binding var selection: Set<Int64>
     @Binding var selectedOverlay: UUID?
     @Binding var selectedSong: UUID?
+    /// Files picked here that aren't in the show, for the inspector (B-04).
+    @Binding var inspectedFiles: [Int64]
     @Environment(AppModel.self) private var model
 
     /// What's picked in the list: uses in the show, or files not in it.
@@ -455,8 +457,19 @@ struct CollectionBrowser: View {
             if p.isEmpty {
                 if old.contains(where: \.isSlide), !selection.isEmpty { selection = [] }
                 if old.contains(where: \.isOverlay), selectedOverlay != nil { selectedOverlay = nil }
+                if !inspectedFiles.isEmpty { inspectedFiles = [] }
                 return
             }
+            // Files not in the show go to the inspector as files (B-04). The
+            // show's slide selection lets go, or the inspector kept showing
+            // the slide picked before while a rating key rated the file
+            // (B-07, reproduced 2026-10-02).
+            let files = p.allSatisfy { !$0.isUse } ? ordered(p) : []
+            if !files.isEmpty {
+                if !selection.isEmpty { selection = [] }
+                if selectedOverlay != nil { selectedOverlay = nil }
+            }
+            if inspectedFiles != files { inspectedFiles = files }
             guard p.count == 1, let only = p.first else { return }
             switch only {
             case .slide(let id):

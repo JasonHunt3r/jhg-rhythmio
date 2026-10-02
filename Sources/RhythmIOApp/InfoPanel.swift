@@ -97,7 +97,16 @@ struct InfoPanelContent: View {
     @Environment(AppModel.self) private var model
     @State private var newTag = ""
 
-    private var itemIDs: [Int64] { model.infoPanelSelection }
+    /// The files to show: the Info window's own selection, or these when
+    /// set (Edit Show's inspector, for files not in the show; B-04).
+    var files: [Int64]? = nil
+
+    init(undoManager: UndoManager?, files: [Int64]? = nil) {
+        self.undoManager = undoManager
+        self.files = files
+    }
+
+    private var itemIDs: [Int64] { files ?? model.infoPanelSelection }
     private var items: [MediaItem] { itemIDs.compactMap { model.itemsByID[$0] } }
 
     /// Read fresh each time the selection changes — never cached — for a

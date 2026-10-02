@@ -105,13 +105,14 @@ RhythmBG and doesn't restart it: start it again from RhythmBG â–¸ Desktop Showâ€
 ## What's next
 
 1. **B-86**: what's still Jason's, above.
-2. **B-04** (P1): the inspector for a file that isn't in the show.
-3. **The range, B-02, B-05, B-06** (P1), then B-11.
-4. **RhythmBG, B-14 to B-16** (P1).
-5. **B-83, B-84**: two click oddities.
+2. **The range batch, B-02, B-05, B-06, B-11** (P1/P2).
+3. **RhythmBG, B-08, B-14, B-17**; B-16 waits on B-39.
+4. **B-83, B-84**: two click oddities.
 
-B-01 and B-03 (and the held-arrow fixes) are built and installed; their
-shakedown rows wait for Jason. Everything else: `spec/backlog.md`.
+Built and waiting on Jason's shakedown rows: B-01, B-03 and the held-arrow
+fixes; the inspector batch (B-04, B-07: a file not in the show shows its
+info, and a rating key no longer leaves a stale slide's stars); a tile
+press that starts RhythmBG opens its panel first time (B-15's half). Everything else: `spec/backlog.md`.
 
 ## Test things installed on Jason's Mac
 

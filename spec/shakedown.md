@@ -52,6 +52,7 @@ Jason's shakedown that day (his raw notes:
 - [x] **The browser header's switch** ("Other Collections") — opens, switches, filters, switches back. · Last checked by Jason: 2026-09-28 · Claude: axtool · `spec/groups.md`, "The browser filter". Found: what the drop-down holds, B-34
 - [x] **Inspector sliders' live preview** · Last checked by Jason: 2026-09-28 · Claude: can't (built `b66b4af`, never watched) · `spec/plan.md`, "Inspector"
 - [ ] **Edit Show's inspector popping out** — the window, the main window closing up, following the selection, undo from the popped-out window. · Last checked by Jason: 2026-09-28 (failed) · Claude: axtool · `spec/panekit.md`, "Pane ⇄ panel". Found: closing the window loses the content, B-01; ways to pop out, B-10
+- [ ] **The inspector for a file not in the show** — pick one in the browser's "Not in this show": the inspector shows its info (picture, details, rating, tags) under "Not in this show"; a rating key there moves its stars; picking a slide brings the slide inspector back. · Last checked by Jason: — · Claude: axtool (one file, docked and popped out, 2026-10-02) · `spec/anatomy.md` §5; B-04, B-07
 - [ ] **A video slide's volume line** — the outermost points' diamonds, half-clipped by the rounded corners (may want insetting); the undo names ("Add Volume Point" and so on) in the Edit menu. · Last checked by Jason: — · Claude: tests only (undo steps; names not confirmed) · `spec/video-audio.md`
 
 ## Timeline

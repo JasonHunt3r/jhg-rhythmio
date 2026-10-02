@@ -16,6 +16,10 @@ import RhythmIOPlayback
 final class ShowSession {
     let showID: Int64
     var selection: Set<Int64> = []
+    /// Files picked in Edit Show's browser that aren't in the show, in list
+    /// order: the inspector shows their info (B-04). Empty whenever
+    /// anything in the show is selected.
+    var inspectedFiles: [Int64] = []
     /// Edit Show only: created when that mode is entered, torn down when
     /// it's left or another show opens (`EditShowView`'s own lifecycle,
     /// unchanged by this move).

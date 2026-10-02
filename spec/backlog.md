@@ -26,10 +26,8 @@ where it came from.
 Claude can do these.
 
 - **B-02** · P1 · Range — Dragging a range end (I or O) runs faster than the mouse, so the marker zips away. Real, not the tool artifact the old status suspected. `spec/range-and-ruler.md`. (Shakedown 2026-09-28.)
-- **B-04** · P1 · Inspector — The inspector shows nothing for a selected file that isn't in the show (the stars still work). (Shakedown 2026-09-28.)
 - **B-05** · P1 · Range — The range can be set past the show's current end, so more tiles can be added into it. `spec/range-and-ruler.md`. (Shakedown 2026-09-28.)
 - **B-06** · P1 · Range — Clicking a range marker selects it, so it can be nudged. `spec/range-and-ruler.md`. (Shakedown 2026-09-28.)
-- **B-07** · P2 · Inspector — The inspector's stars don't refresh after a rating key in the browser (seen 2026-09-26, and by Jason 2026-09-28). Maybe the inspector not re-reading the item.
 - **B-08** · P2 · RhythmBG — Double-clicking to launch: Jason suspects the first launch starts a second copy while one is already running. Investigate. `spec/rhythmbg.md`. (Shakedown 2026-09-28.)
 - **B-09** · P2 · Rhythm — Tempo detection reads double: Fly Me to the Moon as 145 BPM, where it's about 72. Needs an octave (half-time) check. `spec/rhythm.md`. (Shakedown 2026-09-28.)
 - **B-10** · P2 · PaneKit — Ways to pop out the inspector besides the View menu: a right-click item, a button, or a click action. `spec/panekit.md`, "Pane ⇄ panel". (Shakedown 2026-09-28.)
