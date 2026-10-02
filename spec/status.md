@@ -12,9 +12,8 @@ RhythmIO (short form miO) was **ShowTools**, and RhythmBG was **BGTools**,
 until the rename of 2026-10-02 (B-85). History keeps the old names.
 
 Repo: `~/Projects/ShowTools` (the folder keeps its name for now), pushed to
-**github.com/JasonHunt3r/jhg-showtools** (`main`), to be renamed
-`jhg-rhythmio` (B-86). The rename is on branch **`rename/rhythmio`**, not
-merged and not pushed.
+**github.com/JasonHunt3r/jhg-rhythmio** (`main`; GitHub redirects the old
+`jhg-showtools` URL).
 
 ## The rename: the overnight report
 
@@ -51,39 +50,30 @@ in xcode-port.md's story, the set-aside library, the repo URL, this file).
   of `BGTools` to it. Its bundle is checked; the launch is his.
 - **`com.jhg.rhythmio` holds a test copy's leftovers** (window frame and
   five PaneKit layouts, no library paths). Deleting the domain was refused
-  by the permission check, so it's step 2 below.
+  by the permission check; done the next morning with Jason's go-ahead.
 - **Measured nowhere yet:** the player's id no longer sits under the
   host's (`com.jhg.rhythmbg`, not `com.jhg.rhythmio.…`). A login item has
-  no such rule (only the extension does), but it's unproven: step 9.
+  no such rule (only the extension does), but it's unproven until RhythmBG is turned on at login.
 - Untouched: Jason's untracked files at the root (`ShowTools-icon 2.svg`,
   the plan, the ModKit design pass); `Resources/AppIcon.svg`, the old
   icon's drawing; the old `build/ShowTools.app` in the ignored `build/`.
 
 ## The rename: Jason's morning
 
-B-86. In order; the old apps must be quit for steps 2–5.
+B-86, done 2026-10-02 except what needs his hands. **Preferences** were
+copied (`com.jhg.rhythmio` is identical to the old `com.jhg.showtools`;
+RhythmBG kept its window position under its new key). **A fresh library:**
+Jason chose not to move the old one, so RhythmIO made `~/Pictures/RhythmIO
+Library.noindex`, empty; `ShowTools Library.noindex` stays where it was,
+and so does `Application Support/BGTools` (RhythmBG starts fresh).
+**Installed:** `~/Applications/RhythmIO.app`; its tiles' extension is
+registered. Merged to `main` and pushed; the repo is `jhg-rhythmio`.
 
-1. Quit ShowTools (⌘Q) and BGTools (its panel ▸ Quit BGTools).
-2. Clear the test leftovers: `defaults delete com.jhg.rhythmio`
-3. Copy preferences: `defaults export com.jhg.showtools - | defaults import com.jhg.rhythmio -`
-   and `defaults export com.jhg.showtools.bgtools - | defaults import com.jhg.rhythmbg -`
-   (RhythmBG's window opens at its default place once: its frame key was
-   `BGToolsMain`.)
-4. Rename `~/Pictures/ShowTools Library.noindex` to `RhythmIO Library.noindex`.
-5. Rename `~/Library/Application Support/BGTools` to `RhythmBG`.
-6. Delete the old app: `~/Applications/ShowTools.app` (it's in your home
-   folder's Applications, not /Applications). Its login item goes with it.
-7. `./install.sh` (from the branch), which installs and opens
-   `~/Applications/RhythmIO.app`.
-8. Re-grant what macOS asks for under the new ids (Photos, folders,
-   Music). If the library doesn't open from Open Recent, the saved path
-   still says "ShowTools Library": open it by hand once.
-9. RhythmBG ▸ Desktop Show… (its own menu in the menu bar), turn RhythmBG on at login; check it
-   finds the library, plays, and that both Control Center tiles work.
-10. Copy/paste and drag slides, sections and items between windows.
-11. Name and icon read right: menu bar, Dock, About, window titles, Finder.
-12. Merge `rename/rhythmio`, rename the repo on GitHub to `jhg-rhythmio`,
-    then `git remote set-url origin https://github.com/JasonHunt3r/jhg-rhythmio.git`.
+**Still Jason's:** allow the permission prompts under the new ids; press
+both Control Center tiles; turn RhythmBG on at login (RhythmBG ▸ Desktop
+Show…); glance at the Dock and About. The old `~/Applications/ShowTools.app`
+is still installed (moving it to the Trash was refused by the permission
+check): trash it by hand, or its tiles and player sit beside the new ones.
 
 ## Where it stands
 
@@ -100,21 +90,21 @@ Every schema upgrade is additive and tested by opening a library of the
 version before. Before an upgrade the database is copied to
 `Library.sqlite.v<N>.bak`.
 
-**Installed (until step 7):** `~/Applications/ShowTools.app` at `4753229`,
+**Installed:** `~/Applications/RhythmIO.app` from the rename (`rename/rhythmio`),
 signed with Jason's team. Every reinstall (`install.sh`) quits the real
 RhythmBG and doesn't restart it: start it again from RhythmBG ▸ Desktop Show….
 
-**The real library** is at `~/Pictures/ShowTools Library.noindex` until
-step 4 (12 files and one collection on 2026-09-26); the old one, set aside
-2026-09-24, is `~/Pictures/ShowTools Library (2026-09-24).noindex`,
-untouched, and keeps that name.
+**The real library** is a fresh, empty `~/Pictures/RhythmIO Library.noindex`
+(2026-10-02). The ShowTools-era ones are untouched and keep their names:
+`ShowTools Library.noindex` (12 files, one collection) and
+`ShowTools Library (2026-09-24).noindex`.
 
 **Last shakedown:** 2026-09-28, by Jason; 24 rows still open
 (`spec/shakedown.md`).
 
 ## What's next
 
-1. **B-86**, Jason's morning, above.
+1. **B-86**: what's still Jason's, above.
 2. **B-04** (P1): the inspector for a file that isn't in the show.
 3. **The range, B-02, B-05, B-06** (P1), then B-11.
 4. **RhythmBG, B-14 to B-16** (P1).
@@ -125,7 +115,7 @@ shakedown rows wait for Jason. Everything else: `spec/backlog.md`.
 
 ## Test things installed on Jason's Mac
 
-`ShowTools.app` in `~/Applications` (until step 6), `build/DesktopProbe.app`
+`RhythmIO.app` and the old `ShowTools.app` in `~/Applications`, `build/DesktopProbe.app`
 (not running), and XcodeGen (`brew install xcodegen`, required to build).
 **Apple's WWDR G3 certificate** is in the login keychain (signing needs
 it). ShowTools' unused Accessibility permission goes with the old app. Stale Background Task Management entries for `com.jhg.bgtools` and two

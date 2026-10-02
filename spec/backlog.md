@@ -58,7 +58,7 @@ Claude can do these.
 The feature-by-feature checks are in `spec/shakedown.md` (every unticked
 row). These are the other things only Jason can do.
 
-- **B-86** · P0 · Rename — The morning after the rename to RhythmIO (B-85, built overnight on branch `rename/rhythmio`): move preferences, the library and RhythmBG's folder, re-grant permissions, install, check, merge, rename the repo. The steps are in `spec/status.md`, "The rename: Jason's morning". (2026-10-02.)
+- **B-86** · P1 · Rename — After the rename to RhythmIO: allow the permission prompts under the new ids, press both Control Center tiles, turn RhythmBG on at login (its id is no longer nested under RhythmIO's: unmeasured), glance at the Dock and About, and trash the old `~/Applications/ShowTools.app`. `spec/status.md`, "The rename: Jason's morning". (2026-10-02.)
 - **B-30** · P2 · Library — Set up a big test library (4,000+ images), so Claude can measure scroll-scrubbing getting ahead of image loading. (was item 36)
 - **B-31** · P2 · Rhythm — List what's still to do on the Rhythm tool (Jason, 2026-09-28: "largely fleshed out", with "some things to do"). `spec/rhythm.md`.
 - **B-32** · P3 · Range — Read one edge case in Fill Range: a slide wholly inside the range continues past its end as a second use of the same file. Reasoned through and tested, but the plan never said so. `spec/range-and-ruler.md`, "Fill the range with images".
