@@ -690,7 +690,8 @@ struct ClickTakesKeyboard: NSViewRepresentable {
 /// taken before AppKit dispatches them, except while text is being edited:
 /// then the key goes to the text. `handle` returns true for a key it used.
 /// Held keys don't repeat the command (a held space would flicker between
-/// play and pause).
+/// play and pause), except the arrows: a held arrow keeps moving, and a
+/// held ⇧-arrow keeps extending, as everywhere on the Mac.
 struct SingleKeys: NSViewRepresentable {
     let handle: (NSEvent) -> Bool
 
@@ -722,7 +723,7 @@ struct SingleKeys: NSViewRepresentable {
                 if event.keyCode == held { held = nil }
                 return false
             }
-            if event.isARepeat { return event.keyCode == held }
+            if event.isARepeat, !(123...126).contains(event.keyCode) { return event.keyCode == held }
             guard handle?(event) == true else { return false }
             held = event.keyCode
             return true
