@@ -1,4 +1,4 @@
-# ShowTools — shakedown
+# RhythmIO — shakedown
 
 **The permanent hands-on checklist.** One row per feature a person has to
 try, so a full shakedown can be run again from the top. It isn't a to-do
@@ -90,11 +90,11 @@ Jason's shakedown that day (his raw notes:
 - [x] **Video export, a listen** — an exported movie against the same show playing. · Last checked by Jason: 2026-09-25 · Claude: tests only · `spec/video-export.md`
 - [ ] **Setlist round trip with an edit in Numbers** (4e) — export, edit the TSV in Numbers, re-import; does Numbers save TSV back? · Last checked by Jason: — (no record it was done) · Claude: tests only (no Numbers) · `spec/setlist.md`
 
-## BGTools
+## RhythmBG
 
-- [ ] **BGTools under the new signature** — the Control Center tile (re-registered on install), the login item. · Last checked by Jason: 2026-09-28 (the login item is fine) · Claude: can't · `spec/bgtools.md`. Found: the double launch, B-08; the tile's two clicks, B-15
-- [ ] **BGTools: naming screens, the map view, the window opening on your screen** — renaming a monitor or a Space, Map | List, the window landing on the calling monitor with its Space selected; with a second monitor, the map to scale, the window following the pointer, ⌥-double-click moving it. · Last checked by Jason: — (one monitor only) · Claude: axtool (one monitor; the multi-monitor half reasoned from the code) · `spec/bgtools.md`
-- [ ] **BGTools: Touch ID, click-away and Space pause** — unlocking a private library with Touch ID, the panel closing on a click elsewhere, pausing on a Space switch; not re-done against the nested BGTools. · Last checked by Jason: — · Claude: can't · `spec/bgtools.md`
+- [ ] **RhythmBG under the new signature** — the Control Center tile (re-registered on install), the login item. · Last checked by Jason: 2026-09-28 (the login item is fine) · Claude: can't · `spec/rhythmbg.md`. Found: the double launch, B-08; the tile's two clicks, B-15
+- [ ] **RhythmBG: naming screens, the map view, the window opening on your screen** — renaming a monitor or a Space, Map | List, the window landing on the calling monitor with its Space selected; with a second monitor, the map to scale, the window following the pointer, ⌥-double-click moving it. · Last checked by Jason: — (one monitor only) · Claude: axtool (one monitor; the multi-monitor half reasoned from the code) · `spec/rhythmbg.md`
+- [ ] **RhythmBG: Touch ID, click-away and Space pause** — unlocking a private library with Touch ID, the panel closing on a click elsewhere, pausing on a Space switch; not re-done against the nested RhythmBG. · Last checked by Jason: — · Claude: can't · `spec/rhythmbg.md`
 
 ## From before Phase 3
 

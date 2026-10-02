@@ -1,4 +1,4 @@
-# ShowTools — backlog
+# RhythmIO — backlog
 
 **The one to-do list.** Every open item lives here, once. Specs keep their
 design and reasoning, and point here for what's left; `spec/status.md`
@@ -25,22 +25,21 @@ where it came from.
 
 Claude can do these.
 
-- **B-85** · P1 · Rename — ShowTools becomes **RhythmIO** (miO), BGTools **RhythmBG**: every name, module, bundle ID, env var and doc, per `ShowTools → RhythmIO (miO) Rename Plan.md` at the repo root (Jason's, 2026-10-02, untracked). Next session.
 - **B-02** · P1 · Range — Dragging a range end (I or O) runs faster than the mouse, so the marker zips away. Real, not the tool artifact the old status suspected. `spec/range-and-ruler.md`. (Shakedown 2026-09-28.)
 - **B-04** · P1 · Inspector — The inspector shows nothing for a selected file that isn't in the show (the stars still work). (Shakedown 2026-09-28.)
 - **B-05** · P1 · Range — The range can be set past the show's current end, so more tiles can be added into it. `spec/range-and-ruler.md`. (Shakedown 2026-09-28.)
 - **B-06** · P1 · Range — Clicking a range marker selects it, so it can be nudged. `spec/range-and-ruler.md`. (Shakedown 2026-09-28.)
 - **B-07** · P2 · Inspector — The inspector's stars don't refresh after a rating key in the browser (seen 2026-09-26, and by Jason 2026-09-28). Maybe the inspector not re-reading the item.
-- **B-08** · P2 · BGTools — Double-clicking to launch: Jason suspects the first launch starts a second copy while one is already running. Investigate. `spec/bgtools.md`. (Shakedown 2026-09-28.)
+- **B-08** · P2 · RhythmBG — Double-clicking to launch: Jason suspects the first launch starts a second copy while one is already running. Investigate. `spec/rhythmbg.md`. (Shakedown 2026-09-28.)
 - **B-09** · P2 · Rhythm — Tempo detection reads double: Fly Me to the Moon as 145 BPM, where it's about 72. Needs an octave (half-time) check. `spec/rhythm.md`. (Shakedown 2026-09-28.)
 - **B-10** · P2 · PaneKit — Ways to pop out the inspector besides the View menu: a right-click item, a button, or a click action. `spec/panekit.md`, "Pane ⇄ panel". (Shakedown 2026-09-28.)
 - **B-11** · P2 · Range — A numeric field for exact In and Out values. `spec/range-and-ruler.md`. (Shakedown 2026-09-28.)
 - **B-12** · P2 · Library — An Info drawer on the right of the Library view, where the inspector sits elsewhere: one click on the Info button opens the drawer, a double-click opens the Info window that exists. Jason first asked 2026-09-24 ("Design notes", below). (Shakedown 2026-09-28.)
 - **B-13** · P2 · Settings — Set Up Triggers: one control where the Responsiveness slider and the practice drawer sit together, instead of two items. `spec/window-behavior.md`, "A reusable modal box"; `spec/panekit.md`, "The clutch". (Shakedown 2026-09-28.)
-- **B-14** · P1 · BGTools — Per-screen stop: a green on/off switch in each monitor's title bar **and** a "Plays Nothing" entry in the per-Space list (Jason, 2026-09-26: "Simple, do both"). `spec/bgtools.md`, "The 2026-09-25 feedback items". (was item 24)
-- **B-15** · P1 · BGTools — The Control Center tile opens the quick panel on the second click, not the first; and it wants a better icon (with BGTools' own icon, item 29's other half). Diagnosing needs Jason at a real Control Center. `spec/bgtools.md`, "The 2026-09-25 feedback items". (was item 23)
-- **B-16** · P1 · BGTools — Pan and Zoom, length and transition options, matching Quick Show's and New Show's. After Quick Show's field list settles (B-39). `spec/bgtools.md`, "The 2026-09-25 feedback items". (was item 25)
-- **B-17** · P2 · BGTools — Play on Desktop: the show row's menu item (there, greyed out) hands the show to BGTools. `spec/conventions.md` §3.
+- **B-14** · P1 · RhythmBG — Per-screen stop: a green on/off switch in each monitor's title bar **and** a "Plays Nothing" entry in the per-Space list (Jason, 2026-09-26: "Simple, do both"). `spec/rhythmbg.md`, "The 2026-09-25 feedback items". (was item 24)
+- **B-15** · P1 · RhythmBG — The Control Center tile opens the quick panel on the second click, not the first; and it wants a better icon (with RhythmBG's own icon, item 29's other half). Diagnosing needs Jason at a real Control Center. `spec/rhythmbg.md`, "The 2026-09-25 feedback items". (was item 23)
+- **B-16** · P1 · RhythmBG — Pan and Zoom, length and transition options, matching Quick Show's and New Show's. After Quick Show's field list settles (B-39). `spec/rhythmbg.md`, "The 2026-09-25 feedback items". (was item 25)
+- **B-17** · P2 · RhythmBG — Play on Desktop: the show row's menu item (there, greyed out) hands the show to RhythmBG. `spec/conventions.md` §3.
 - **B-18** · P2 · Timeline — The timeline's right-click menus as settled 2026-09-24. Today only C1–C3's minimal items exist: a block (Edit Slides' slide menu, plus Select All After), a cut with no transition, a transition (Style ▸, Duration ▸, Use Show Default, Apply to All Cuts), a lane image (Duplicate, Fade ▸, Show in Library), an audio clip (Set Range to Clip, Fade ▸, Show in Library), a marker (Show / Hide Line, Remove All Beat Markers), empty ruler space, a row handle, the transport, empty audio-row space. `spec/conventions.md` §3.
 - **B-19** · P2 · Menus — The rest of §3's settled items that aren't on their menus: a tile's Quick Look and Copy; Select All on empty grid space; Open Inspector on a slide; Edit Slides' empty space below a non-empty list; the browser's empty space (Import…, Add from Library…); section menus for the inspector's Length, Transition, Pan and Zoom and Rotation (they need headers first) and Reset to Default on a single control; the viewer's Select ▸. (A tile's and a collection's Play wait on Quick Show, B-39.) `spec/conventions.md` §3.
 - **B-20** · P2 · Edit menu — Copy and Paste of slides from the Edit menu (today only from the slide's right-click); copying tiles to Finder or Mail; Duplicate for a selected lane image (A2). `spec/conventions.md` §5.
@@ -59,6 +58,7 @@ Claude can do these.
 The feature-by-feature checks are in `spec/shakedown.md` (every unticked
 row). These are the other things only Jason can do.
 
+- **B-86** · P0 · Rename — The morning after the rename to RhythmIO (B-85, built overnight on branch `rename/rhythmio`): move preferences, the library and RhythmBG's folder, re-grant permissions, install, check, merge, rename the repo. The steps are in `spec/status.md`, "The rename: Jason's morning". (2026-10-02.)
 - **B-30** · P2 · Library — Set up a big test library (4,000+ images), so Claude can measure scroll-scrubbing getting ahead of image loading. (was item 36)
 - **B-31** · P2 · Rhythm — List what's still to do on the Rhythm tool (Jason, 2026-09-28: "largely fleshed out", with "some things to do"). `spec/rhythm.md`.
 - **B-32** · P3 · Range — Read one edge case in Fill Range: a slide wholly inside the range continues past its end as a second use of the same file. Reasoned through and tested, but the plan never said so. `spec/range-and-ruler.md`, "Fill the range with images".
@@ -72,7 +72,7 @@ row). These are the other things only Jason can do.
 - **B-36** · Timeline — Making a show from the timeline when no show is open (the show creator; item 33's option (b)). The timeline stays open there, greyed and inert. Ties to B-35. `spec/slides-as-mini-movies.md`. (was item 33)
 - **B-37** · Library — Show Similar, by theme: Vision's feature prints find bursts and near-copies, not themes ("dogs", "dogs sitting"); Jason wants it to find a good next slide. Research, then a talk. `spec/plan.md`, Phase 3b. (was item 35)
 - **B-38** · Simple things fast — The levels (Basic, Advanced, "Bring it on!"): Jason arranges each level, then a design. `spec/simple-things-fast.md`, "Levels".
-- **B-39** · Simple things fast — Quick Show: the dialog's details, then a design with Jason. A tile's and a collection's Play, and BGTools' options (B-16), wait on it. `spec/simple-things-fast.md`, "Quick Show". (was item 37, scope settled)
+- **B-39** · Simple things fast — Quick Show: the dialog's details, then a design with Jason. A tile's and a collection's Play, and RhythmBG's options (B-16), wait on it. `spec/simple-things-fast.md`, "Quick Show". (was item 37, scope settled)
 - **B-40** · First run — The guided first run: the brief's five open questions. `spec/first-run-brief.md`, "Open questions to settle".
 - **B-41** · Timeline — Image stickiness (2c): does a lane image stay at its time on the clock, or move with the slide it starts over? It stays on the clock for now. Ask once Jason has his own files as a test bed. `spec/plan.md`, Phase 2c.
 - **B-42** · Slides — What one slide's loop covers: its own time cut to cut (as built), or its transitions too. Waits on B-43. `spec/slides-as-mini-movies.md`.
@@ -93,13 +93,13 @@ row). These are the other things only Jason can do.
 
 **Parked** (not pressing; each wants a talk or a plan before code):
 - **B-57** · Accessibility — The pass Jason wants later ("PaneKit should be made to the standards of a pro level App Store candidate", 2026-09-27). First item: ListKit's lists get VoiceOver's real outline role through `.accessibilityRepresentation` (a hidden `List` with `OutlineGroup`); settle first in the harness whether VoiceOver's cursor and axtool's frames still land on the drawn rows. `spec/listkit.md`, "Known limits".
-- **B-58** · ReorderKit — Lift drag-to-reorder into its own package, like PaneKit. No plan written yet. What would move: `ShowToolsCore/Reorder.swift` (+ tests), `ShowToolsApp/ReorderDrag.swift`, and the grid's wiring in `LibraryGridView` (`startDrag`, `commitReorder`, `slot(at:)`, the fly-in and landing) as the package's API. `LibraryOrderNotice` stays in ShowTools. `spec/groups.md`, "Reordering".
+- **B-58** · ReorderKit — Lift drag-to-reorder into its own package, like PaneKit. No plan written yet. What would move: `RhythmIOCore/Reorder.swift` (+ tests), `RhythmIOApp/ReorderDrag.swift`, and the grid's wiring in `LibraryGridView` (`startDrag`, `commitReorder`, `slot(at:)`, the fly-in and landing) as the package's API. `LibraryOrderNotice` stays in RhythmIO. `spec/groups.md`, "Reordering".
 - **B-59** · Library — Double-click inside a multi-selection Quick Looks the whole selection (Jason, 2026-09-26: "it's fine" as is). The idea: delay the collapse only for a plain click on a tile already selected among others. Details: `spec/history/2026-09-28-status-archive.md`, "Parked for later".
 - **B-60** · Notices — One type for "explainer" notices (`CustomOrderNotice`, `LibraryOrderNotice`) and a line in `spec/conventions.md` §6. Jason wanted their text centred (macOS 27's `NSAlert` can't) and room beside the lone icon, maybe for the app's name: a reason to consider our own panel.
 - **B-61** · Framing — Presets (Flush, 2a): accelerating rotation plus zoom and pan, "down the hole". Deferred 2026-09-21. `spec/plan.md`, Phase 2a.
 - **B-62** · ModKit — Jason's standalone look-auditioning app, planned with App Claude (`ModKit & DefaultsKit — Design Pass.md`, repo root, untracked, his). Here: the glass buttons' corners less circular; whether AppKit windows' corner radius can be changed. (was items 26, 27, 29)
-- **B-63** · BGTools — Telling BGTools when a library moves (B7 left it; Jason isn't sure it's needed). `spec/bgtools.md`.
-- **B-64** · BGTools — Power, a curiosity: live Core Image drawing against a looping HEVC video, per monitor. `spec/bgtools.md`, "Still to test".
+- **B-63** · RhythmBG — Telling RhythmBG when a library moves (B7 left it; Jason isn't sure it's needed). `spec/rhythmbg.md`.
+- **B-64** · RhythmBG — Power, a curiosity: live Core Image drawing against a looping HEVC video, per monitor. `spec/rhythmbg.md`, "Still to test".
 - **B-65** · Windows — The areas not yet able to leave the main window: the Library pane itself (not the separate library panel) and the Browser; and a single row opened in a window of its own. `spec/windows.md`, "Two kinds of window".
 - **B-66** · Windows — Scrolling a Timeline window that's partly covered (padding while covered). Designed, not built; a harness first. `spec/windows.md`, "Scrolling a window that's partly covered".
 - **B-67** · Windows — Settings steps the app's own panels aside, but not PaneKit's pop-outs (the Inspector, the Timeline window); a follow-up if it matters. `spec/window-behavior.md`, "The windows pass".
@@ -116,8 +116,8 @@ row). These are the other things only Jason can do.
 - **B-75** · P3 · Undo — Edit ▸ Undo was disabled once after a rating key, on one test copy (2026-09-26). Four later tries worked. Not reproduced, not explained; `UndoMenuState`'s tracking of the key window is the suspect, unproven.
 - **B-76** · P3 · Audio — A song lying wholly inside another plays over it without crossfading (only a partial overlap crossfades). Level tops out at 100%.
 - **B-77** · P3 · Playback — The last slide cuts to the background when something runs past the slides; a fade could come later.
-- **B-78** · P3 · Performance — CPU is about 33–37% while the editor plays; memory about 430 MB. BGTools' desktop mode is ~2%, except while Pan and Zoom moves (about 40% of a core: it really redraws every frame). Why BGTools' random-mode Pan and Zoom default is off.
-- **B-79** · P3 · Video — A video can't go in the lane. The frame strip shows a video's first frame, the onion skin skips video slides, and `stcli render` draws a video slide as the background colour (only `stcli movie` and the app use `MovieMedia`). A video slide's sound is decoded whole into memory on export; fine for slides.
+- **B-78** · P3 · Performance — CPU is about 33–37% while the editor plays; memory about 430 MB. RhythmBG's desktop mode is ~2%, except while Pan and Zoom moves (about 40% of a core: it really redraws every frame). Why RhythmBG's random-mode Pan and Zoom default is off.
+- **B-79** · P3 · Video — A video can't go in the lane. The frame strip shows a video's first frame, the onion skin skips video slides, and `mio render` draws a video slide as the background colour (only `mio movie` and the app use `MovieMedia`). A video slide's sound is decoded whole into memory on export; fine for slides.
 - **B-80** · P3 · Viewer — The zoomed-out work area doesn't draw a lane image's overhang past the frame.
 - **B-81** · P3 · Viewer — Its right-click picks the image menu or the pasteboard menu by which image was last *clicked*, not where the right-click landed. Accepted 2026-09-24; real click-location tracking is the fix if it bites. `spec/conventions.md` §3, route item 4.
 - **B-83** · P2 · Timeline — In the popped-out Timeline window, clicking a slide didn't select it (two axtool clicks, 2026-10-02; the arrows did reach the timeline there). Not yet tried by hand, so it may be a synthetic-click artifact. `spec/panekit.md`, "Pane ⇄ panel".
@@ -210,6 +210,6 @@ one thing").
 
 **B-70, Photos-library browsing.** Deferred until the app has taken
 shape; the permission question gets worked out then. **Checked
-2026-09-24:** no paid developer membership is needed. ShowTools isn't
+2026-09-24:** no paid developer membership is needed. RhythmIO isn't
 sandboxed, so it needs a usage line in Info.plist and the user's
 permission (`spec/conventions.md` §5).

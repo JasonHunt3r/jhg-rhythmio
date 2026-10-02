@@ -237,7 +237,7 @@ why and changes nothing. Letting go over the plain Library's grid also
 shows `LibraryOrderNotice` (Jason's wording: "You cannot set a custom
 order in the Library." / "Collections and Groups support custom
 ordering.", OK, "Don't show this again"), once the files are put back —
-never for Escape, which lets go of nothing. The wording is ShowTools'; a
+never for Escape, which lets go of nothing. The wording is RhythmIO's; a
 package would only report that a drag was refused where it was let go.
 
 **What a drop saves.** Exactly what's on screen. Dragging under another
@@ -249,9 +249,9 @@ use. One "Reorder" undo step per drop, in its own undo group
 (`commitReorder`) — without it Edit ▸ Undo stayed disabled until the next
 event.
 
-**How it's built.** Core: `Reorder` (`ShowToolsCore/Reorder.swift`,
+**How it's built.** Core: `Reorder` (`RhythmIOCore/Reorder.swift`,
 tested) — the slot under a point, the order shown while dragging, the
-merge. View side, kept free of ShowTools' own types for the package:
+merge. View side, kept free of RhythmIO's own types for the package:
 `ReorderDrag.swift` (`ReorderDrop`, `TileFramesKey`, `StackDragSource`,
 `StackDragAnchor`). The grid (`LibraryGridView`) wires them together.
 Three rules found the hard way:

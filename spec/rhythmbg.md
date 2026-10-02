@@ -1,4 +1,9 @@
-# BGTools — the desktop companion app
+# RhythmBG — the desktop companion app
+
+*Called BGTools until 2026-10-02 (B-85); this spec was `bgtools.md`.
+History files use the old name. Its own bundle id is now
+`com.jhg.rhythmbg`, not nested under RhythmIO's, so a standalone RhythmBG
+could keep its id and settings later.*
 
 **Status:** Built 2026-09-22 (B1–B7). **Jason's first-test list**
 (2026-09-24, below) is done: a Quit you can find and All same →
@@ -8,33 +13,33 @@ against a scratch settings file — see below). **Open work:** see
 `spec/backlog.md` (B-08, B-14–B-17, B-63, B-64, B-78); hands-on checks in
 `spec/shakedown.md`.
 
-Phase 5 of ShowTools (renamed 2026-09-22; it was "Live desktop"). This file
-holds BGTools' decisions and measurements; `spec/plan.md` points here. It
+Phase 5 of RhythmIO (renamed 2026-09-22; it was "Live desktop"). This file
+holds RhythmBG's decisions and measurements; `spec/plan.md` points here. It
 began as research and throwaway test programs (`tools/desktop-probe`,
 `control-probe`, `library-probe`, `login-probe`) answering "will this
 work?" — they did, and it was built.
 
 ## What it is
 
-A small companion app that plays ShowTools shows **as the desktop picture**
+A small companion app that plays RhythmIO shows **as the desktop picture**
 on each monitor: behind the desktop icons, on every Space, all day, at
 little cost. It never edits anything.
 
-Why a separate app (Jason, 2026-09-22): ShowTools has become a heavy
+Why a separate app (Jason, 2026-09-22): RhythmIO has become a heavy
 editor (database, undo, timeline, Rhythm tool), too much to keep running
-all day for the desktop. BGTools is menu-bar-only (no Dock icon, no
-editor), built in this repo on ShowToolsCore's renderer (`frame(at:)` →
+all day for the desktop. RhythmBG is menu-bar-only (no Dock icon, no
+editor), built in this repo on RhythmIOCore's renderer (`frame(at:)` →
 `Compositor`), so a show looks the same on the desktop as in the editor.
 
 ## Decisions
 
-- **ShowTools installs BGTools** (Jason, 2026-09-22): it ships as
-  ShowTools' companion, not as a separate download. *How* is open (below).
-- **BGTools reads the library itself, read-only** (Jason: "why couldn't
+- **RhythmIO installs RhythmBG** (Jason, 2026-09-22): it ships as
+  RhythmIO's companion, not as a separate download. *How* is open (below).
+- **RhythmBG reads the library itself, read-only** (Jason: "why couldn't
   the menubar extension also use and access the library?"), rather than
   being sent packages. Edits show up by themselves, and random from a
   collection or the library can work.
-- **Control Center opens BGTools' window**; its **menu bar icon is
+- **Control Center opens RhythmBG's window**; its **menu bar icon is
   optional**, a checkbox in its settings (Jason's menu bar is crowded).
   Control Center tiles can only be a button or a toggle, so the tiles
   open the window and perhaps switch the desktop show on and off; the full
@@ -69,7 +74,7 @@ editor), built in this repo on ShowToolsCore's renderer (`frame(at:)` →
     *main* display's first desktop has an empty uuid; the external's first
     Space had one.
   - **One change fires two or three notices** (screens changed ×2 plus
-    spaces changed, same second). BGTools must wait a moment and rebuild
+    spaces changed, same second). RhythmBG must wait a moment and rebuild
     once, or a slide show restarts three times per plug.
   - **Unplugging moves a display's Spaces onto the one left**, uuid and
     all (the external's Space 2 turned up as the laptop's fourth desktop),
@@ -83,22 +88,22 @@ editor), built in this repo on ShowToolsCore's renderer (`frame(at:)` →
 - **Control Center tiles work unsigned** (`tools/control-probe`): a
   WidgetKit extension, generated with XcodeGen and built by Xcode 27,
   signed ad hoc (this Mac has no certificate), installed in
-  `~/Applications` and launched once. Both tiles ("Open BGTools", a
+  `~/Applications` and launched once. Both tiles ("Open RhythmBG", a
   button; "Desktop Show", a toggle) appeared in Control Center's gallery,
   could go in Control Center or the menu bar, and the button opened the
   app (Jason). The action ran in the sandboxed extension, not the app, so
-  a tile that must change something in BGTools needs a way to reach it:
-  App Groups want a certificate, so try a URL scheme (`bgtools://…`) or a
+  a tile that must change something in RhythmBG needs a way to reach it:
+  App Groups want a certificate, so try a URL scheme (`rhythmbg://…`) or a
   distributed notification. (MacStories documented a Tahoe bug hiding
   third-party controls until the widget gallery is opened.)
-- **A tile can change BGTools without opening it** (`tools/control-probe`,
+- **A tile can change RhythmBG without opening it** (`tools/control-probe`,
   tiles Colour A/B/C, Jason pressing them, 2026-09-22). A tile's action
   always runs in the sandboxed extension, even when the same intent is
   compiled into the app too (C: logged by the extension, never reached
   the app). Two ways across both worked, every press, within the second:
   - **A, a distributed notification** (name only; a sandboxed sender
-    gets no userInfo): reaches BGTools only if it's already running.
-  - **B, a URL** (`bgtools://…`) opened with `activates = false` and
+    gets no userInfo): reaches RhythmBG only if it's already running.
+  - **B, a URL** (`rhythmbg://…`) opened with `activates = false` and
     handled in the app delegate's `application(_:open:)`, not SwiftUI's
     `onOpenURL` (which opens a window): with the app running it stays
     behind other windows; **with it quit, the press launches it, delivers
@@ -106,7 +111,7 @@ editor), built in this repo on ShowToolsCore's renderer (`frame(at:)` →
     URLs.
   - New tiles didn't appear in Control Center's gallery until the build
     number went up and `chronod` was restarted (`killall chronod`).
-- **Reading the library while ShowTools writes** (`tools/library-probe`,
+- **Reading the library while RhythmIO writes** (`tools/library-probe`,
   scratch copy): a writer saving through `Library` (744 saves in 20 s)
   and two readers opening `Library.sqlite` with `SQLITE_OPEN_READONLY`,
   polling `PRAGMA data_version` every 50 ms, reading inside one
@@ -124,13 +129,13 @@ editor), built in this repo on ShowToolsCore's renderer (`frame(at:)` →
   Apple-recommended way and shows in Login Items with a switch. Probes
   removed afterwards (`tools/login-probe/remove.sh`).
 
-## BGTools' read path (from the measurements)
+## RhythmBG's read path (from the measurements)
 
 Open read-only (never `Library.init`, which migrates, and never
 `identifier()`, which writes); check `user_version` and refuse a newer
 schema than it knows; poll `data_version`; read each change in one read
-transaction; decode with ShowToolsCore's types; skip files deleted under
-it; follow the library when it moves (a bookmark; ShowTools tells it).
+transaction; decode with RhythmIOCore's types; skip files deleted under
+it; follow the library when it moves (a bookmark; RhythmIO tells it).
 
 ## Still to test
 
@@ -153,7 +158,7 @@ From the 2026-09-20 plan, still applying:
    (the same slide at the same moment). Off, each monitor's and Space's own
    settings come back; they're kept while it's on.
 3. **Monitors coming and going** — **Settled (Jason, 2026-09-22):** a
-   **"new screens" default** in BGTools (e.g. Random from all files, or a
+   **"new screens" default** in RhythmBG (e.g. Random from all files, or a
    chosen collection) plays on any monitor or Space it hasn't seen; after
    that it's remembered by id (monitors) and uuid (Spaces).
 4. **Videos and GIFs** — **Settled (Jason, 2026-09-22):** they play;
@@ -161,21 +166,21 @@ From the 2026-09-20 plan, still applying:
    on one display, stills on another). With it on, a show skips its video
    and GIF slides.
 5. **Wallpaper fallback** — **Settled (Jason, 2026-09-22): never touch
-   it.** BGTools never changes the system wallpaper; when it stops,
+   it.** RhythmBG never changes the system wallpaper; when it stops,
    whatever Jason had shows through.
 
-New with BGTools:
-6. **How ShowTools installs it** — **Settled (Jason, 2026-09-22): copy to
-   `~/Applications`.** ShowTools carries BGTools inside it and copies it
+New with RhythmBG:
+6. **How RhythmIO installs it** — **Settled (Jason, 2026-09-22): copy to
+   `~/Applications`.** RhythmIO carries RhythmBG inside it and copies it
    out the first time the desktop is turned on, replacing the copy when a
    newer build arrives. A normal, visible app (where tiles were measured
-   to load); deleting ShowTools leaves it behind.
+   to load); deleting RhythmIO leaves it behind.
 7. **Sound** — **Settled (Jason, 2026-09-22): silent, with a switch** in
    each monitor's and Space's setting that lets its show's music (and
    video sound) play. Detail for the build: if two screens have it on,
    only one should be heard (the one on the main display?).
 8. **Settings for random pictures** — **Settled (Jason, 2026-09-22): one
-   set of desktop defaults** in BGTools (length, transition, Pan and Zoom
+   set of desktop defaults** in RhythmBG (length, transition, Pan and Zoom
    on/off, fit or fill), used by every random mode on every screen.
 9. **Power** — **Settled (Jason, 2026-09-22): pause when** the display
    sleeps or the screen locks (always), in **Low Power Mode**, and when an
@@ -185,11 +190,11 @@ New with BGTools:
    the hidden Spaces too; resume where it left off.)
 10. **Which library** — **Settled (Jason, 2026-09-22): per monitor and
     Space.** Each monitor's and Space's setting names its own library,
-    starting with the one ShowTools has open. A library switch in
-    ShowTools doesn't change the desktop.
+    starting with the one RhythmIO has open. A library switch in
+    RhythmIO doesn't change the desktop.
 11. **Private libraries** — **Settled (Jason, 2026-09-22): Touch ID when
     one is chosen; back to public on sleep or lock.** Choosing a private
-    library for a screen asks for Touch ID (BGTools' own prompt). When the
+    library for a screen asks for Touch ID (RhythmBG's own prompt). When the
     Mac sleeps or the screen locks, every screen playing a private library
     drops it and goes back to its last public setting (or the "new
     screens" default), so it isn't there when the lid opens (Jason: "we
@@ -199,11 +204,11 @@ New with BGTools:
     launch.
 12. **Clicks** — **Settled:** they go straight through to the desktop
     (measured working).
-13. **Control Center tiles** — **Settled (Jason, 2026-09-22): Open BGTools
+13. **Control Center tiles** — **Settled (Jason, 2026-09-22): Open RhythmBG
     and Desktop Show on/off.** Control Center only holds buttons and
     switches (macOS 27 SDK: `ControlWidgetButton`, `ControlWidgetToggle`,
     optionally configured when added, a status line, draggable to the
-    menu bar), so "something bigger" is **BGTools' panel**: the Open tile
+    menu bar), so "something bigger" is **RhythmBG's panel**: the Open tile
     drops a compact floating panel near the top right, a row per monitor
     and Space (thumbnail, mode and show, Next, Stills only) plus All same.
     Favourite "Play X on screen Y" tiles can come later.
@@ -214,13 +219,13 @@ From `spec/history/2026-09-24-work-order.md`. *Decided* is Jason's;
 *Proposal* is Claude's, for him to settle.
 
 1. ~~**A Quit you can find.**~~ — done 2026-09-24. The panel gained
-   **"Quit BGTools (stops desktop shows)"** at its bottom, below Open
-   BGTools…. `BGToolsApp.main` now sets a minimal `NSApp.mainMenu` (an App
-   menu holding only Quit, ⌘Q) at launch, so ⌘Q works whenever BGTools has
+   **"Quit RhythmBG (stops desktop shows)"** at its bottom, below Open
+   RhythmBG…. `RhythmBGApp.main` now sets a minimal `NSApp.mainMenu` (an App
+   menu holding only Quit, ⌘Q) at launch, so ⌘Q works whenever RhythmBG has
    a menu bar to be typed into — the settings window, or the panel, since
-   both are regular-app moments. Checked: `xcodebuild` for the `BGTools`
-   scheme builds clean; a scratch launch (`BGTOOLS_SETTINGS`,
-   `BGTOOLS_OPEN_PANEL=1`) shows the panel with the new button, screenshot
+   both are regular-app moments. Checked: `xcodebuild` for the `RhythmBG`
+   scheme builds clean; a scratch launch (`RHYTHMBG_SETTINGS`,
+   `RHYTHMBG_OPEN_PANEL=1`) shows the panel with the new button, screenshot
    confirmed the wording.
 2. ~~**All same → Synchronize**~~ — done 2026-09-24: the switch, its row,
    its help text, the note shown on a screen while it's on, and the
@@ -291,14 +296,14 @@ From `spec/history/2026-09-24-work-order.md`. *Decided* is Jason's;
    keeps only the size across launches now, never the position, which the
    settled decision needs overridden every time. The calling screen's
    current Space is selected in `WindowState` at the same time. A new
-   `WindowState.moveToDisplay` closure, set by `BGToolsApp` to
+   `WindowState.moveToDisplay` closure, set by `RhythmBGApp` to
    `moveWindow(toDisplay:)`, backs ⌥-double-click on a screen's box in
    either the map or the list (`Arrangement`'s and the sidebar header's own
    `.contextMenu` also getting Rename… from item 3 on the same box) — a
    plain double-click still just selects, matching "go into it" elsewhere
    staying a no-op here. **Checked with axtool:** the window opened
    correctly positioned and with the right Space selected on this Mac's
-   one monitor (`BGTOOLS_OPEN_WINDOW=1`, no pointer to speak of in a
+   one monitor (`RHYTHMBG_OPEN_WINDOW=1`, no pointer to speak of in a
    sandboxed launch, so only the single-monitor path was really exercised).
    **Not checked:** the pointer-following behaviour or ⌥-double-click's
    move with more than one monitor — this Mac has one, so both are
@@ -316,14 +321,14 @@ From `spec/history/2026-09-24-work-order.md`. *Decided* is Jason's;
 Open work: see `spec/backlog.md` (B-15, B-14, B-16 — items 23, 24, 25 of
 the 2026-09-25 feedback worklist; items 10, 21 and 22 from the same list
 are done, batch 4). Jason's own call: these are picked up once the
-ShowTools side of that worklist is finished, not before. What follows is
+RhythmIO side of that worklist is finished, not before. What follows is
 the design for each.
 
 1. **Control Center launch icon: one click, not two, and a better icon**
    (item 23). Today's tile opens the quick panel on a second click; needs
    real hands on a Control Center tile to see why the first click doesn't
    (the reinstall note in `spec/status.md` applies — the installed
-   `~/Applications/ShowTools.app` is what Control Center actually sees,
+   `~/Applications/RhythmIO.app` is what Control Center actually sees,
    not `build/`). The icon itself is art, not code — pairs with item 29
    (app icons) below.
 2. **Per-screen stop, not just the master switch** (item 24). Jason's
@@ -333,17 +338,17 @@ the design for each.
    build both** (Jason: "Simple, do both"). Sits next to the
    naming/map work above (`MainWindow.swift`, `Arrangement`), same area
    of the sidebar.
-3. **BGTools pan & zoom, length and transition options** (item 25) — a
-   feature port. BGTools' desktop defaults
-   (`Sources/BGToolsCore/DesktopSettings.swift`, `randomDefaults`) already
+3. **RhythmBG pan & zoom, length and transition options** (item 25) — a
+   feature port. RhythmBG's desktop defaults
+   (`Sources/RhythmBGCore/DesktopSettings.swift`, `randomDefaults`) already
    carry length, transition and Pan and Zoom for its random modes; this is
    giving them the same options and controls Quick Show/New Show's own
    settings have (`spec/simple-things-fast.md`'s "essentials" table lists
-   BGTools alongside them), not new plumbing. Worth doing after Quick Show
+   RhythmBG alongside them), not new plumbing. Worth doing after Quick Show
    itself firms up the shared field list, since the two are meant to
    converge.
 
-The hands-on checks not yet re-done against the nested BGTools (private
+The hands-on checks not yet re-done against the nested RhythmBG (private
 unlock with Touch ID, the panel closing on a click elsewhere, Space-switch
 pausing) are rows in `spec/shakedown.md`.
 
@@ -352,28 +357,28 @@ pausing) are rows in `spec/shakedown.md`.
 - **B1 Shared player. BUILT 2026-09-22** (172 tests pass; Edit Show's
   preview and the player checked in-app on a scratch library). Move `PlaybackClock`, `PlaybackEngine`,
   `MediaProvider`/`VideoSlot`, `MusicPlayer` and `ShowCanvas` out of the
-  app into a new SwiftPM library, `ShowToolsPlayback`. The engine talks to
+  app into a new SwiftPM library, `RhythmIOPlayback`. The engine talks to
   a small `ShowSource` protocol (a show by id, its timeline, an item's
-  URL, editing state) instead of `AppModel`; AppModel conforms. ShowTools
+  URL, editing state) instead of `AppModel`; AppModel conforms. RhythmIO
   behaves exactly as before, so the desktop draws shows exactly as the
   player does (the Compositor rule).
-- **B2 BGTools skeleton. BUILT 2026-09-22** (then `BGTools/build.sh`;
+- **B2 RhythmBG skeleton. BUILT 2026-09-22** (then `RhythmBG/build.sh`;
   since the Xcode port it's a target of the root `project.yml` and is
   built, nested, by `./make-app.sh` — `spec/xcode-port.md`;
   `Library(readingOnly:)` + 3 tests; played the test show on 4 Spaces and
-  noticed a save within the second). `BGTools/` (XcodeGen: the app, later its
+  noticed a save within the second). `RhythmBG/` (XcodeGen: the app, later its
   Control Center extension) using the package. A read-only library reader
-  in ShowToolsCore (the read path above) that is a `ShowSource`. Desktop
+  in RhythmIOCore (the read path above) that is a `ShowSource`. Desktop
   windows per display and Space (uuid keys, one rebuild per burst of
-  notices) playing one show from `BGTOOLS_LIBRARY` (a scratch library;
+  notices) playing one show from `RHYTHMBG_LIBRARY` (a scratch library;
   never the real one in tests).
-- **B3 Settings and modes. BUILT 2026-09-22** (`BGToolsCore`:
+- **B3 Settings and modes. BUILT 2026-09-22** (`RhythmBGCore`:
   `DesktopSettings`, `DesktopShow`; 12 tests. In the app a `Player` per
   screen, one for all under All same; checked on 4 Spaces with a test
   settings file: every mode, Stills only, All same in sync and back,
   re-picks each pass). No UI yet: the settings file
-  (`~/Library/Application Support/BGTools/settings.json`, or
-  `BGTOOLS_SETTINGS`) is read, and re-read when it changes. Found: hidden
+  (`~/Library/Application Support/RhythmBG/settings.json`, or
+  `RHYTHMBG_SETTINGS`) is read, and re-read when it changes. Found: hidden
   Spaces keep drawing (B6 pauses them); a new pick must restart the engine
   from the top (`restartWithLatest`), since keeping the place by slide id
   lands anywhere when slide ids are item ids. Each monitor's and Space's setting (library,
@@ -387,41 +392,41 @@ pausing) are rows in `spec/shakedown.md`.
   (library, the five modes, a thumbnail grid of shows or collections,
   Stills only, Sound); All same (switch in its row), New screens and
   Random pictures below. Desktop Show switch in the toolbar. Opens with
-  `bgtools://window`, by opening BGTools again, or `BGTOOLS_OPEN_WINDOW=1`;
-  BGTools shows in the Dock only while it's open. Libraries on offer:
-  ShowTools' main and recent ones (its prefs, read only), or in a test
+  `rhythmbg://window`, by opening RhythmBG again, or `RHYTHMBG_OPEN_WINDOW=1`;
+  RhythmBG shows in the Dock only while it's open. Libraries on offer:
+  RhythmIO's main and recent ones (its prefs, read only), or in a test
   launch only those the settings name. Checked by driving it with axtool
-  (`AXTOOL_APP=bgtools`) on the test settings. Private libraries show a
+  (`AXTOOL_APP=rhythmbg`) on the test settings. Private libraries show a
   note until B6.
 - **B4b The panel. BUILT 2026-09-22.** A borderless, non-activating
   panel with the popover blur, at the top right of the screen the pointer
   is on, sized by its content and kept in the corner. A row per Space (live
   thumbnail, current one outlined, what it plays; ▾ picks a show,
   shuffled show, collection, random show or all files; ⏭ next; ⚙ Stills
-  only, Sound, "Open in BGTools…"), All same collapsing them into one;
-  New screens (a menu), Random pictures (→ window), "Open BGTools…".
-  `bgtools://open` toggles it (tested); Escape closes it (tested); a
+  only, Sound, "Open in RhythmBG…"), All same collapsing them into one;
+  New screens (a menu), Random pictures (→ window), "Open RhythmBG…".
+  `rhythmbg://open` toggles it (tested); Escape closes it (tested); a
   click anywhere else closes it (a global mouse monitor: for Jason to
-  try). Was: `bgtools://open` shows it without activating other
+  try). Was: `rhythmbg://open` shows it without activating other
   windows; rows per monitor and Space.
 - **B5 Control Center. BUILT 2026-09-22** (Jason pressed all four:
-  both tiles, both ways). `BGTools/Controls` is a widget extension with
-  **Open BGTools** (→ `bgtools://open`, the panel) and **Desktop Show**
-  (→ `bgtools://show/on|off`), each opened without activating BGTools,
+  both tiles, both ways). `RhythmBG/Controls` is a widget extension with
+  **Open RhythmBG** (→ `rhythmbg://open`, the panel) and **Desktop Show**
+  (→ `rhythmbg://show/on|off`), each opened without activating RhythmBG,
   which also launches it if it's quit. The tile is sandboxed and can't
-  read the settings, so BGTools writes `control-state.json` beside them
+  read the settings, so RhythmBG writes `control-state.json` beside them
   and calls `ControlCenter.shared.reloadControls`; the extension has a
-  **read-only sandbox exception** for `~/Library/Application Support/BGTools/`
+  **read-only sandbox exception** for `~/Library/Application Support/RhythmBG/`
   alone, which works ad hoc signed (measured). New tiles need a build
   number bump and `killall chronod` before Control Center lists them.
-  The probe app and its tiles are gone; BGTools is installed in
+  The probe app and its tiles are gone; RhythmBG is installed in
   `~/Applications` (where tiles load from).
 - **B6 Pausing and private libraries. BUILT 2026-09-22.** A player pauses
   unless one of its screens is the Space its display is showing, and
   everything pauses when the Mac or its displays sleep, the screen locks
   (`com.apple.screenIsLocked`, the old distributed notification: there's no
   public one) or Low Power Mode is on. A private library needs Touch ID in
-  BGTools' window ("Unlock…"); until then that screen plays its last
+  RhythmBG's window ("Unlock…"); until then that screen plays its last
   public setting, or the "new screens" default (checked: it fell back at
   launch). Sleep or lock clears every unlock, and none is restored at
   launch.
@@ -435,25 +440,25 @@ pausing) are rows in `spec/shakedown.md`.
   costs ~40%**, since it really does move every frame — worth a look. It's
   why the random-mode default was flipped from `.auto` to `.off`
   2026-09-23: it's opt-in now, not a cost every random desktop show pays.
-- **B7 ShowTools installs it. BUILT 2026-09-22.** `make-app.sh` builds
-  BGTools (when XcodeGen is there) into `ShowTools.app/Contents/Resources`.
+- **B7 RhythmIO installs it. BUILT 2026-09-22.** `make-app.sh` builds
+  RhythmBG (when XcodeGen is there) into `RhythmIO.app/Contents/Resources`.
   **View ▸ Desktop Show…** (or "Set Up Desktop Show…" the first time)
   copies it to `~/Applications` and opens its window; it replaces the copy
   when the carried one is a different version **or newer** (versions rarely
-  change while it's being built), quitting a running BGTools first and
-  swapping the bundle whole. BGTools registers itself at login on its first
+  change while it's being built), quitting a running RhythmBG first and
+  swapping the bundle whole. RhythmBG registers itself at login on its first
   run from `~/Applications` (`SMAppService.mainApp`), with an "Open at
   login" switch in its window's ⋯ menu. Checked end to end: the menu item
   installed it, it launched, registered, and opened its window. A screen
   with nothing chosen now gets **no window at all** (it was black before),
   so the normal wallpaper shows.
-  **Left open:** telling BGTools when a library moves. Until then a moved
+  **Left open:** telling RhythmBG when a library moves. Until then a moved
   library reads as "can't be opened" and is chosen again by hand.
 
 ## Originally (2026-09-20)
 
 Phase 5 was "Live desktop": one borderless window per monitor at desktop
-level inside ShowTools itself, a four-way play mode per monitor plus "All
+level inside RhythmIO itself, a four-way play mode per monitor plus "All
 same", hot-plugged monitors, videos allowed with a stills-only setting,
-and a real-wallpaper fallback. The idea of doing it inside ShowTools is
+and a real-wallpaper fallback. The idea of doing it inside RhythmIO is
 gone; the rest carries into the open questions above.

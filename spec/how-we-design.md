@@ -1,4 +1,4 @@
-# How we design ShowTools, and why
+# How we design RhythmIO, and why
 
 **Kernel.** Started 2026-09-24, from one evening's planning. It's meant
 to grow, with hindsight, into a design manual: the principles behind the
@@ -21,13 +21,13 @@ A slideshow is six things:
 5. **Whether they move:** Pan and Zoom.
 6. **What plays under them:** audio.
 
-Everything else in ShowTools refines one of these six: transforms,
+Everything else in RhythmIO refines one of these six: transforms,
 rotation, the lane, effects, markers, rhythm, levels of sound.
 
 **How we know.** Jason designed the app around them before anyone
 counted. They were counted on 2026-09-24, while working out what a
 Quick Show dialog needs and what a New Show… dialog needs. The fields the
-two shared were these six. Then BGTools, designed separately for the
+two shared were these six. Then RhythmBG, designed separately for the
 desktop, turned out to have the same six in its settings. Three places,
 one set: that's the evidence.
 
@@ -56,9 +56,9 @@ holds or what the app can do.
 
 Look for the same idea wearing two names, and for two ideas sharing one.
 
-- **Two that are nearly one:** Quick Show and BGTools. Both play a pool
+- **Two that are nearly one:** Quick Show and RhythmBG. Both play a pool
   of pictures with a length, a transition and movement. One plays in a
-  window, one on the desktop. Seeing that made "Send to BGTools" a
+  window, one on the desktop. Seeing that made "Send to RhythmBG" a
   hand-over, not a new feature.
 - **One that had to be two:** a single panel for Quick Show and New
   Show… looked tidy. But one plays at once and the other makes something
@@ -83,7 +83,7 @@ be exceptions. (Jason, 2026-09-24.)
 - **Who decides:** Jason, who uses the software, judges each departure.
   Claude points out where a choice departs from the HIG or from
   tradition, so each one is made knowingly.
-- **The example:** in Finder, Space is Quick Look. In ShowTools, Space is
+- **The example:** in Finder, Space is Quick Look. In RhythmIO, Space is
   play/pause pretty much always, because wanting to stop playback and
   having to juggle windows first would be frustrating. Quick Look moves
   to ⌘Y and double-click. It's a knowing departure, with the reason
@@ -261,7 +261,7 @@ that difference was the crash.
 - **Watch the whole gesture, not its first half.** On 2026-09-26 a test
   app seemed to show that posting a mouse-up ends tap-to-drag's drag
   lock: the button read as up and the drag ended — and the test stopped
-  watching there. Built into ShowTools, it "remained unchanged" in
+  watching there. Built into RhythmIO, it "remained unchanged" in
   Jason's hands; measured for three seconds after the release, 15–90
   drags were still arriving. The measurement was right about what it
   measured; it just ended too soon, and the feel was never asked about.

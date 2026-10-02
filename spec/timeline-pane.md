@@ -54,7 +54,7 @@ lands at or near the bottom and is scrolled fully into view** (unless
 the window is shorter than the row).
 
 **Built 2026-09-26, the ceiling first, the floor the same day:** the
-ceiling as a general PaneKit mechanism, not a ShowTools-only patch
+ceiling as a general PaneKit mechanism, not a RhythmIO-only patch
 (`PaneKit/Sources/PaneKit/PaneModel.swift`, `Split.contentTracking`,
 `ContentTracking`; `PaneLayout.sizedExtent`; `PaneController
 .setContentExtent`, proven in the standalone harness's own arithmetic
@@ -100,7 +100,7 @@ Checked: `swift build` clean, `swift test` (336 core tests, PaneKit's own
 46 → 51, both unchanged by this). A scratch-library launch at the default
 (full-content) size renders identically to before. Shrunk well below
 full content (`defaults write` a 200-pt stored size directly, a scratch
-library, `showtools-testing`'s rules throughout — Jason's real
+library, `rhythmio-testing`'s rules throughout — Jason's real
 preferences domain backed up first and restored byte-for-byte after):
 the ruler and only the rows that fit (images, slides) show, cut cleanly
 at the pane's own edge with no clipping artifact or overlap — the

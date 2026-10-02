@@ -13,8 +13,8 @@ dogs barking. That's this.
 
 **Corrected on the way in:** the handoff said a video slide's sound was
 "muted for now". It isn't. `MediaProvider.muteVideo` defaults to `false`
-and only BGTools sets it true (`BGTools/App/Player.swift:37`), so in
-ShowTools video slides play their original audio at 100%, uncontrollably.
+and only RhythmBG sets it true (`RhythmBG/App/Player.swift:37`), so in
+RhythmIO video slides play their original audio at 100%, uncontrollably.
 
 ## Settled with Jason
 
@@ -36,7 +36,7 @@ saved slides to respect, and should migrate rather than assume.
 
 ## The model
 
-A new `LevelCurve` in `ShowToolsCore` (`Levels.swift`), decoded field by
+A new `LevelCurve` in `RhythmIOCore` (`Levels.swift`), decoded field by
 field like every saved type, with a lenient point list so one unreadable
 point doesn't cost the rest:
 
@@ -79,10 +79,10 @@ implementation. How it's **applied** differs by player, and deliberately:
   same curve is applied there.
 
 This mirrors the picture, which already has two paths (AVPlayer live, the
-Compositor for `stcli render` and export). The single-source rule is kept
+Compositor for `mio render` and export). The single-source rule is kept
 where it matters: one curve, one `level(at:)`, two players.
 
-`MediaProvider.muteVideo` stays as it is — BGTools still mutes the lot.
+`MediaProvider.muteVideo` stays as it is — RhythmBG still mutes the lot.
 
 ## Steps
 
@@ -116,7 +116,7 @@ video's audio in the lane.
 
 ## As built (V1–V3, 2026-09-22)
 
-`Sources/ShowToolsCore/Levels.swift` and `Sources/ShowToolsApp/CurveLine.swift`.
+`Sources/RhythmIOCore/Levels.swift` and `Sources/RhythmIOApp/CurveLine.swift`.
 `SlideSettings.audio` is nil when silent, so a slide turned back down leaves
 no field behind. Library schema stayed **12**: no migration. 18 tests
 (193 core in total).
@@ -191,7 +191,7 @@ curve reaches the player with the rest of the resolved slide.
 `audio.level(at: layer.localTime)` each frame, and a newly made `VideoSlot`
 opens at `level(at: 0)` rather than full volume — otherwise a frame's worth
 of original audio is heard before the first update. `VideoSlot.volume` is
-`AVPlayer.volume`, separate from `muted`, which BGTools still uses to
+`AVPlayer.volume`, separate from `muted`, which RhythmBG still uses to
 silence everything.
 
 Two more tests (195 core): a video slide's curve reaches the resolved

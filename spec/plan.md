@@ -1,4 +1,4 @@
-# ShowTools — plan
+# RhythmIO — plan
 
 Approved 2026-09-20.
 
@@ -32,8 +32,8 @@ Built the same way as CutSim (see `jhg-cutcheck/spec/macos_panels_guide.md`):
 
 - SwiftUI app with AppKit underneath. **Updated 2026-09-22:** the app is
   built by one Xcode project (XcodeGen, `project.yml`), which is what lets
-  BGTools and its Control Center tiles nest inside the ShowTools bundle —
-  see `spec/xcode-port.md`. The libraries, `stcli` and the tests stay
+  RhythmBG and its Control Center tiles nest inside the RhythmIO bundle —
+  see `spec/xcode-port.md`. The libraries, `mio` and the tests stay
   SwiftPM, so `swift test` is unchanged. It was originally SwiftPM
   throughout, wrapped into a `.app` by a shell script.
 - Floating side panels are `NSPanel` utility windows that snap together and
@@ -56,7 +56,7 @@ metadata inside the image (camera, date, GPS), and text it recognises in the
 picture itself. Keeping images out of Spotlight means excluding the library
 folder, not just leaving tags off. A folder whose name ends in `.noindex` is
 skipped by Spotlight, so **by default the library is hidden:**
-`~/Pictures/ShowTools Library.noindex/`. The Preferences pane has a setting,
+`~/Pictures/RhythmIO Library.noindex/`. The Preferences pane has a setting,
 **"Let Spotlight index the library"**, that renames the folder without the
 suffix (and back again). The database stores paths relative to the library
 root, so the rename doesn't break anything. The `.noindex` behaviour must be
@@ -67,7 +67,7 @@ app's own library folder. The copy is checked against the original's hash
 before the ingest reports success, so after that the original can be safely
 deleted from wherever it was.
 
-- **Location:** `~/Pictures/ShowTools Library.noindex/` (see Privacy). On this Mac, Desktop and
+- **Location:** `~/Pictures/RhythmIO Library.noindex/` (see Privacy). On this Mac, Desktop and
   Documents sync to iCloud Drive but `~/Pictures` does not, so the library
   stays local. If a library location is ever chosen inside an iCloud-synced
   folder, the app refuses it
@@ -380,7 +380,7 @@ chosen later, after checking what macOS actually offers.
 
 ### Phase 2b: Library manager — BUILT 2026-09-21
 **Starts with Collections (Jason, 2026-09-21).** The app is organised the
-way Final Cut is (Library → Event → Project), with ShowTools' own names:
+way Final Cut is (Library → Event → Project), with RhythmIO's own names:
 
 - **Library → Collection → Show** in the sidebar. A **Collection** is a
   defined set of the library's photos (a photo can be in several); a
@@ -430,12 +430,12 @@ to the Collection Browser and the library.
   opening it asks for **Touch ID or the Mac's login password**
   (LocalAuthentication's device-owner check). The mark lives in the library
   itself, so it holds wherever the library is opened from. Turning it off
-  asks too. ShowTools must leave no copies or previews of a private
+  asks too. RhythmIO must leave no copies or previews of a private
   library's photos outside its folder (thumbnail caches included).
-  **Limit, told to Jason:** this guards the door in ShowTools only; the
+  **Limit, told to Jason:** this guards the door in RhythmIO only; the
   files are still ordinary files to anyone using the Mac account. Real
   locking means keeping that library in an encrypted disk image, with
-  ShowTools as a second lock.
+  RhythmIO as a second lock.
 - Browse the whole library: thumbnail grid, sort and filter (type, date, size,
   "not in any show")
 - **Delete** follows the Photos convention:
@@ -559,13 +559,13 @@ shows, and in **keeping one of a series** that got imported.
 
 ### Phase 4: Setlist export / import (replanned with Jason 2026-09-22) — BUILT 2026-09-22
 
-A folder of numbered copies to use outside ShowTools, and a lossless way
+A folder of numbered copies to use outside RhythmIO, and a lossless way
 to move a show to another library or Mac: `show.json` (everything) and
 `show.tsv` (the readable, editable one). The whole design: `spec/setlist.md`.
 
-### Phase 5: BGTools, the desktop companion app (renamed 2026-09-22; was "Live desktop") — BUILT 2026-09-22
+### Phase 5: RhythmBG, the desktop companion app (renamed 2026-09-22; was "Live desktop") — BUILT 2026-09-22
 Plays shows as the desktop picture on each monitor and Space. **Its own
-spec: `spec/bgtools.md`.**
+spec: `spec/rhythmbg.md`.**
 
 ### Replace a slide's image (Jason, 2026-09-24) — BUILT 2026-09-24
 
@@ -610,9 +610,9 @@ like any add. *Ways in (settled, Jason, 2026-09-24):*
 - Desktop randomizing: a four-way play mode per monitor (none / random from
   show / random show / random from all files) plus an "All same" checkbox.
   Random show plays the picked show in order; random from show shuffles it.
-  (2026-09-22: carried into `spec/bgtools.md` as open questions)
+  (2026-09-22: carried into `spec/rhythmbg.md` as open questions)
 - "All files" means everything the app has ingested: the library database
-- The library is managed: files are copied into `~/Pictures/ShowTools Library/`,
+- The library is managed: files are copied into `~/Pictures/RhythmIO Library/`,
   which is kept out of iCloud and hidden from Spotlight by default. Originals can be deleted after ingest
 - Settings belong to each slide (each use of an item), never to the library item
 - Editing means removing and reordering slides; the output order list is drag and drop

@@ -169,7 +169,7 @@ What's known before trying it:
 - **Scrolling a window behind is already normal on the Mac.** A swipe
   scrolls whatever window is under the pointer, front or not, without
   activating it. So only the padding is new.
-- **Knowing what's covered:** ShowTools knows where its own windows are
+- **Knowing what's covered:** RhythmIO knows where its own windows are
   and in what order. Other apps' window frames are readable too
   (`CGWindowListCopyWindowInfo`; bounds need no screen-recording
   permission). The covered height is where the covering windows' bottom

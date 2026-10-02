@@ -4,30 +4,30 @@
 what, and the few structural rules that go with each. Rules live in
 `CLAUDE.md`, current state in `spec/status.md`.
 
-- `Sources/ShowToolsCore/`: no UI. Models, the SQLite library, ingest, the
+- `Sources/RhythmIOCore/`: no UI. Models, the SQLite library, ingest, the
   timeline (`ShowTimeline.frame(at:)`), the `Compositor`, and setlist
   export (`Setlist`, `MetadataStrip`). Everything
   that draws a show goes through `frame(at:)` → `Compositor.compose`,
   the video exporter included. Keep it that way.
-- `Sources/ShowToolsPlayback/`: the player, shared with BGTools:
+- `Sources/RhythmIOPlayback/`: the player, shared with RhythmBG:
   `PlaybackEngine`, `ShowCanvas`/`ShowCanvasView`, `MediaProvider`,
   `MusicPlayer`. The engine reads shows and files through `ShowSource`
-  (AppModel is one; BGTools' read-only reader will be another), never the
+  (AppModel is one; RhythmBG's read-only reader will be another), never the
   app's types. Anything the app uses from here must be `public`.
-- `BGTools/`: the desktop companion app (spec `spec/bgtools.md`) and its
-  Control Center tiles (`BGTools/Controls`). Both are targets of the root
-  `project.yml`, and the built BGTools is nested inside ShowTools at
-  `Contents/Library/LoginItems/BGTools.app`.
+- `RhythmBG/`: the desktop companion app (spec `spec/rhythmbg.md`) and its
+  Control Center tiles (`RhythmBG/Controls`). Both are targets of the root
+  `project.yml`, and the built RhythmBG is nested inside RhythmIO at
+  `Contents/Library/LoginItems/RhythmBG.app`.
   It opens libraries with `Library(readingOnly:)` only. Its settings and
-  the show each mode builds are in `Sources/BGToolsCore` (tested). How to
-  launch and drive it is in the `showtools-testing` skill.
+  the show each mode builds are in `Sources/RhythmBGCore` (tested). How to
+  launch and drive it is in the `rhythmio-testing` skill.
 - `ListKit/` (top level): our own lists for when `List` can't be used,
   **for any Mac app**, its own Swift package depending on nothing
   (`spec/listkit.md`). `cd ListKit && swift test`; `swift run
   ListHarness`. A local package dependency in both `Package.swift` and
   `project.yml`, like PaneKit; the Catalog (`MainView`) is its first user.
 - `PaneKit/` (top level): our own pane system, **for any Mac app**, as
-  its own Swift package, depending on nothing in ShowTools
+  its own Swift package, depending on nothing in RhythmIO
   (`spec/panekit.md`). `cd PaneKit && swift test` runs its tests;
   `swift run PaneHarness` runs its test app. **In active use by the app**
   since `spec/panekit.md` steps 2–3 (2026-09-24): a local package
@@ -40,7 +40,7 @@ what, and the few structural rules that go with each. Rules live in
   and `PaneSwipe`); the drag itself is `trackResize` in
   `PaneContainerView.swift`, which also watches the pointer for the
   resize cursor (`PaneResizeCursorView`, `PaneHandle.swift`).
-- `Sources/ShowToolsApp/`: the SwiftUI/AppKit app. `PlaybackEngine` owns a
+- `Sources/RhythmIOApp/`: the SwiftUI/AppKit app. `PlaybackEngine` owns a
   show's clock, media and drawing, and any number of `ShowCanvas` views
   show it (the Edit Show preview and its pop-out share one engine). A paused
   engine stops drawing about 0.6s after the last change; call `touch()`
@@ -87,34 +87,34 @@ what, and the few structural rules that go with each. Rules live in
   undo manager and ruler preview), `RhythmNotationView` (a pattern as notation:
   Bravura's glyph outlines in a `Canvas`, placed by `RhythmNotation.layout`), `RhythmGridView`
   (the drum-machine view, through `RhythmGrid`).
-- `Resources/AppIcon.icon`: the app icon, an Icon Composer document (SVG
-  layers cut from `Resources/AppIcon.svg`, Jason's drawing; its gradient
-  square is a full-canvas `background` layer). Xcode
-  compiles it into `Assets.car` and `AppIcon.icns`; `project.yml` names it
-  as the app's icon.
+- `Resources/RhythmIO.icon`: the app icon, an Icon Composer document,
+  Jason's, made for the rename to RhythmIO. Xcode compiles it into
+  `Assets.car` and `RhythmIO.icns`; `project.yml` names it as the app's
+  icon. `Resources/AppIcon.svg` is the drawing behind the app's first icon,
+  before the rename.
 - `Resources/Fonts/`: Bravura, the SMuFL music font (SIL OFL 1.1, licence
   alongside). `make-app.sh` copies it into the app and `ATSApplicationFontsPath`
   loads it, so it only exists in the built app, not under `swift run`.
-- `Sources/stcli/`: dev CLI. `ingest`, `show` (creates a show; it doesn't print one), `render` (writes frames
+- `Sources/mio/`: dev CLI. `ingest`, `show` (creates a show; it doesn't print one), `render` (writes frames
   through the Compositor to PNG, which is how transitions get checked by eye),
   `movie` (a real movie through the same path — video export,
   `spec/video-export.md`) and `mix` (just the show's music, rendered
   offline).
-- `make-app.sh`: builds `build/ShowTools.app` with Xcode, through the root
-  `project.yml` (XcodeGen; `ShowTools.xcodeproj` is generated and
+- `make-app.sh`: builds `build/RhythmIO.app` with Xcode, through the root
+  `project.yml` (XcodeGen; `RhythmIO.xcodeproj` is generated and
   gitignored). One app holds everything: the tiles in `Contents/PlugIns`,
-  BGTools in `Contents/Library/LoginItems`, Bravura in Resources. The
-  libraries, `stcli` and the tests stay SwiftPM — `swift test` is
-  unchanged. View ▸ Desktop Show… launches the nested BGTools and
-  registers it at login (`SMAppService.loginItem`); deleting ShowTools
+  RhythmBG in `Contents/Library/LoginItems`, Bravura in Resources. The
+  libraries, `mio` and the tests stay SwiftPM — `swift test` is
+  unchanged. View ▸ Desktop Show… launches the nested RhythmBG and
+  registers it at login (`SMAppService.loginItem`); deleting RhythmIO
   takes all of it. `install.sh` copies the app to `~/Applications` and
   launches it once, which is the only way the Control Center tiles
-  register — testing tiles means installing, not `build/ShowTools.app`.
-  Caches lie about tiles; the `showtools-testing` skill says how.
+  register — testing tiles means installing, not `build/RhythmIO.app`.
+  Caches lie about tiles; the `rhythmio-testing` skill says how.
 - `tools/`: `make-test-library.sh <dir>` builds a scratch library with
   generated media and a test show. There are also a window lister and a
   contact-sheet tool, for checking screenshots.
 - **Signing:** every bundle is signed "Apple Development", team
   `P82S39V2KJ` (`project.yml`'s base settings; `spec/xcode-port.md`), so a
-  permission granted to ShowTools survives rebuilds.
+  permission granted to RhythmIO survives rebuilds.
 

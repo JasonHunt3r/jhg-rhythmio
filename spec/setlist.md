@@ -15,7 +15,7 @@ images row, songs, markers, rows or editing state. Its flat TSV could no
 longer carry a show, so it was replanned against what exists now.
 
 **What it's for (Jason, 2026-09-22): both.** A folder of numbered copies to
-use outside ShowTools (a USB stick, a TV, another app, Finder), *and* a way
+use outside RhythmIO (a USB stick, a TV, another app, Finder), *and* a way
 to move a show to another library or Mac and get it back exactly. So import
 must be lossless.
 
@@ -57,7 +57,7 @@ later formats read old exports.
 per slide, a header row, show-wide defaults in `#` lines at the top, an
 empty cell means "use the default". As built in 4a:
 ```
-# ShowTools setlist v1
+# RhythmIO setlist v1
 # name	Beach Trip
 # default_length	5
 # default_transition	dissolve 2 lead 1

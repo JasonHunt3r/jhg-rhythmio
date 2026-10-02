@@ -1,11 +1,11 @@
-# ShowTools: guided first run, a brief
+# RhythmIO: guided first run, a brief
 
 For fleshing out with App Claude (Jason, 2026-09-22). Nothing here is built
 or decided yet beyond what's marked as Jason's. Names follow
 `spec/anatomy.md` (updated 2026-09-24: songs are **audio clips**, in the
 **audio row**; the bottom of Edit Show is the **timeline pane**).
 
-## What ShowTools is
+## What RhythmIO is
 
 A macOS slideshow composer and player for Jason's own Mac (SwiftUI and
 AppKit). You get as much control as possible over each slide: how long it
@@ -21,7 +21,7 @@ highly customizable slideshow by adjusting the transform controls and
 applying effects to your slides. Also its music files."
 
 As built:
-- **Library**: every file ShowTools has taken in (photos, animated GIFs,
+- **Library**: every file RhythmIO has taken in (photos, animated GIFs,
   videos, audio). Importing *copies* files in, so originals can be deleted.
   Files carry a rating and tags, never slide settings. You can have more
   than one library (File ▸ Open Library…).
@@ -100,7 +100,7 @@ where this fits: the first run is one of three answers to "simple things
 aren't fast".
 
 1. **The empty library, on first open.**
-   > Welcome to ShowTools! You are currently viewing your first library,
+   > Welcome to RhythmIO! You are currently viewing your first library,
    > but it is empty. Click below to add the files you'll need to create
    > Collections and Shows.
 

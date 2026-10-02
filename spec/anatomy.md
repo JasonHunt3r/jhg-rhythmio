@@ -20,7 +20,7 @@ thing.
 
 | Name | What it is | Also called |
 |---|---|---|
-| **Library** | Every file ShowTools has taken in, in one folder on disk. One is open at a time. | master library (the default one) |
+| **Library** | Every file RhythmIO has taken in, in one folder on disk. One is open at a time. | master library (the default one) |
 | **File** | One picture, animation, video or audio file in the library. Has a name, a rating and tags, and **no slide settings**. | item, `MediaItem` |
 | **Collection** | A named group of files. Every show belongs to one. | `MediaCollection`; Final Cut's Event |
 | **Show** | A slideshow: slides in order, plus lane images, audio clips and markers, and the show's defaults. | project |
@@ -161,8 +161,8 @@ Main window
 - **Sheets:** Batch Rename, Keep One, Detect Beats, Place Image Here
   (a library picker), and the export panels.
 - **Settings:** the app's settings window.
-- **BGTools:** a separate app inside ShowTools that plays shows on the
-  desktop. It only reads the library. See `spec/bgtools.md`.
+- **RhythmBG:** a separate app inside RhythmIO that plays shows on the
+  desktop. It only reads the library. See `spec/rhythmbg.md`.
 
 ## 3. Each area: what it's for, what it holds, what it affects
 
@@ -271,7 +271,7 @@ second images row: plan, Phase 3).
 
 ## 4. The picture's layers
 
-What the viewer, the player, the frame strip, BGTools and a movie export
+What the viewer, the player, the frame strip, RhythmBG and a movie export
 all draw, bottom to top. Everything goes through
 `ShowTimeline.frame(at:)` → `Compositor.compose`, so all five agree.
 
@@ -358,7 +358,7 @@ not with the show:
   `similarWithin`.
 - **The Rhythm and Detect Beats tools:** `rhythm*`, `beat*`.
 
-These live in `com.jhg.showtools`, which test copies share: see
+These live in `com.jhg.rhythmio`, which test copies share: see
 CLAUDE.md.
 
 The row order, the range, the loop state and the lines are the other

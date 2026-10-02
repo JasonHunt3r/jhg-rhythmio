@@ -1,7 +1,7 @@
 # Window behavior: layers, Settings, the modal box, placement
 
 **Status:** Built 2026-09-27 (the windows pass: panel hiding as a setting,
-panels floating only while ShowTools is active, Settings coming up
+panels floating only while RhythmIO is active, Settings coming up
 frontmost and uncovered, About, the tabbed Settings window, the drawers'
 sensitivity setting, the Transparency module, `SettingsBox`, where these
 windows open). **Open work:** see `spec/backlog.md` (B-13 one combined
@@ -20,18 +20,18 @@ Jason's answers into one pass over every window.
 **Make the windows consistent, each defined by its purpose.** What the
 code did before this pass (audited 2026-09-26): the Info panel, the Rhythm
 panel, the library panel and the Slide Editor are `NSPanel`s that **hid**
-when ShowTools wasn't frontmost (`hidesOnDeactivate`); the PaneKit
+when RhythmIO wasn't frontmost (`hidesOnDeactivate`); the PaneKit
 pop-outs (the Inspector, the Timeline window) **stayed visible** and
 dropped to `.normal` (`PaneWindows.swift`). Every one of them sat at
-`.floating` while ShowTools was active — **above the Settings window**,
+`.floating` while RhythmIO was active — **above the Settings window**,
 an ordinary window.
 
 **Jason's answers, the three settled ones — built 2026-09-27:**
-- **Whether panels hide when ShowTools isn't frontmost is a setting** —
+- **Whether panels hide when RhythmIO isn't frontmost is a setting** —
   polite for some kinds of window — but **panels that take drops from
   other apps never hide** (the browser list, popped out, is a
   destination for files dragged from Finder). Built: `PanelHidingSetting`
-  (`ShowToolsApp.swift`), an `@AppStorage` toggle in Settings' new
+  (`RhythmIOApp.swift`), an `@AppStorage` toggle in Settings' new
   "Windows" section, default on (matching the old hardcoded behavior).
   The Info panel, the Rhythm tool and the Slide Editor read it fresh each
   time they come to front, so toggling it while one's already open takes
@@ -47,13 +47,13 @@ an ordinary window.
   (`InfoPanel`, `RhythmPanel`, `SlideEditorWindow`, the library panel)
   set `window.level = .floating` once, permanently — unlike PaneKit's own
   pop-outs (the Inspector, the Timeline window), which already drop to
-  `.normal` when ShowTools isn't active. A window level ranks *across
+  `.normal` when RhythmIO isn't active. A window level ranks *across
   every app on screen*, so with hiding turned off, a panel just sat
-  floating above every other app's windows forever, not just ShowTools'
+  floating above every other app's windows forever, not just RhythmIO's
   own — it never "left" when you switched away, so there was nothing to
   "bring back." Built `floatOnlyWhileActive` (mirroring
   `PaneWindowController`'s own pattern exactly): Info, Rhythm and the
-  Slide Editor now drop to `.normal` whenever ShowTools isn't active, back
+  Slide Editor now drop to `.normal` whenever RhythmIO isn't active, back
   to `.floating` when it is. **The library panel is deliberately left
   out**: it's a drop target for files dragged from Finder, which makes
   *Finder* the active app for the length of the drag — dropping its level
@@ -62,7 +62,7 @@ an ordinary window.
   the Info panel sat, `panelsHideWhenInactive` off (to isolate the level
   fix from hiding): before the fix, the Info panel stayed on top of
   Finder even after switching to it; after, it dropped behind, and
-  reactivating ShowTools brought it back in front together with the main
+  reactivating RhythmIO brought it back in front together with the main
   window, "as a package."
 - **Settings, opened from the menu or its key, comes up frontmost, and
   panels stop covering it.** Built as `SettingsWindowCoordinator`: every
@@ -91,13 +91,13 @@ an ordinary window.
   even though its title keeps changing) and compared thereafter. **Scoped
   to this app's own panels** — PaneKit's own pop-outs (the Inspector, the
   Timeline window) aren't covered, since giving PaneKit a dependency on
-  ShowToolsApp's Settings window wants a cleaner cross-package hook than
+  RhythmIOApp's Settings window wants a cleaner cross-package hook than
   this pass builds; worth a follow-up if it turns out to matter.
-- **About ShowTools** in the app menu — already there. SwiftUI's own
+- **About RhythmIO** in the app menu — already there. SwiftUI's own
   default app menu provides it for free (confirmed with axtool: "About
-  ShowTools" sits right above "Settings…," exactly where you'd expect);
-  nothing to build. "Install BGTools" (this doc's own guess at where it
-  might live) doesn't exist as a menu item either — the BGTools menu's
+  RhythmIO" sits right above "Settings…," exactly where you'd expect);
+  nothing to build. "Install RhythmBG" (this doc's own guess at where it
+  might live) doesn't exist as a menu item either — the RhythmBG menu's
   only item today is "Desktop Show…".
 
 **A pro-style, tabbed Settings window — built 2026-09-27.** Jason: the
@@ -113,11 +113,11 @@ preference key, entirely free) — matching the HIG language already read
 out for the layer-fix discussion a day earlier, so no chrome had to be
 hand-built.
 
-The old sections became six tabs (`SettingsView`, `ShowToolsApp.swift`):
+The old sections became six tabs (`SettingsView`, `RhythmIOApp.swift`):
 **Library** (its own section, unchanged), **Editing** (Tags, Collections,
 Alerts — everyday behaviors while working in the library), **Playback**,
 **Export**, **Windows** (this pass's own new section, and where the rest
-of the windows pass will land), **BGTools** (its own tab since it's a
+of the windows pass will land), **RhythmBG** (its own tab since it's a
 whole companion app, not one setting among others). Each page is
 `SettingsPage`, a shared scrollable container capped under the screen's
 menu bar and dock, at a wider fixed width (640, up from 520). The window
@@ -130,7 +130,7 @@ confirmed with axtool (640×450 for Library, narrower pages shrinking to
 fit their own shorter content).
 
 **Broke, then fixed, the Settings-covering fix above.** Tabs mean the
-window's title now names the selected pane instead of staying "ShowTools
+window's title now names the selected pane instead of staying "RhythmIO
 Settings" — exactly what defeated the title-matching version of
 `SettingsWindowCoordinator`, found immediately by rerunning the same
 Info-panel-overlap check after the redesign. `WindowAccessor` (above) is
@@ -158,7 +158,7 @@ other items in the tabbed windows," not a one-off for this setting alone.
 Built `ModalSettingsBox.present(title:content:)`: a plain `NSWindow`
 (`.titled, .closable`), its content an `NSHostingController` wrapping
 whatever SwiftUI view the caller hands it, shown with `NSApp.runModal(for:)`
-— every ShowTools window blocked, confirmed with axtool (a click on the
+— every RhythmIO window blocked, confirmed with axtool (a click on the
 Library window's title bar while the box was open left it un-key;
 `focused` still read the box).
 
@@ -174,7 +174,7 @@ tap that opened it has fully finished dispatching, not mid-dispatch —
 fixed it; retested the identical scenario and both Done and the close
 button worked. `spec/panekit.md`, "The clutch," has the fuller story,
 including a second, false alarm (`axtool drag` not moving either fine
-control after the fix, where a plain click did — `showtools-testing`'s
+control after the fix, where a plain click did — `rhythmio-testing`'s
 own "synthetic drag isn't proof," not a bug).
 
 **Reversed the same day, once Jason tried it: "I was wrong about making
@@ -203,7 +203,7 @@ paths for a design that didn't ship.
 
 `SettingsBox` is now an `NSPanel`, `.floating`, exactly the pattern this
 app's own hand-built panels already use (Info, Rhythm, the Slide Editor)
-— sits above every ShowTools window including Settings, so it's never
+— sits above every RhythmIO window including Settings, so it's never
 hidden behind anything; closes only on its own Done or close button,
 untouched by closing Settings or clicking through to a real drawer behind
 it. `floatOnlyWhileActive` (`FloatingPanelActivation.swift`) keeps it
@@ -310,20 +310,20 @@ open box alone; the box's own Done button still closes it. Never opened
 by a real hand.
 
 **The header bar's title, same session**: Jason: "the header bar should
-say: ShowTools Settings: XXXX," not just the tab's own name — the HIG's
+say: RhythmIO Settings: XXXX," not just the tab's own name — the HIG's
 "title naming the pane" reads as "Library," full stop, indistinguishable
 at a glance from the main window's own title (the Settings-covering fix,
 above, flagged this exact collision as one reason title-matching
 couldn't identify the window — this doesn't change that; the window's
 still found by identity, never by title). `SettingsWindowCoordinator
-.applyTitleFormat` prefixes it with `"ShowTools Settings: "` — applied
+.applyTitleFormat` prefixes it with `"RhythmIO Settings: "` — applied
 once immediately on capture, and kept up through every tab switch after
 that with a KVO observation on the window's own `title` (there's no
 "tab changed" notification to hook instead), a plain prefix check making
 the observer's own re-entrant call (setting the title again inside its
 own KVO callback) a harmless no-op. Checked with axtool against a scratch
-library: opens as "ShowTools Settings: Windows," reads "ShowTools
-Settings: Library" after clicking that tab, "ShowTools Settings:
+library: opens as "RhythmIO Settings: Windows," reads "RhythmIO
+Settings: Library" after clicking that tab, "RhythmIO Settings:
 Playback" after that one — the collision is gone too, cosmetically,
 though nothing here depends on that.
 

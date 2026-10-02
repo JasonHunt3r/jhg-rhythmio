@@ -50,7 +50,7 @@ itself. Names follow `spec/anatomy.md`.
 
 | Gesture | Means, everywhere | Where it differs | State |
 |---|---|---|---|
-| **Click** | Select this, and only this — **at once**, never waiting to see if a second click comes. Takes the keyboard to that area | Where a double-click also means something (a Library tile's Quick Look), one tap reads the click count: the first click selects, the second goes into it, as Finder does — a separate double-click gesture made SwiftUI hold every click ~350 ms (measured 2026-09-26, `showtools-gotchas`) | Built (grid, timeline, lists). **A SwiftUI List doesn't take the keyboard on a click by itself** (macOS 27): `ClickTakesKeyboard` gives it, built on Edit Slides' slide list 2026-09-26 |
+| **Click** | Select this, and only this — **at once**, never waiting to see if a second click comes. Takes the keyboard to that area | Where a double-click also means something (a Library tile's Quick Look), one tap reads the click count: the first click selects, the second goes into it, as Finder does — a separate double-click gesture made SwiftUI hold every click ~350 ms (measured 2026-09-26, `rhythmio-gotchas`) | Built (grid, timeline, lists). **A SwiftUI List doesn't take the keyboard on a click by itself** (macOS 27): `ClickTakesKeyboard` gives it, built on Edit Slides' slide list 2026-09-26 |
 | **⌘-click** | Add to or remove from the selection | — | Built in the grid, lists and the slides row. **Settled for lane images and audio clips too** (Jason, 2026-09-24; E4): today they select one at a time |
 | **⇧-click** | Select the range from the anchor (the last plain click or ⌘-click) to here, *replacing* the previous ⇧-range | — | **Built 2026-09-24** (batch 4) in the grid and the storyline, through `GridSelection` (unit-tested); Lists already did it right |
 | **Click on empty space** | Deselect all | The browser: deselecting there lets go of the show's slide or lane image too (it was left in the inspector, editable) | Built in the grid; **the timeline** (every row's empty space and past the last slide, clearing every kind of selection) and **the browser**, 2026-09-26 (Jason) |
@@ -73,7 +73,7 @@ itself. Names follow `spec/anatomy.md`.
 | **⇧⌥⌘-click the range button** | Set the range to the whole show | A locked range refuses it | Settled (Jason, 2026-09-24); built (W7), not yet tried by hand |
 | **Drag a range end** (I or O) on the ruler | Move that end; one undo step | Not while the range is locked | Settled (Jason, 2026-09-24); built (W6). By hand (2026-09-28) the end runs faster than the mouse: a bug, `spec/backlog.md` B-02 |
 | **⌘[ / ⌘]** | Go Back / Go Forward: the playhead's own history, with the timeline's scroll and zoom. The playhead is never in ⌘Z | — | Settled (Jason, 2026-09-24); built (W8, View menu), checked by Jason 2026-09-28 |
-| **⌥-double-click a screen's box** (BGTools) | Move the settings window to that monitor | A plain double-click selects the screen | Modified double-click settled (Jason, 2026-09-24); ⌥ was Claude's proposal. Built (BGTools `MainWindow.swift`) |
+| **⌥-double-click a screen's box** (RhythmBG) | Move the settings window to that monitor | A plain double-click selects the screen | Modified double-click settled (Jason, 2026-09-24); ⌥ was Claude's proposal. Built (RhythmBG `MainWindow.swift`) |
 
 ### How ⌥ is used elsewhere (for deciding ⌥-click)
 
@@ -91,7 +91,7 @@ What's well established on the Mac and in creative apps:
   by ⌥-clicking the image (`spec/backlog.md`, B-56).
 - **Selecting what's behind:** design apps mostly use ⌘-click
   (Illustrator's "select behind"), or a right-click menu listing
-  everything under the pointer (Photoshop, Figma). In ShowTools ⌘-click
+  everything under the pointer (Photoshop, Figma). In RhythmIO ⌘-click
   already means "add to the selection", so **⌥-click for "behind" would
   be a knowing departure.** A right-click "Select" submenu of what's
   under the pointer could do the same job without taking ⌥.
@@ -99,7 +99,7 @@ What's well established on the Mac and in creative apps:
 **Final Cut's ⌥-click (checked 2026-09-24):** in Final Cut, a plain click
 on a clip only moves the *skimmer*, and **⌥-click moves the playhead** to
 that frame (and selects the clip if skimming is off). ⌥⌘-click moves a
-connected clip's connection point. In ShowTools a plain click on a block
+connected clip's connection point. In RhythmIO a plain click on a block
 already moves the playhead to it, so Final Cut's ⌥-click meaning is
 already the plain click here, and **⌥-click is free for something
 else**, such as selecting what's behind.
@@ -146,7 +146,7 @@ built no further than that).
 | **← → ↑ ↓** | Move the selection; with ⇧, extend it | **Edit Show: the arrows go to the area last clicked, or the active area** (Jason, 2026-09-28, reversing 2026-09-24): "It was a mistake to reserve the arrow keys for the timeline in show view… probably the default behavior is what we really want after all." He was trying to move through the browser list and the timeline took the keys. *Superseded 2026-09-28: the timeline's claim on the arrows everywhere in Edit Show.* **The timeline, once it has them (settled, Jason, 2026-09-24):** ← → move through the items in the current row (slides, or audio clips); ↑ ↓ move between rows; **in the ruler**, ← → nudge the playhead. The player: previous and next slide. The viewer with an image selected: nudge it. **A grid with the viewer drawer open and several selected:** ← → move the outline (the stack's top card) within the selection, wrapping, and the selection stays (Jason, 2026-09-26, Aperture's multi-up). **Edit Slides:** the slide list keeps ↑ ↓ once clicked; the timeline's arrows work there too, since it's live in both modes | Built in lists, the player, the viewer, the grid and the timeline. **The 2026-09-28 reversal is built** (2026-10-02, `KeyboardArea`): the arrows go to the area last clicked in each window, the timeline before any click; a selection whose area doesn't have them draws grey, the Mac's way (Jason, 2026-10-02). A held arrow repeats |
 | **Home / End** | The first or last item, or the show's start or end | — | Built in the player |
 | **Tab** | Move the keyboard to the next area | — | Built by SwiftUI where areas are focusable |
-| **0–5, 9, − / =, U** | **Rate a file, Aperture's keys** (item 20, Jason, 2026-09-26): 1–5 stars, 0 clears, 9 rejects, − / = one star down/up; U shows/hides ratings. **Y** opens/closes the viewer drawer over the grids and **⇧Y** switches it Side by Side / Stack (Aperture's Viewer key; built 2026-09-26 in the Library grid, the library panel and Edit Show's browser, `spec/viewer-drawer.md`); **in Edit Slides, Y opens/closes the Slide viewer** (one picture, so no ⇧Y) | The rating keys only where files are: the Library grid, the library panel, Edit Show's browser. Never on slides, the timeline, the viewer or the player. − / = may need to become contextual if they clash. **U works everywhere in the window and nothing else ever gets it** — not the sidebar's type-select (it used to jump to "Untitled Collection"; Jason: "it's not supposed to jump at all"), only a text field. See `showtools-gotchas`, "U is taken window-wide" | Built |
+| **0–5, 9, − / =, U** | **Rate a file, Aperture's keys** (item 20, Jason, 2026-09-26): 1–5 stars, 0 clears, 9 rejects, − / = one star down/up; U shows/hides ratings. **Y** opens/closes the viewer drawer over the grids and **⇧Y** switches it Side by Side / Stack (Aperture's Viewer key; built 2026-09-26 in the Library grid, the library panel and Edit Show's browser, `spec/viewer-drawer.md`); **in Edit Slides, Y opens/closes the Slide viewer** (one picture, so no ⇧Y) | The rating keys only where files are: the Library grid, the library panel, Edit Show's browser. Never on slides, the timeline, the viewer or the player. − / = may need to become contextual if they clash. **U works everywhere in the window and nothing else ever gets it** — not the sidebar's type-select (it used to jump to "Untitled Collection"; Jason: "it's not supposed to jump at all"), only a text field. See `rhythmio-gotchas`, "U is taken window-wide" | Built |
 | **Single letters** | Final Cut's keys, where there's a timeline: J K L shuttle, I O range, M marker, N snapping; E W Q add from the browser | Never while typing in a text field (`SingleKeys`) | Built. Space, M, I, O are named in the Show menu's titles and E, W, Q in the browser's right-click (F1, C8); Help ▸ Keyboard Shortcuts lists them all (F3) |
 
 ## 3. Right-click menus
@@ -215,7 +215,7 @@ divider, and empty groups are skipped:
 | Inspector: the header bar (the slide's name and length) | **Settled 2026-09-24.** Play from Here ✓ · Replace Image… ✓ · Show in Library ✓ |
 | Inspector: a single control (a slider, a picker) | **Settled 2026-09-24.** Reset to Default |
 | Browser: empty space | **Settled 2026-09-24.** Import…, Add from Library… (not built: a "No menu yet" note names them) |
-| Library pane: a show | **Settled 2026-09-24.** Play ✓, Play Full Screen ✓, Play on Desktop (on the menu, greyed out until the BGTools handoff) · Duplicate Show ✓ · Export ▸ (Show…, Movie…) ✓ · Rename ✓ (in place, 2026-09-27) · Delete Show… ✓ |
+| Library pane: a show | **Settled 2026-09-24.** Play ✓, Play Full Screen ✓, Play on Desktop (on the menu, greyed out until the RhythmBG handoff) · Duplicate Show ✓ · Export ▸ (Show…, Movie…) ✓ · Rename ✓ (in place, 2026-09-27) · Delete Show… ✓ |
 | Library pane: a collection | **Settled 2026-09-24.** Play (greyed out until playing without a show is built; not on the menu yet) · New Show in… ✓ · Rename ✓ (in place, 2026-09-27) · Delete Collection… ✓ |
 | Library pane: the Library row | **Settled 2026-09-24.** Import… ✓, New Collection ✓, Open Library Panel ✓ · Show in Finder (the library's folder) ✓ |
 | An empty row | Place Image Here… ✓ (images row); for an audio row, see the timeline rows above |
@@ -266,9 +266,9 @@ Duplicate of a lane image aren't built; the rest is Proposed.
 
 **Copying tiles to Finder or Mail is small:** the files' URLs go on the
 pasteboard, and Finder pastes copies. Photos is different: **native
-access to the Photos library** (browsing it inside ShowTools, plan,
+access to the Photos library** (browsing it inside RhythmIO, plan,
 Later) is the larger job, but **it doesn't need the paid developer
-membership** (checked 2026-09-24). ShowTools has no hardened runtime
+membership** (checked 2026-09-24). RhythmIO has no hardened runtime
 and **no sandbox** (`project.yml`; only the Control Center tiles are
 sandboxed). *(When this was written it was signed ad hoc; since
 2026-09-26 every bundle is signed Apple Development, team `P82S39V2KJ`,
@@ -347,9 +347,9 @@ universals first.
     menu.
   - **Duplicate Show and Play on Desktop:** both wanted. They're the two
     items here that need new code, not just a menu item. Play on Desktop
-    hands the show to BGTools (`spec/bgtools.md`). **Duplicate Show
+    hands the show to RhythmBG (`spec/rhythmbg.md`). **Duplicate Show
     built 2026-09-24** (`AppModel.duplicateShow`, undoable); **Play on
-    Desktop still needs the BGTools handoff**, so it's on the menu
+    Desktop still needs the RhythmBG handoff**, so it's on the menu
     greyed out for now.
   - **Export:** in the show's menu **and** in File ▸ Export, as one
     **Export ▸** submenu (Show…, Movie…) wherever export appears. The

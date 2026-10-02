@@ -35,7 +35,7 @@ decisions are Jason's, 2026-09-21 and 2026-09-22.
   I and O, ⌥X. The rest of the editing state (the lines, loop) still
   isn't. *Build note:* undo restores a whole-show snapshot and
   deliberately carries the editing state over (`AppModel.update`,
-  showtools-gotchas), so the range has to be taken out of that carry-over
+  rhythmio-gotchas), so the range has to be taken out of that carry-over
   and given undo steps of its own. Marker edits, a marker's own line
   included, are undoable, as before.
   It's multi-purpose by context: the part detection applies to, and, with

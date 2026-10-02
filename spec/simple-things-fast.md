@@ -33,7 +33,7 @@ leaves Pan and Zoom as something applied *on top*. So it should not be on
 by default for a new slide. It belongs instead to a choice made when a
 show is started — "make me a slideshow that gently moves" — rather than a
 setting every slide quietly carries. **The show-level default was already
-`.off`** (`ShowDefaults.panAndZoom`). BGTools'
+`.off`** (`ShowDefaults.panAndZoom`). RhythmBG's
 `DesktopSettings.startingRandomDefaults` was the one default still set to
 `.auto` — flipped to `.off` the same day, since it's also the one that
 measurably costs CPU (`spec/backlog.md`, B-78).
@@ -64,7 +64,7 @@ shows, how one gives way to the next, whether they move, and what plays
 under them.** Everything else in the app refines one of them.
 
 **Perceptual efficiency** is the posture that follows. Wherever someone
-starts (Quick Show, New Show…, BGTools, Basic), the six come first, in
+starts (Quick Show, New Show…, RhythmBG, Basic), the six come first, in
 that order, and nothing else is in the way. The refinements (transforms,
 the lane, effects, rhythm, markers) are there when asked for, never in
 front. A new panel or level is checked against the six: which of them
@@ -105,15 +105,15 @@ field starts filled in, so Return alone plays:
 - **Transition** and its duration.
 - **Audio:** an audio file, or a playlist, if wanted.
 - **Play** (Return), full screen or in a window.
-- **Send to BGTools:** plays it on the desktop instead. Quitting
-  ShowTools leaves it running, since BGTools is a separate app that
-  keeps going on its own (`spec/bgtools.md`).
-  - *From the code:* BGTools already has pools as play modes (a show in
+- **Send to RhythmBG:** plays it on the desktop instead. Quitting
+  RhythmIO leaves it running, since RhythmBG is a separate app that
+  keeps going on its own (`spec/rhythmbg.md`).
+  - *From the code:* RhythmBG already has pools as play modes (a show in
     order, a show shuffled, random from a collection, a random show,
     random from all files), plus one set of desktop defaults (length,
-    transition, Pan and Zoom, fit). Send to BGTools is mostly handing it
+    transition, Pan and Zoom, fit). Send to RhythmBG is mostly handing it
     the dialog's choices.
-  - *What's new:* BGTools' random modes play pictures only. Audio chosen
+  - *What's new:* RhythmBG's random modes play pictures only. Audio chosen
     in the dialog would be a new thing for it to play. And its defaults
     are shared by every random mode, so a Quick Show sent with its own
     length or transition needs somewhere of its own to keep them.
@@ -168,8 +168,8 @@ the dialog's length and the audio's length.
 
 *From the code:* playing without a saved show means a show that exists
 only in memory. The engine reads shows through `ShowSource`
-(`spec/layout.md`), and BGTools already builds shows it never saves
-(its random modes, `Sources/BGToolsCore`). So there's a precedent.
+(`spec/layout.md`), and RhythmBG already builds shows it never saves
+(its random modes, `Sources/RhythmBGCore`). So there's a precedent.
 
 ### Two panels, and what they share (Jason, 2026-09-24)
 
@@ -208,7 +208,7 @@ thinking (the levels, the first run). The overlap:
 | Audio: a file or a playlist, Loop | yes | yes: goes into the audio row | as played |
 | Rhythm | yes | later, in the show | as played |
 | Presets | yes, its own | yes, its own (separate, Jason 2026-09-26) | — |
-| Main button | **Play** (and Send to BGTools) | **Make Show** | **Make Show** |
+| Main button | **Play** (and Send to RhythmBG) | **Make Show** | **Make Show** |
 
 - **Make Show from Quick Show** (Jason: "a very sweet idea") turns a
   Quick Show you like into a real show you can edit. The player offers
@@ -225,11 +225,11 @@ a selection), their order, how long each shows, how one gives way to the
 next, whether they move (Pan and Zoom), and what plays under them. Six
 things. Everything else in the app refines one of them.
 
-**BGTools has the same six** (`Sources/BGToolsCore/DesktopSettings.swift`).
+**RhythmBG has the same six** (`Sources/RhythmBGCore/DesktopSettings.swift`).
 Jason designed it that way before they were counted. Seeing the same six
-turn up in three places (Quick Show, New Show, BGTools) confirms them:
+turn up in three places (Quick Show, New Show, RhythmBG) confirms them:
 
-| Essential | BGTools today |
+| Essential | RhythmBG today |
 |---|---|
 | The pictures | a pool: a show, a collection, a random show, or all files (`PlayMode`); **Stills only** narrows it |
 | Their order | a show in order, or shuffled; the random modes reshuffle each pass |
@@ -238,14 +238,14 @@ turn up in three places (Quick Show, New Show, BGTools) confirms them:
 | Whether they move | the desktop defaults' Pan and Zoom (off by default: it costs CPU) |
 | What plays under them | **the weak one.** A **Sound** switch lets a *show's* own audio play. The random modes have no audio of their own |
 
-Two things BGTools adds that are its own, and not essentials of a
+Two things RhythmBG adds that are its own, and not essentials of a
 slideshow: *where* it plays (each monitor and Space, or All same) and
 *when* it pauses (sleep, lock, Low Power, a full-screen app). And one
-difference in shape: BGTools' length, transition and movement are one
+difference in shape: RhythmBG's length, transition and movement are one
 set shared by every random mode, where Quick Show keeps them per preset.
 
-So **Quick Show and BGTools are nearly the same idea**, one in a window
-and one on the desktop. That's why Send to BGTools is mostly a hand-over.
+So **Quick Show and RhythmBG are nearly the same idea**, one in a window
+and one on the desktop. That's why Send to RhythmBG is mostly a hand-over.
 The gaps are audio, and settings per Quick Show rather than one shared
 set.
 
@@ -272,7 +272,7 @@ his Mac then captures that arrangement as the level's preset:
 - *Areas and layout* are already saved settings (`editMode`,
   `inspectorShown`, `frameStripShown`, the columns' widths, and the rest
   in `spec/anatomy.md` §5). They can be read with
-  `defaults read com.jhg.showtools`, plus screenshots.
+  `defaults read com.jhg.rhythmio`, plus screenshots.
 - **This has been done once already.** `DefaultLayout.swift` holds
   Jason's arrangement, "set by hand and captured 2026-09-23": the window
   size (1376 × 835), the Library pane (219), and Edit Show's browser (246) and

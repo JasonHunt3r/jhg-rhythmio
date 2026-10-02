@@ -38,7 +38,7 @@ only stack-like thing the grid has.
 
 ## A. The Edit menu
 
-The app never touches the Edit menu (`ShowToolsApp.swift` has no
+The app never touches the Edit menu (`RhythmIOApp.swift` has no
 `CommandGroup` for `.pasteboard`, `.undoRedo` or `.textEditing`), so it
 holds only what SwiftUI and AppKit add by themselves. That works inside
 text fields and `List`s, and nowhere else.
@@ -121,7 +121,7 @@ text fields and `List`s, and nowhere else.
   background tap only clears the selection (`MainView.swift:679`).
 - **B5 (Med) — No Quick Look.** Finder, Photos and every file
   browser use Space for Quick Look. **Settled (Jason, 2026-09-24): not
-  Space here.** In ShowTools, Space is play/pause pretty much always.
+  Space here.** In RhythmIO, Space is play/pause pretty much always.
   Quick Look is ⌘Y (Finder's other key for it) and double-clicking a
   tile (`spec/conventions.md` §1–2). `QLPreviewPanel` isn't used anywhere
   in the app. It could step through the selection with ←/→ as Finder's
@@ -178,7 +178,7 @@ Browser. Elsewhere they're thin, or missing altogether:
   the File menu uses too); a collection gets Play, greyed out until
   playing without a show is built. Duplicate Show and Play on Desktop
   need new code; the rest are menu items. **Built 2026-09-24**, except
-  Play on Desktop (greyed out, still needs the BGTools handoff) and the
+  Play on Desktop (greyed out, still needs the RhythmBG handoff) and the
   collection's Play (not added yet).
 - **C7 (Low) — One action, two names.** Deleting a file from the library
   is "Move to Trash…" in the grid (`MainView.swift:751`) and "Delete from
@@ -205,7 +205,7 @@ Browser. Elsewhere they're thin, or missing altogether:
   `SingleKeys` monitor in `.background()` directly on the sidebar `List`
   (a real `NSTableView`, unlike the grid's plain `ScrollView`). Undoing a
   show deletion hit AppKit's layout-loop guard and crashed
-  (`EXC_BREAKPOINT`, `~/Library/Logs/DiagnosticReports/ShowTools-2026-09-24-034845.ips`,
+  (`EXC_BREAKPOINT`, `~/Library/Logs/DiagnosticReports/RhythmIO-2026-09-24-034845.ips`,
   thousands of repeated `CellHostingView`/`NavigationPaneModifier` layout
   frames) — the same class of bug as the `.inspector()` crash fixed
   2026-09-23, in a new place. Moving the monitor to the split view as a
@@ -387,7 +387,7 @@ Today they disagree on several of the "should match" items:
   so this came for free once it existed. ~~The toolbar's Play and Play
   Full Screen start at the first selected slide (`ShowView.swift:62`).
   Their help text names ⌥⇧⌘P and ⌥⌘P, but those menu items call
-  `Player.open` with no `startAt` (`ShowToolsApp.swift`,
+  `Player.open` with no `startAt` (`RhythmIOApp.swift`,
   `play(fullScreen:)`), so the same shortcut starts from the top.~~
 
 - **G6 (Med) — Show defaults can only be changed in Edit Slides.** The

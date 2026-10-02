@@ -1,5 +1,5 @@
 ---
-name: showtools-gotchas
+name: rhythmio-gotchas
 description: Traps in this codebase found by measurement — AVFoundation failing quietly, measuring the right quantity, @ObservationIgnored on PlaybackEngine.show, undo restoring whole-show snapshots, the older-version test trap, synthetic events not being proof, per-window undo managers, AppKit layout that measures during layout, U being taken window-wide (why a U does "nothing"). Load before debugging unexpected behaviour or touching export, playback, undo or migrations.
 ---
 
@@ -168,7 +168,7 @@ never have guessed it. `VideoSlideTiming` now holds it for both — asked by
   and fail there.
 - **Measure with probes**, written to a file. `log show` returns nothing
   from this app in Claude's sandbox.
-- **`pgrep` is not "the app is running"** — see the `showtools-testing`
+- **`pgrep` is not "the app is running"** — see the `rhythmio-testing`
   skill. Measuring aliveness that way invalidated an entire crash hunt.
 - **Bursts are real.** Restore Default Layout provoked the crash seven
   times out of seven, then zero out of five on the next build with no

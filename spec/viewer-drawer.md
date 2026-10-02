@@ -62,7 +62,7 @@ keys, ⌘A, Delete, Return all still work on the grid, and the viewer
 follows. The viewer takes no clicks of its own in v1 (a click could later
 make a tile the outlined one, or double-click to the Slide Editor).
 
-**PaneKit gains "a view as the handle"** — reusable, not ShowTools'. A
+**PaneKit gains "a view as the handle"** — reusable, not RhythmIO's. A
 split can say its handle is the app's own view (`handle: .external`):
 closed, it takes no room (no 12 pt edge handle, no divider line), and
 the app marks a view with `.paneHandle(controller, split:)`, which turns

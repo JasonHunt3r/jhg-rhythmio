@@ -6,7 +6,7 @@ Listened to by Jason 2026-09-25. **Open work:** see `spec/backlog.md`
 
 The hook has been in since day one ("The hook, as planned", below): everything
 that draws goes through `ShowTimeline.frame(at:)` → `Compositor.compose`,
-so an exporter is a new menu item, not a rewrite. `stcli render` already
+so an exporter is a new menu item, not a rewrite. `mio render` already
 walks a show's times and writes PNGs through exactly that path — it is the
 exporter's inner loop, working today.
 
@@ -54,7 +54,7 @@ so plainly, naming how many slides are affected. Refusing to export any
 show containing video would make the feature useless to Jason, whose test
 show opens with a video; silently freezing them without saying so would be
 worse. **Jason confirmed this**, choosing it over refusing such shows and
-over doing E5 first. `stcli movie` already says the line
+over doing E5 first. `mio movie` already says the line
 ("1 video slide holding the first frame"); E4's panel carries it.
 
 Core doesn't decide this: a video slide's picture is whatever the caller's
@@ -62,10 +62,10 @@ Core doesn't decide this: a video slide's picture is whatever the caller's
 
 ## Shape of it
 
-- `MovieExport` lives in `ShowToolsCore` (which already uses AVFoundation
+- `MovieExport` lives in `RhythmIOCore` (which already uses AVFoundation
   for `Music`). Like `Compositor.compose`, it takes a closure for media
   rather than reaching for files itself, so Core stays free of the app's
-  types and `stcli` can drive it too.
+  types and `mio` can drive it too.
 - **One source for levels stays one source.** The offline audio mix uses
   `AudioClip.gain(of:at:among:)` — the same function the live
   `MusicPlayer` uses for volume, fades and equal-power crossfades — so an
@@ -90,7 +90,7 @@ Core doesn't decide this: a video slide's picture is whatever the caller's
   `frame(at:)` → `Compositor.compose` → `CIContext.render`. Blocking on
   purpose, with `progress` and `isCancelled` closures: **call it off the
   main thread** — E4 does the dispatching. A cancel removes the
-  part-written file. `stcli movie <lib> <showID> <WxH> <out> [fps]
+  part-written file. `mio movie <lib> <showID> <WxH> <out> [fps]
   [h264|hevc|prores]` drives it.
   - **Tag the colours, or the picture comes back wrong.** Untagged, the
     encoder wrote YCbCr by one matrix and the reader read it by another:
@@ -101,7 +101,7 @@ Core doesn't decide this: a video slide's picture is whatever the caller's
     fixes it, and frames now match to 0.02 on every channel.
   - **Checked by hand**, scratch library: the 11-slide test show exports
     at 1280×800 in 8.1 s (1620 frames, 27 MB), and frame 300 matches
-    `stcli render`'s PNG at t=10.0 to a mean of 0.0018 per channel.
+    `mio render`'s PNG at t=10.0 to a mean of 0.0018 per channel.
 - **E3 The sound track — DONE** (`MovieSoundTrack.swift`, 16 tests).
   An offline `AVAudioEngine` (`enableManualRenderingMode`) building the
   same graph as `MusicPlayer` — a player node per song into the main
@@ -109,7 +109,7 @@ Core doesn't decide this: a video slide's picture is whatever the caller's
   (~21 ms, finer than the player's 60 Hz timer). It renders in blocks
   through a `receive` closure, so E4 can append straight to an
   `AVAssetWriter` input; `write()` puts the mix in a file, which is what
-  `stcli mix <lib> <showID> <out.caf>` drives. A show with no songs
+  `mio mix <lib> <showID> <out.caf>` drives. A show with no songs
   renders silence of the right length — the caller decides whether to
   give it a track at all. 48 kHz stereo.
   - **Measure a crossfade as RMS, not peak.** Equal power holds the
@@ -199,7 +199,7 @@ Core doesn't decide this: a video slide's picture is whatever the caller's
 ## Still open
 
 Open work: see `spec/backlog.md` (B-79: a video slide's sound decoded
-whole on export; `stcli render` drawing video slides as the background
+whole on export; `mio render` drawing video slides as the background
 colour). The listen against the app is done (Jason, 2026-09-25).
 
 ## Not in this

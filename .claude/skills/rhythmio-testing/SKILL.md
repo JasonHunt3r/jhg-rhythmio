@@ -1,9 +1,9 @@
 ---
-name: showtools-testing
-description: How to launch, drive and measure ShowTools without touching Jason's real app, library or preferences — scratch libraries, the shared preferences-domain trap, axtool, window-not-pgrep checks, audio taps, seeding data with sqlite3, stcli render. Load before launching any test copy or doing a hands-on check.
+name: rhythmio-testing
+description: How to launch, drive and measure RhythmIO without touching Jason's real app, library or preferences — scratch libraries, the shared preferences-domain trap, axtool, window-not-pgrep checks, audio taps, seeding data with sqlite3, mio render. Load before launching any test copy or doing a hands-on check.
 ---
 
-# Testing ShowTools without breaking Jason's app
+# Testing RhythmIO without breaking Jason's app
 
 He uses this app. Everything below exists because something here went
 wrong on his Mac, not in theory.
@@ -12,26 +12,30 @@ wrong on his Mac, not in theory.
 
 ```sh
 tools/make-test-library.sh <scratch>/STTest   # scratch library + generated media
-open -n --env SHOWTOOLS_LIBRARY=<scratch>/STTest/TestLib.noindex build/ShowTools.app
+open -n --env RHYTHMIO_LIBRARY=<scratch>/STTest/TestLib.noindex build/RhythmIO.app
 ```
 
-**Never** run against the real library (`~/Pictures/ShowTools Library.noindex`).
-Always set `SHOWTOOLS_LIBRARY`.
+**Never** run against the real library (`~/Pictures/RhythmIO Library.noindex`).
+Always set `RHYTHMIO_LIBRARY`.
 
 **A test copy uses a scratch library but shares Jason's real preferences
-domain** (`com.jhg.showtools`). That is the trap, and it has two halves:
+domain** (`com.jhg.rhythmio`). That is the trap, and it has two halves.
+(Since the rename, 2026-10-02, it's the new domain, holding Jason's
+settings imported from the retired `com.jhg.showtools`: check and restore
+there. The old domain belongs to the old ShowTools.app; a test copy never
+touches it, so a clean read of it proves nothing.)
 
 1. **A test copy that crashes shuts his real app out.** The note
    `TestLaunchRecord` leaves lives in the shared domain, so the refusal is
    read by *his* app, not the next test copy: he gets "Library problem"
    and an empty window with a long scratch path, and **his library looks
    broken**. It happened twice on 2026-09-23. After any test copy dies,
-   check `defaults read com.jhg.showtools runningTestLaunches` and clear
+   check `defaults read com.jhg.rhythmio runningTestLaunches` and clear
    it *before* handing the app back.
 2. **Test copies overwrite his layout.** Column widths
    (`EditShowColumns.list` / `.inspector`), window frames and split
    positions all land in his preferences. `defaults export
-   com.jhg.showtools <file>` before a test session and put the layout
+   com.jhg.rhythmio <file>` before a test session and put the layout
    keys back after. **`defaults import` only overwrites keys the backup
    already had — it doesn't delete a key a test session created that
    wasn't there before** (found 2026-09-25, testing a new suppression
@@ -44,13 +48,13 @@ domain** (`com.jhg.showtools`). That is the trap, and it has two halves:
    install (2026-09-26: `PaneKit.Viewer.slides` was deleted after a
    restore, then put back from the backup). `plutil -p` the backup first.
 
-`defaults write com.jhg.showtools editMode show` and the `snapping` switch
+`defaults write com.jhg.rhythmio editMode show` and the `snapping` switch
 are his **real** preferences too (a scratch library doesn't change the
 domain). Leave them as found.
 
 Close test copies with `kill` or ⌘Q, not `kill -9` — `kill -9` leaves the
 note, and the refused launch that costs is *his*. **Check `pgrep -f
-ShowTools.app/Contents/MacOS` after a kill:** a copy that didn't quit
+RhythmIO.app/Contents/MacOS` after a kill:** a copy that didn't quit
 means two copies on one scratch library.
 
 ## `pgrep` is not "the app is running"
@@ -117,7 +121,7 @@ with real events (`click`, `drag`, `type`, `key`, `menu`).
 - **A test song:** a click on every beat makes timing checkable by eye and
   by ear. Generate a WAV with Python's `wave` module (120 BPM: a 1 kHz
   click every 0.5 s over a quiet 220 Hz tone), `afconvert -f m4af -d aac`
-  it, then `stcli ingest <lib> <file>`. `stcli ingest` doesn't add to a
+  it, then `mio ingest <lib> <file>`. `mio ingest` doesn't add to a
   collection: add a `collection_items` row with `sqlite3` so the song
   shows in the collection list.
 - **Checking audio without ears:** a temporary tap on
@@ -127,7 +131,7 @@ with real events (`click`, `drag`, `type`, `key`, `menu`).
   other and the app hangs on quit (it happened; the copy needed `kill -9`).
   Read the clock with a lock, or log the tap's own sample time. Remove the
   tap before committing.
-- **Frames:** `stcli render <lib> <showID> 960x540 <outdir> <t>…` draws
+- **Frames:** `mio render <lib> <showID> 960x540 <outdir> <t>…` draws
   through the real Compositor and prints each frame's state,
   `background after #N` included.
 - **Screenshots:** `swiftc tools/list-windows.swift` gives window ids,
@@ -146,23 +150,23 @@ with real events (`click`, `drag`, `type`, `key`, `menu`).
 
 ## Dev hooks
 
-Listed in `CLAUDE.md`: `SHOWTOOLS_DEV_PLAY`, `SHOWTOOLS_DEV_SHOW`,
-`SHOWTOOLS_DEV_IMAGE`, `SHOWTOOLS_DEV_TRANSITION`, `SHOWTOOLS_DEV_OVERLAY`.
-A launch with any `SHOWTOOLS_` variable but no `SHOWTOOLS_LIBRARY` opens
+Listed in `CLAUDE.md`: `RHYTHMIO_DEV_PLAY`, `RHYTHMIO_DEV_SHOW`,
+`RHYTHMIO_DEV_IMAGE`, `RHYTHMIO_DEV_TRANSITION`, `RHYTHMIO_DEV_OVERLAY`.
+A launch with any `RHYTHMIO_` variable but no `RHYTHMIO_LIBRARY` opens
 nothing and says why.
 
-## BGTools
+## RhythmBG
 
 ```sh
-open -n --env BGTOOLS_SETTINGS=<scratch settings.json> \
-  build/ShowTools.app/Contents/Library/LoginItems/BGTools.app
+open -n --env RHYTHMBG_SETTINGS=<scratch settings.json> \
+  build/RhythmIO.app/Contents/Library/LoginItems/RhythmBG.app
 ```
 
 Settings must point at a scratch library, never the real one. It re-reads
-the file when it changes and logs to `~/Library/Logs/BGTools.log`.
-`BGTOOLS_OPEN_WINDOW=1` opens its window at launch, `BGTOOLS_OPEN_PANEL=1`
-its panel, and `AXTOOL_APP=bgtools` lets axtool drive it.
+the file when it changes and logs to `~/Library/Logs/RhythmBG.log`.
+`RHYTHMBG_OPEN_WINDOW=1` opens its window at launch, `RHYTHMBG_OPEN_PANEL=1`
+its panel, and `AXTOOL_APP=rhythmbg` lets axtool drive it.
 
 **Control Center tiles only register from an installed app** — `install.sh`
-into `~/Applications`, not `build/ShowTools.app`. Caches lie: a new or
+into `~/Applications`, not `build/RhythmIO.app`. Caches lie: a new or
 renamed tile needs `CURRENT_PROJECT_VERSION` bumped and `killall chronod`.

@@ -1,6 +1,11 @@
-# CLAUDE.md — ShowTools
+# CLAUDE.md — RhythmIO
 
 A macOS slideshow composer and player for Jason's own Mac.
+
+**Old names.** RhythmIO (short form miO) was called **ShowTools** until
+2026-10-02, RhythmBG was **BGTools**, and the `mio` CLI was `stcli`
+(B-85). `spec/history/` keeps the old names as written, so **search it
+for both**: a grep for "RhythmBG" alone misses every story about BGTools.
 
 ## The docs
 
@@ -17,7 +22,7 @@ A macOS slideshow composer and player for Jason's own Mac.
 | `spec/groups.md` | current | Groups inside collections, the browser's switcher, drag-to-reorder (its terms and dials), nesting by drag. |
 | `spec/viewer-drawer.md` | current | The selection viewer over the grids: Side by Side and Stack, its handle, its keys. |
 | `spec/slides-as-mini-movies.md` | current | Edit Slides plays: the live timeline, looping the selection, the Slide viewer; Smart View; slides with more inside. |
-| `spec/bgtools.md` | current | Phase 5, BGTools: the desktop companion app that lives inside ShowTools. |
+| `spec/rhythmbg.md` | current | Phase 5, RhythmBG: the desktop companion app that lives inside RhythmIO. |
 | `spec/video-export.md` | current | Video export: the hook, the writer, the traps, the codecs. |
 | `spec/video-audio.md` | current | A video slide's own sound. |
 | `spec/xcode-port.md` | current | Why one Xcode project builds both bundles, and how. |
@@ -32,7 +37,6 @@ A macOS slideshow composer and player for Jason's own Mac.
 | `spec/hig-audit.md` | current | Expected Mac behaviour that was never built: the Edit menu, context menus, keyboard selection, Edit Slides vs Edit Show. Findings and fix batches. |
 | `spec/anatomy.md` | reference | The screen's map: one name for each area, how areas nest, the picture's layers, and what selecting or changing one area does to the others. Use its names. |
 | `spec/layout.md` | reference | The file-by-file map: which target owns what. Read before moving code between targets or adding a file. |
-| `spec/rename-inventory.md` | reference | The rename's hit list (B-85): every old-name mention outside history, taken before anything was renamed. |
 | `spec/first-run-brief.md` | reference | A brief for whoever builds the guided first run. Not a build plan. |
 | `spec/history/` | **history** | Dated events. **Never read for current rules or current state** — only when the question is *why* something is the way it is. Start at its `README.md`. `spec/history/verbatim/` holds frozen copies of retired docs, never edited. |
 
@@ -53,8 +57,8 @@ part.
 4. Run `tools/docs-check.sh` and fix what it reports.
 5. Commit (and offer the push).
 
-Two skills load on demand: **`showtools-testing`** before launching any
-test copy or doing a hands-on check, and **`showtools-gotchas`** before
+Two skills load on demand: **`rhythmio-testing`** before launching any
+test copy or doing a hands-on check, and **`rhythmio-gotchas`** before
 debugging something unexpected or touching export, playback, undo or
 migrations.
 
@@ -66,9 +70,9 @@ before moving code between targets or adding a file to one.
 
 ## Rules
 
-- **Never test against the real library** (`~/Pictures/ShowTools Library.noindex`).
-  Set `SHOWTOOLS_LIBRARY=<scratch path>`: `open -n --env SHOWTOOLS_LIBRARY=… build/ShowTools.app`.
-  A launch with any `SHOWTOOLS_` variable but no `SHOWTOOLS_LIBRARY` (a dev
+- **Never test against the real library** (`~/Pictures/RhythmIO Library.noindex`).
+  Set `RHYTHMIO_LIBRARY=<scratch path>`: `open -n --env RHYTHMIO_LIBRARY=… build/RhythmIO.app`.
+  A launch with any `RHYTHMIO_` variable but no `RHYTHMIO_LIBRARY` (a dev
   hook alone, or a typo) opens nothing and says why
   (`LibraryLocation.testLaunchProblem`). A test copy that crashes can be
   relaunched without its environment (the crash reporter's Reopen), so
@@ -76,26 +80,28 @@ before moving code between targets or adding a file to one.
   launch after a crashed one opens nothing (`TestLaunchRecord`). Close test
   copies with `kill` or ⌘Q; `kill -9` leaves the note, and **the refused
   launch it costs is Jason's, not the next test copy's** — see below.
-- **A test copy shares Jason's preferences domain** (`com.jhg.showtools`),
-  even with a scratch library. So a crashed test copy's `TestLaunchRecord`
+- **A test copy shares Jason's preferences domain** (`com.jhg.rhythmio`),
+  even with a scratch library. Since the rename that is the new domain,
+  with his old settings imported into it; the old `com.jhg.showtools`
+  belongs to the retired ShowTools.app, and checking it proves nothing. So a crashed test copy's `TestLaunchRecord`
   note makes **his** app refuse to open: "Library problem", an empty
   window and a long scratch path, which reads as a broken library to
   someone who didn't write the safety net. It happened to him twice on
   2026-09-23. Test copies also overwrite his column widths and window
   frames. **After any test copy dies, check and clear
-  `defaults read com.jhg.showtools runningTestLaunches`; capture his
+  `defaults read com.jhg.rhythmio runningTestLaunches`; capture his
   layout keys before a test session and restore them after.** The
-  `showtools-testing` skill has the commands.
-- `SHOWTOOLS_DEV_PLAY="<showID>:<slideIndex>[:full]"` opens the player at
+  `rhythmio-testing` skill has the commands.
+- `RHYTHMIO_DEV_PLAY="<showID>:<slideIndex>[:full]"` opens the player at
   launch, so it can be screenshotted without clicking (UI scripting
-  was once off-limits; they still save clicks). `SHOWTOOLS_DEV_SHOW="<showID>[:<slideIndex>]"`
-  selects a show (and a slide). `SHOWTOOLS_DEV_IMAGE=1` also selects that
+  was once off-limits; they still save clicks). `RHYTHMIO_DEV_SHOW="<showID>[:<slideIndex>]"`
+  selects a show (and a slide). `RHYTHMIO_DEV_IMAGE=1` also selects that
   slide's image in the Edit Show preview, so its handles show
-  (`SHOWTOOLS_DEV_IMAGE=rotation` shows its Rotation handles).
-  `SHOWTOOLS_DEV_TRANSITION=<slideIndex>` selects the transition into that
-  slide in the storyline's lane; `SHOWTOOLS_DEV_OVERLAY=<n>` selects the
+  (`RHYTHMIO_DEV_IMAGE=rotation` shows its Rotation handles).
+  `RHYTHMIO_DEV_TRANSITION=<slideIndex>` selects the transition into that
+  slide in the storyline's lane; `RHYTHMIO_DEV_OVERLAY=<n>` selects the
   lane's nth image. The mode comes from the `editMode` default:
-  `defaults write com.jhg.showtools editMode show`.
+  `defaults write com.jhg.rhythmio editMode show`.
 - Every show edit goes through a `ShowMutator` with an undo name. Drags
   (reorder, trim, Pan and Zoom) commit once, on release, so each is one undo step.
 - Modifiers on a SwiftUI `Group` apply to every child. Use a `ZStack` when
@@ -111,7 +117,7 @@ before moving code between targets or adding a file to one.
   layer-tree dump before changing it.
 - Accessibility is granted to the Claude app (2026-09-21), so the app can
   be clicked, dragged and typed into with `tools/axtool.swift`, always on a
-  scratch library — the `showtools-testing` skill has the rules. **Don't
+  scratch library — the `rhythmio-testing` skill has the rules. **Don't
   drive the app while Jason is using it.** Cross-app drops (Finder,
   Photos), Touch ID, pinch and look-and-feel still go on his list.
 - Audio files (library items of kind `.audio`) are never slides or lane
@@ -149,7 +155,7 @@ before moving code between targets or adding a file to one.
   the library was disposable test material, so no old spelling was kept
   readable.
 - `MediaItem` is not called `LibraryItem`, and the app refers to
-  `ShowToolsCore.Transition` by its full name, because both short names
+  `RhythmIOCore.Transition` by its full name, because both short names
   collide with SwiftUI. Likewise `SRGBColor` (not `RGBColor`, QuickDraw's)
   and `MediaCollection` (not `Collection`, Swift's).
 - Measure, don't guess: write probes to a file in the scratchpad, and

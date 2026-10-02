@@ -72,7 +72,7 @@ applies here as much as anywhere.
 1. **Extend `ColumnsSplitView`** with the two-pane shape (option 1
    above). Every place that indexes `subviews[1]` for `list` needs a
    guard for "no list column" — read the whole class first
-   (`Sources/ShowToolsApp/ColumnsSplitView.swift`), it's dense and
+   (`Sources/RhythmIOApp/ColumnsSplitView.swift`), it's dense and
    already carries hard-won fixes (divider grab width, collapse-by-drag,
    the `dividerColor` override, `shouldAdjustSizeOfSubview`) that are
    easy to break by accident.
@@ -93,14 +93,14 @@ applies here as much as anywhere.
    anywhere in this code path — that's the actual trigger.
 4. **Test.** `swift build`, `swift test` (regression baseline — none of
    this should touch existing behavior). Then rebuild the app
-   (`rm -rf build/xcode build/ShowTools.app && ./make-app.sh` — a clean
+   (`rm -rf build/xcode build/RhythmIO.app && ./make-app.sh` — a clean
    rebuild, not incremental; an incremental one produced a false "10/10
    clean" reading in an earlier session) and run the exact repro from
-   tonight: a **copy** of `~/Pictures/ShowTools Library.noindex` (never
-   the real one — `showtools-testing` skill), select "Trucks to the
+   tonight: a **copy** of `~/Pictures/RhythmIO Library.noindex` (never
+   the real one — `rhythmio-testing` skill), select "Trucks to the
    Future," then Edit Slides ↔ Edit Show at least 16 times at ~0.4s
    pacing. Confirm zero new entries in
-   `~/Library/Logs/ShowTools-exception.log` (count before and after,
+   `~/Library/Logs/RhythmIO-exception.log` (count before and after,
    don't just watch for a visible crash — the exception fires far more
    often than it kills the process).
    Also confirm, by hand or with `axtool`, that the ported inspector

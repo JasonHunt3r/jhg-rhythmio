@@ -31,7 +31,7 @@ own filter bar look genuinely transparent — never composites over a real
 (`spec/history/2026-09-27-transparency-rework.md`: measured twice, nested and as a true sibling, identical flat
 result both times). The fix for a translucent sidebar isn't a different
 blending mode; it's not using `List` — but `List` was the only thing
-giving ShowTools' own Catalog its keyboard behaviour, so replacing it
+giving RhythmIO's own Catalog its keyboard behaviour, so replacing it
 meant rebuilding that one piece. Jason: "as long as we're making something
 reusable for future apps using PaneKit. We're basically writing this into
 PaneKit, right?" — yes.
@@ -61,7 +61,7 @@ sidebar," a new `Shape`): 25 and 35 consecutive Down presses from a fresh
 launch landed exactly on Row 25 and Row 35, auto-scrolling correctly both
 times.
 
-**Wired into ShowTools the same day**: the Catalog's `libraryList` is a
+**Wired into RhythmIO the same day**: the Catalog's `libraryList` is a
 `ScrollView` now, not a `List`. Every row (`collectionRow`, `groupRow`,
 `showRow`, `libraryRow`) carries its own `sidebarRowChrome` — a shared
 helper doing the selection highlight and tap-to-select that `List`'s

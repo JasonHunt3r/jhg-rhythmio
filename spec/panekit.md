@@ -5,13 +5,13 @@ popping out — the Slide Editor, the library panel, the Inspector, the
 Timeline pane) and step 5 (the timeline pane full width under the
 Library pane too) both done 2026-09-25.** Step 1: compiled and
 tested clean on the Mac, and the harness's hands-on checks all passed,
-Jason's own hands. Step 2: ShowTools' main window is on PaneKit —
+Jason's own hands. Step 2: RhythmIO's main window is on PaneKit —
 `NavigationSplitView` is gone; the Library pane and the detail are a real
 PaneKit split. Step 3: Edit Show's and Edit Slides' columns are on
 PaneKit too — `ColumnsSplitView` and `VSplitView` are both gone, and
 building Edit Show's three columns turned into `PaneNode.row(…)`, a
 reusable recipe for a row of three independently-sized panes ("Building a
-row" below) — not ShowTools-specific, since a second app hitting the same
+row" below) — not RhythmIO-specific, since a second app hitting the same
 shape shouldn't have to re-derive it. Step 4's own prerequisite, the show
 session, is also done (`ShowSession.swift`; `spec/history/2026-09-24-windows-before-panekit.md`, "What stands in the way") — the
 show's selection, engine and lane state moved out of `ShowView`'s and
@@ -31,7 +31,7 @@ on every handle. The sensitivity setting is built, and Jason checked the
 feel by hand 2026-09-28 (`spec/shakedown.md`).
 
 **Step 4, first piece — the Slide Editor: built 2026-09-24**
-(`Sources/ShowToolsApp/SlideEditorWindow.swift`). Jason picked the build
+(`Sources/RhythmIOApp/SlideEditorWindow.swift`). Jason picked the build
 order (Slide Editor, then the library panel, then one detachable area) and
 settled double-click in its favour over the inspector (`spec/conventions.md`
 §"Double-click"). v1 scope, also Jason's call: the image with its
@@ -49,13 +49,13 @@ slide in Edit Slides' list or the storyline, or "Open in Slide Editor" on
 either's context menu. `swift test` (305) and `./make-app.sh` clean;
 checked with axtool against a scratch library — both double-click paths
 open it, retargeting reuses the window, Esc closes it, no new
-`ShowTools-exception.log` entries — and **confirmed by Jason's own hands,
+`RhythmIO-exception.log` entries — and **confirmed by Jason's own hands,
 2026-09-24: "seems to work as expected."** **Left of step 4:** one
 detachable area (probably the inspector), the timeline pane detached
 last — `spec/history/2026-09-24-windows-before-panekit.md`, "A possible order".
 
 **Step 4, second piece — the library panel: built 2026-09-24**
-(`LibraryPanel`/`LibraryPanelWindow`, `Sources/ShowToolsApp/Libraries.swift`).
+(`LibraryPanel`/`LibraryPanelWindow`, `Sources/RhythmIOApp/Libraries.swift`).
 Settled as a **panel** (floats above the app's other windows), per
 `spec/windows.md` answer 3 — it's meant to float over a new, empty
 collection so the whole panel becomes a drop target. Opens from "Open
@@ -80,7 +80,7 @@ real copy left untouched throughout: the context menu item is enabled
 (was disabled), opens a floating "Library" panel showing all 11 seeded
 items with its search/filter/sort/tile-size bar, reopening brings the
 same window forward rather than duplicating, Esc closes it, no new
-`ShowTools-exception.log` entries. **Not yet checked by Jason's own
+`RhythmIO-exception.log` entries. **Not yet checked by Jason's own
 hands**, and Show in Library (which lands here per the plan) still waits
 on the right-click-menu work that hasn't built that item anywhere yet.
 
@@ -90,7 +90,7 @@ Our own pane layout, to replace the built-in split views, built once and
 reused in every Mac app Jason makes, not rebuilt for each.
 
 **The primitive is Finder's shape:** two panes and one divider. Anything
-bigger is made by nesting that primitive. ShowTools' main window, with
+bigger is made by nesting that primitive. RhythmIO's main window, with
 the timeline pane edge to edge under the Library pane
 (`spec/windows.md`):
 
@@ -200,7 +200,7 @@ Assistant). Not needed for our fix.
   don't switch (their linked arithmetic assumes fixed sides); no menu
   command yet, and no animation — it jumps.
 - **The app's own view as the handle — built 2026-09-26** (Jason, for
-  ShowTools' viewer drawer — which in the end uses the dark strip under
+  RhythmIO's viewer drawer — which in the end uses the dark strip under
   its bar, not the bar, since the bar is full of controls; any view can
   be the handle: "we can just use the existing header bar as
   the handle box"). A split with `handle: .external` takes no room when
@@ -231,7 +231,7 @@ Assistant). Not needed for our fix.
   since 2026-09-27, to the measured content itself: before that, only the
   half-the-window ceiling applied, so a saved size above the content
   survived and left an empty band under the timeline's rows.
-  `PaneLayout.sizedExtent`; `PaneLayoutTests`, 6 cases. ShowTools' own use
+  `PaneLayout.sizedExtent`; `PaneLayoutTests`, 6 cases. RhythmIO's own use
   (`AppModel.mainPanes`'s `"window"` split, `EditShowTimelinePane
   .contentHeight`/`.minContentHeight`) exercises both halves: the
   timeline pane's floor came down once `StorylineView` grew its own
@@ -289,7 +289,7 @@ How it got here, draft by draft: `spec/history/2026-09-26-slides-and-the-clutch.
   rects lost to it; tracking areas never fired).
 - **Tap-to-drag with drag lock: an app can't end its hold.** The trackpad
   driver keeps the button down after the finger lifts, until the next
-  tap; measured in ShowTools with Accessibility granted, a posted
+  tap; measured in RhythmIO with Accessibility granted, a posted
   system mouse-up cleared the button state but 15–90 drags kept arriving
   in the next 3 s. So PaneKit posts nothing and swallows the rest of the
   press until the real tap; for a drag-lock user the answer is the flick
@@ -309,7 +309,7 @@ every size; where a slow drag shuts past the stopped divider; a flick's
 speed over the last moment; a flick needs speed and travel; a peek drawn
 below the minimum; a peek never crowding the main side).
 
-**Checked on a ShowTools test copy at hand speed** (a pointer stepping
+**Checked on a RhythmIO test copy at hand speed** (a pointer stepping
 every 25 ms, the drawer's extent sampled every ~35 ms), 2026-09-26, on
 Edit Slides' Slide viewer unless said: a 55-pt pull sprang back, a 70-pt
 pull opened to exactly its saved 290 and stayed there as the pointer went
@@ -352,7 +352,7 @@ mapped onto both `engageRange` and `slideRange` at once); the line, the
 Quick ↔ Smooth slider and the practice drawer moved into
 `TriggerBoundariesBox`, opened by "Set Up Triggers…" through
 `ModalSettingsBox.present`, a true app-modal window (`NSApp.runModal`),
-not a `.sheet()` — every ShowTools window blocked, not just the one that
+not a `.sheet()` — every RhythmIO window blocked, not just the one that
 opened it.
 
 **A real bug found by testing, not assumed fixed**: the first version
@@ -371,7 +371,7 @@ closed it, and focus returned to the window clicked earlier. (A second,
 false alarm along the way: `axtool drag`'s synthetic multi-step drag
 didn't move either the engage line or the Quick ↔ Smooth slider even
 after the fix — but a plain click on each *did* move it, matching
-`showtools-testing`'s own note that a synthetic drag isn't proof of
+`rhythmio-testing`'s own note that a synthetic drag isn't proof of
 anything; not a bug.)
 
 **Reversed, once Jason tried it, the same day**: "I was wrong about
@@ -445,7 +445,7 @@ pane's own colour bleeding through it, while the sidebar pane stops below
 the title bar exactly as it always did — screenshotted, not just reasoned
 through.
 
-**Wired into ShowTools** the same day: `AppModel.mainPanes`' `detail` pane
+**Wired into RhythmIO** the same day: `AppModel.mainPanes`' `detail` pane
 carries the flag; `MainView.swift` calls `enableContentUnderTitleBar` once
 and adds a `titleBarHeight`-tall spacer at the top of the filter bar's own
 translucent background (`ScrollBarBackground`, `spec/window-behavior.md`, "The Transparency module"; item 34's
@@ -511,7 +511,7 @@ show), still works exactly as it did before this fix.
 **`PaneHandleAppearance`** — how every edge handle fills its background:
 solid by default; an app can supply an opacity (per dark/light) laid over
 the OS header material, and call `changed()` so every handle redraws —
-live, from a slider's preview. ShowTools feeds it from its Translucent
+live, from a slider's preview. RhythmIO feeds it from its Translucent
 Bars setting when "Include handles" is on. The handle's edge line and
 pill are drawn in their own view above that material (drawn in the
 handle's own `draw`, the material covered them — Jason caught it).
@@ -566,11 +566,11 @@ future app gets the recipe instead of re-deriving it:
   the harness's Mail shape does this, and a comment on it notes what that
   costs: the mailboxes|list divider ends up moving the *message* pane, not
   list, since list is protected as the inner split's own sized side).
-  `.row` is what covers ShowTools' real case, checked against a real
+  `.row` is what covers RhythmIO's real case, checked against a real
   demo show, not a general theory of rows — a fourth call worth adding if
   a second real shape needs a different trade, not before.
 - Proven, not just typed: `PaneKitTests.testRow*` pin the arithmetic;
-  `EditColumnsLayout.threeColumns` (ShowTools) and the harness's `.showTools`
+  `EditColumnsLayout.threeColumns` (RhythmIO) and the harness's `.rhythmIO`
   case both build from it now, replacing hand-nested splits that said the
   same thing three separate times.
 
@@ -604,7 +604,7 @@ slack allowed put some of the growth on list after all). This isn't a
 bug: a rigid pane can only stay rigid while there's somewhere else for
 the change to go.
 
-**ShowTools no longer uses `.row` (2026-09-25, item 13).** Edit Show's
+**RhythmIO no longer uses `.row` (2026-09-25, item 13).** Edit Show's
 Browser had to become a drawer, and `near` is the inner split's main side,
 so it can't close. `EditColumnsLayout.threeColumns` is now two splits
 nested from the right — the inspector's split outside, the Browser's
@@ -658,7 +658,7 @@ app gets it.
   scoped to its `Scene` graph; a `PanePanel` is a raw AppKit window built
   outside that graph (`PaneWindowController`, imperative), so those
   commands never see it, regardless of what `window.undoManager` itself
-  returns. **The fix:** `ShowToolsApp.swift`'s `UndoMenuState` replaces
+  returns. **The fix:** `RhythmIOApp.swift`'s `UndoMenuState` replaces
   SwiftUI's automatic commands with `CommandGroup(replacing: .undoRedo)`,
   asking `NSApp.keyWindow?.undoManager` directly and refreshing on
   `NSWindow.didBecomeKeyNotification` plus `NSUndoManager`'s own
@@ -675,11 +675,11 @@ app gets it.
   whether the Info panel or the Rhythm tool (built the same imperative
   way, before this fix existed) had the same gap — they now share this
   app-wide fix regardless, so it doesn't matter going forward.
-- **Keys follow:** the window-level keys an app sets up (ShowTools'
+- **Keys follow:** the window-level keys an app sets up (RhythmIO's
   Space, J, K, L) work in a popped-out pane's window too, since the app
   registers them with PaneKit rather than with one window.
 - **What PaneKit can't do for the app:** a pane can only move between
-  windows if what it shows lives *outside* its views. ShowTools' show
+  windows if what it shows lives *outside* its views. RhythmIO's show
   session (`spec/history/2026-09-24-windows-before-panekit.md`: the selection, the engine and the zoom,
   out of the views) is that app-side prerequisite. PaneKit moves the
   view; the app keeps the state.
@@ -722,7 +722,7 @@ found. Only the confirmed ones are rules.
   (`spec/history/2026-09-23-crash-hunt-session3.md`). PaneKit replaces
   what it did (below).
 - **Per-window undo.** A separate window's undo manager isn't the main
-  window's, and ⌘Z asks the key window's (showtools-gotchas, measured). A
+  window's, and ⌘Z asks the key window's (rhythmio-gotchas, measured). A
   popped-out pane shares the main one.
 - **`ColumnsSplitView`'s rules** listed above (divider drags, window
   resize, collapse, remembered sizes, clear dividers, `ColumnHost`). Each
@@ -744,7 +744,7 @@ found. Only the confirmed ones are rules.
   it proves nothing about pane moves. PaneKit replaces it with layout
   transactions (below).
 - *"No SwiftUI measuring containers in a pane."* `ViewThatFits` was
-  cleared outright (showtools-gotchas: "nothing should be read into its
+  cleared outright (rhythmio-gotchas: "nothing should be read into its
   removal"). Only `.inspector()` is confirmed.
 
 ### Layout transactions: every change at once (Jason, 2026-09-24)
@@ -819,10 +819,10 @@ takes what's left.
 
 ## What was built (2026-09-24, uncompiled)
 
-General, not ShowTools-specific (Jason: "ShowTools is the specific example
+General, not RhythmIO-specific (Jason: "RhythmIO is the specific example
 from which to generalize other morphologies"). The harness shows three
 shapes from the one primitive: Finder's two panes, Mail's three columns,
-and ShowTools' layout with the timeline under everything.
+and RhythmIO's layout with the timeline under everything.
 
 - **`PaneModel.swift`:** the tree. `PaneNode` is `.leaf(Pane)` or
   `.branch(Split)`, built with `.pane(…)` and `.split(…)`. A split has an
@@ -863,7 +863,7 @@ opening or closing (changes are instant for now).
 ## Where it lives
 
 - **Now:** its own Swift package inside this repo, `PaneKit/`, depending
-  on nothing in ShowTools, so the boundary is real from day one. ShowTools
+  on nothing in RhythmIO, so the boundary is real from day one. RhythmIO
   will add it as a local package dependency when its main window moves
   onto it (step 2).
 - **Later:** lifted into its own repo, and added to other apps as a
@@ -872,7 +872,7 @@ opening or closing (changes are instant for now).
 ## The order
 
 1. **Harness:** a standalone app (`PaneKit/Harness`)
-   with the ShowTools tree above and dummy content. Check:
+   with the RhythmIO tree above and dummy content. Check:
    - dragging, closing to each edge, the handles, double-click;
    - popping a pane out as a panel and as a window, and putting it back
      in its slot;
@@ -881,7 +881,7 @@ opening or closing (changes are instant for now).
    - no layout-loop exception under rapid changes.
 
    It's run on the Mac by the Claude Code there, and felt by Jason.
-2. ~~**ShowTools' main window** on PaneKit: the Library pane and the
+2. ~~**RhythmIO's main window** on PaneKit: the Library pane and the
    full-width timeline pane. `NavigationSplitView` goes.~~ — the
    Library-pane-and-detail half is **done 2026-09-24**
    (`MainView.layout`, a two-pane split: `.pane("library", …)` and
@@ -901,7 +901,7 @@ opening or closing (changes are instant for now).
    chain, not the SwiftUI environment, so no explicit passing needed);
    View ▸ Restore Default Layout puts the pane back to its default width
    in one transaction; View ▸ Show Library toggles it. `xcodebuild` for
-   the ShowTools scheme, `./make-app.sh debug` and `swift test` (305
+   the RhythmIO scheme, `./make-app.sh debug` and `swift test` (305
    tests) all clean.
 3. ~~**Edit Show's and Edit Slides' columns** on PaneKit: `ColumnsSplitView`
    and `VSplitView` go.~~ — **done 2026-09-24**
@@ -949,7 +949,7 @@ opening or closing (changes are instant for now).
      window height (700) with room to spare (measured: ~691 total), so
      it isn't reachable in the app's normal range, but it's the same
      kind of cross-axis leak, noted here rather than silently accepted.
-4. **ShowTools' panes popping out** (`spec/windows.md`): the inspector
+4. **RhythmIO's panes popping out** (`spec/windows.md`): the inspector
    panel, the Timeline window. PaneKit already does the moving; the show
    session — its own prerequisite, so the panes have their state to take
    with them — is **done 2026-09-24** (`ShowSession.swift`). The Slide
@@ -957,12 +957,12 @@ opening or closing (changes are instant for now).
    inspector, the first detachable area proper (`spec/history/2026-09-24-windows-before-panekit.md`, "A
    possible order," step 4): built 2026-09-25** (`EditColumnsLayout
    .threeColumns`, `far: Pane("inspector", ..., popOut: .panel)`; View ▸
-   "Inspector in Its Own Window," `ShowToolsApp.swift`). `swift test`
+   "Inspector in Its Own Window," `RhythmIOApp.swift`). `swift test`
    (306) and `./make-app.sh` clean. Checked with axtool against a scratch
    library: pops out to a real `NSPanel` beside the main window (position
    matches the "beside the main window" formula exactly), the main
    window's list column grows to fill the vacated space (`PaneLayout
-   .isEmpty`, already generic — no ShowTools-specific code needed),
+   .isEmpty`, already generic — no RhythmIO-specific code needed),
    selecting a slide in the main window live-updates the popped-out
    content (the show session already shared), and an edit made from it
    (a Position X drag) saves to the library correctly. Undo was a real
@@ -1000,7 +1000,7 @@ opening or closing (changes are instant for now).
    `body` (SwiftUI doesn't allow mutating `@Observable` state during a
    view update), reading the trigger from the saved `show`, **not**
    `engine.show`, to avoid `PlaybackEngine.show`'s own
-   `@ObservationIgnored` trap (showtools-gotchas) silently freezing it;
+   `@ObservationIgnored` trap (rhythmio-gotchas) silently freezing it;
    `.onDisappear` clears it, matching the old `@FocusedValue`'s own
    absence outside Edit Show. The `FocusedValueKey`/`FocusedValues`
    plumbing is gone; `AppCommands` reads `model.editShowCommands`
@@ -1028,7 +1028,7 @@ opening or closing (changes are instant for now).
    from one view's `body` for another to read in the *same* update pass
    is the same class of trap the "don't mutate state during a view
    update" rule exists for, so `EditShowTimelinePane`
-   (`Sources/ShowToolsApp/EditShowTimelinePane.swift`) was pulled out of
+   (`Sources/RhythmIOApp/EditShowTimelinePane.swift`) was pulled out of
    `EditShowView` into its own file instead, with everything about the
    transport/storyline that isn't the engine's own lifecycle (range,
    arrow keys, row navigation, Go Back/Forward, `editShowCommands`) — the
@@ -1084,5 +1084,5 @@ opening or closing (changes are instant for now).
 
 - **The name:** PaneKit (Jason, 2026-09-24).
 - **The repo:** it stays in this one for now, as its own library target
-  with no ShowTools dependencies (Jason). Lifting it out later stays
+  with no RhythmIO dependencies (Jason). Lifting it out later stays
   easy.
