@@ -32,6 +32,7 @@ A macOS slideshow composer and player for Jason's own Mac.
 | `spec/hig-audit.md` | current | Expected Mac behaviour that was never built: the Edit menu, context menus, keyboard selection, Edit Slides vs Edit Show. Findings and fix batches. |
 | `spec/anatomy.md` | reference | The screen's map: one name for each area, how areas nest, the picture's layers, and what selecting or changing one area does to the others. Use its names. |
 | `spec/layout.md` | reference | The file-by-file map: which target owns what. Read before moving code between targets or adding a file. |
+| `spec/rename-inventory.md` | reference | The rename's hit list (B-85): every old-name mention outside history, taken before anything was renamed. |
 | `spec/first-run-brief.md` | reference | A brief for whoever builds the guided first run. Not a build plan. |
 | `spec/history/` | **history** | Dated events. **Never read for current rules or current state** — only when the question is *why* something is the way it is. Start at its `README.md`. `spec/history/verbatim/` holds frozen copies of retired docs, never edited. |
 
