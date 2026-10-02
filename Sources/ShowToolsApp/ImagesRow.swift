@@ -11,6 +11,8 @@ import ShowToolsPlayback
 /// to move it and its edges to trim it; one row, so images never overlap.
 /// Every drag saves once, on release.
 struct ImagesRow: View {
+    /// Grey selection while another area has the arrows (`KeyboardArea`).
+    @Environment(\.selectionHasKeyboard) private var hasKeyboard
     let show: Show
     let timeline: ShowTimeline
     let engine: PlaybackEngine
@@ -176,7 +178,7 @@ struct ImagesRow: View {
         .frame(width: w, height: h)
         .clipShape(RoundedRectangle(cornerRadius: 4))
         .overlay(RoundedRectangle(cornerRadius: 4)
-            .strokeBorder(selected ? Color.accentColor : .black.opacity(0.4), lineWidth: selected ? 2.5 : 1))
+            .strokeBorder(selected ? Color.selection(hasKeyboard) : .black.opacity(0.4), lineWidth: selected ? 2.5 : 1))
         .contentShape(Rectangle())
         .onTapGesture { select(id) }
         .gesture(drag(o, part: .move))

@@ -11,6 +11,8 @@ import ShowToolsPlayback
 ///   shifts along.
 /// - The ruler and the playhead share the engine's clock.
 struct StorylineView: View {
+    /// Grey selection while another area has the arrows (`KeyboardArea`).
+    @Environment(\.selectionHasKeyboard) private var hasKeyboard
     let show: Show
     let timeline: ShowTimeline
     let engine: PlaybackEngine
@@ -1311,7 +1313,7 @@ struct StorylineView: View {
         let h = Self.laneRowHeight - 4
         return ZStack(alignment: .leading) {
             RoundedRectangle(cornerRadius: 4)
-                .fill(selected ? Color.accentColor : Color.white.opacity(own ? 0.9 : 0.55))
+                .fill(selected ? Color.selection(hasKeyboard) : Color.white.opacity(own ? 0.9 : 0.55))
             // Where the join is, inside the overlap.
             Rectangle().fill(Color.black.opacity(0.55))
                 .frame(width: 1, height: h)
@@ -1498,6 +1500,8 @@ struct StorylineView: View {
 // MARK: - One block
 
 struct StoryBlock: View {
+    /// Grey selection while another area has the arrows (`KeyboardArea`).
+    @Environment(\.selectionHasKeyboard) private var hasKeyboard
     let slide: ResolvedSlide
     let item: MediaItem
     let url: URL?
@@ -1548,7 +1552,7 @@ struct StoryBlock: View {
         .frame(width: max(width, 1), height: height, alignment: .leading)
         .clipShape(RoundedRectangle(cornerRadius: 5))
         .overlay(RoundedRectangle(cornerRadius: 5)
-            .strokeBorder(selected ? Color.accentColor : .black.opacity(0.45), lineWidth: selected ? 3 : 1))
+            .strokeBorder(selected ? Color.selection(hasKeyboard) : .black.opacity(0.45), lineWidth: selected ? 3 : 1))
         .overlay(alignment: .topTrailing) {
             let m = slide.peakMagnification(outputSize: outputPixelSize)
             if m > ResolvedSlide.softAbove, width > 24 {

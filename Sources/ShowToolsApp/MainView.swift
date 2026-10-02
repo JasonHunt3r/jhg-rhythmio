@@ -927,6 +927,9 @@ struct LibraryGridView: View {
     /// The grid takes the keyboard on a click, so Delete and ⌘Delete reach
     /// it even before anything's been clicked in this session.
     @FocusState private var focused: Bool
+    /// The window the grid is in, for `KeyboardArea`: its selection draws
+    /// grey while the sidebar (clicked last) has the arrows.
+    @State private var windowNumber: Int?
     /// What Delete is about to send to the Trash — nil until it's confirmed.
     @State private var confirmDeleteIDs: [Int64]?
     /// The batch-rename sheet's targets — nil while it's closed.
@@ -1685,6 +1688,7 @@ struct LibraryGridView: View {
         // window, is key.
         // Not while text is edited (SingleKeys), not while a list (the
         // sidebar) has the keyboard.
+        .background(WindowNumberReader(windowNumber: $windowNumber))
         .background(SingleKeys { event in
             // Item 20: the rating keys rate the selected tiles even while
             // the sidebar has the keyboard (a tile click doesn't take it),
@@ -2059,6 +2063,7 @@ struct LibraryGridView: View {
 
     private func tile(_ item: MediaItem) -> some View {
         let selected = selection.contains(item.id)
+        let tint = Color.selection(KeyboardArea.shared.gridHasArrows(windowNumber: windowNumber))
         return Group {
             if isListMode {
                 HStack(spacing: 8) {
@@ -2074,7 +2079,7 @@ struct LibraryGridView: View {
                     if showRatings { RatingBadge(rating: item.rating, font: .caption) }
                 }
                 .padding(.vertical, 3).padding(.horizontal, 6)
-                .background(selected ? Color.accentColor.opacity(0.18) : .clear,
+                .background(selected ? tint.opacity(0.18) : .clear,
                             in: RoundedRectangle(cornerRadius: 4))
             } else {
                 VStack(spacing: 4) {
@@ -2082,7 +2087,7 @@ struct LibraryGridView: View {
                         .aspectRatio(1, contentMode: .fit)
                         .clipShape(RoundedRectangle(cornerRadius: 4))
                         .overlay(RoundedRectangle(cornerRadius: 5)
-                            .strokeBorder(selected ? Color.accentColor : .clear, lineWidth: 3))
+                            .strokeBorder(selected ? tint : .clear, lineWidth: 3))
                     Text(item.fileName)
                         .font(.caption)
                         .lineLimit(1).truncationMode(.middle)

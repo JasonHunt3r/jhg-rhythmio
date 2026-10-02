@@ -12,6 +12,7 @@ struct ShowToolsApp: App {
     // (ExceptionProbe). Remove with the probe.
     init() {
         ExceptionProbe.install(); LayoutLoopProbe.install(); ListEmptySpace.install()
+        KeyboardArea.install()
         DrawerSensitivitySetting.apply()
     }
 

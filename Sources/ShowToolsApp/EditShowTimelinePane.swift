@@ -68,6 +68,9 @@ struct EditShowTimelinePane: View {
     /// 56 was stale (it draws about 30), and the pane tracked that figure,
     /// leaving an empty band under the rows (2026-09-27).
     @State private var transportHeight: CGFloat?
+    /// The window this pane is in, for `KeyboardArea` (it changes when the
+    /// Timeline pops out).
+    @State private var windowNumber: Int?
     /// The storyline's natural height, as it measures itself
     /// (`StorylineView.onNaturalHeight`) — so the pane fits whatever height
     /// the rows are drawn at, a preference one day.
@@ -102,7 +105,10 @@ struct EditShowTimelinePane: View {
                                   },
                                   inert: !active,
                                   onNaturalHeight: { h in if storylineHeight != h { storylineHeight = h } })
+                    .environment(\.selectionHasKeyboard,
+                                 KeyboardArea.shared.timelineHasArrows(windowNumber: windowNumber))
                 }
+                .background(WindowNumberReader(windowNumber: $windowNumber))
                 .background { if active { shortcuts(engine) } }
                 // Edit Slides' Play loops the selection (nil, the whole
                 // show, with nothing selected or in Edit Show).
@@ -402,6 +408,10 @@ struct EditShowTimelinePane: View {
                 // arrow keys while it has the keyboard.
                 if editSlides, (123...126).contains(event.keyCode),
                    NSApp.keyWindow?.firstResponder is NSTableView { return false }
+                // B-03: the arrows go to the area last clicked; the
+                // timeline keeps them until another area that uses them is.
+                if (123...126).contains(event.keyCode),
+                   !KeyboardArea.shared.timelineHasArrows(in: event.window) { return false }
                 switch (event.keyCode, event.charactersIgnoringModifiers?.lowercased(), event.plainModifiers) {
                 case (49, _, []): engine.togglePlay()                  // space
                 case (_, "j", []): engine.shuttle(-1)

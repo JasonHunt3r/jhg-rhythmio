@@ -215,6 +215,8 @@ struct MusicRow: View {
 
 /// One song on the music row: light blue, its waveform, its name.
 struct SongClip: View {
+    /// Grey selection while another area has the arrows (`KeyboardArea`).
+    @Environment(\.selectionHasKeyboard) private var hasKeyboard
     let clip: AudioClip
     let item: MediaItem
     let url: URL?
@@ -245,7 +247,7 @@ struct SongClip: View {
         .clipShape(RoundedRectangle(cornerRadius: 4))
         .overlay {
             RoundedRectangle(cornerRadius: 4)
-                .strokeBorder(selected ? Color.accentColor : Color.black.opacity(0.35), lineWidth: selected ? 2 : 1)
+                .strokeBorder(selected ? Color.selection(hasKeyboard) : Color.black.opacity(0.35), lineWidth: selected ? 2 : 1)
         }
         .task(id: url) {
             waveform = Waveforms.shared.cached(item)
