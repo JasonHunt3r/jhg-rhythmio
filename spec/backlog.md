@@ -25,6 +25,7 @@ where it came from.
 
 Claude can do these.
 
+- **B-85** · P1 · Rename — ShowTools becomes **RhythmIO** (miO), BGTools **RhythmBG**: every name, module, bundle ID, env var and doc, per `ShowTools → RhythmIO (miO) Rename Plan.md` at the repo root (Jason's, 2026-10-02, untracked). Next session.
 - **B-02** · P1 · Range — Dragging a range end (I or O) runs faster than the mouse, so the marker zips away. Real, not the tool artifact the old status suspected. `spec/range-and-ruler.md`. (Shakedown 2026-09-28.)
 - **B-04** · P1 · Inspector — The inspector shows nothing for a selected file that isn't in the show (the stars still work). (Shakedown 2026-09-28.)
 - **B-05** · P1 · Range — The range can be set past the show's current end, so more tiles can be added into it. `spec/range-and-ruler.md`. (Shakedown 2026-09-28.)

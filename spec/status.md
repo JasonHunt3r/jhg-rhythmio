@@ -45,9 +45,10 @@ patterns, 12 their note length, 13 groups, 14 a drag order for a
 collection's/group's files). Before an upgrade the database is copied
 to `Library.sqlite.v<N>.bak`.
 
-**Installed:** `~/Applications/ShowTools.app` at `f4e39b2`, 2026-09-28,
-signed with Jason's team. Every reinstall (`install.sh`) quits the real
-BGTools and doesn't restart it: start it again from View ▸ Desktop Show….
+**Installed:** `~/Applications/ShowTools.app` at `4753229` (B-01, B-03 and
+the arrow fixes in), 2026-10-02, signed with Jason's team. Every
+reinstall (`install.sh`) quits the real BGTools and doesn't restart it:
+start it again from View ▸ Desktop Show….
 
 **The real library** is a fresh one at the default path, `~/Pictures/ShowTools
 Library.noindex` (12 files and one collection on 2026-09-26); the old one,
@@ -62,14 +63,17 @@ B-33, B-34.
 
 B-01 (a popped-out pane losing its content on close) and B-03 (the
 arrows follow the area last clicked, selections grey elsewhere) are
-fixed and checked in a test copy, not yet installed; so are a held
-arrow repeating and arrows starting from the current selection. Their
-shakedown rows wait for Jason. By priority, Claude's suggestion next:
+fixed, checked in a test copy and installed; so are a held arrow
+repeating and arrows starting from the current selection. Their
+shakedown rows wait for Jason. Next, in order:
 
-1. **B-04** (P1): the inspector for a file that isn't in the show.
-2. **The range, B-02, B-05, B-06** (P1), then B-11.
-3. **BGTools, B-14 to B-16** (P1).
-4. **B-83, B-84**: two click oddities found on the way.
+1. **B-85, the rename to RhythmIO** (short form miO), Jason's choice for
+   the next session: follow `ShowTools → RhythmIO (miO) Rename Plan.md`
+   at the repo root (his, untracked; read it first, all of it).
+2. **B-04** (P1): the inspector for a file that isn't in the show.
+3. **The range, B-02, B-05, B-06** (P1), then B-11.
+4. **BGTools, B-14 to B-16** (P1).
+5. **B-83, B-84**: two click oddities found on the way.
 
 Everything else: `spec/backlog.md`.
 
