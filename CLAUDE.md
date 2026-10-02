@@ -83,8 +83,8 @@ before moving code between targets or adding a file to one.
 - **A test copy shares Jason's preferences domain** (`com.jhg.rhythmio`),
   even with a scratch library. Since the rename that is the new domain,
   with his old settings imported into it; the old `com.jhg.showtools`
-  belongs to the retired ShowTools.app, and checking it proves nothing. So a crashed test copy's `TestLaunchRecord`
-  note makes **his** app refuse to open: "Library problem", an empty
+  belongs to the retired ShowTools.app, and checking it proves nothing.
+  So a crashed test copy's `TestLaunchRecord` note makes **his** app refuse to open: "Library problem", an empty
   window and a long scratch path, which reads as a broken library to
   someone who didn't write the safety net. It happened to him twice on
   2026-09-23. Test copies also overwrite his column widths and window
