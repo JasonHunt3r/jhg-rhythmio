@@ -26,7 +26,6 @@ where it came from.
 Claude can do these.
 
 - **B-02** · P1 · Range — Dragging a range end (I or O) runs faster than the mouse, so the marker zips away. Real, not the tool artifact the old status suspected. `spec/range-and-ruler.md`. (Shakedown 2026-09-28.)
-- **B-03** · P1 · Keys — In Edit Show the arrow keys go to the area last clicked, or the active area; they're no longer reserved for the timeline (Jason, 2026-09-28, reversing 2026-09-24). Includes the race found 2026-09-27: window-wide key handlers (the grid's, the timeline's, the browser's, `PaneArrowKeys`) claim the arrows before the focused list, so the grid's selection sometimes moved instead of the sidebar's, and the grid's `firstResponder is NSTableView` guard is now always true since the sidebar left `List`. Also the talk Jason asked for 2026-09-27: which area owns the arrows when, and how you can tell. `spec/conventions.md` §2; `spec/window-behavior.md`, "The Transparency module"; `spec/listkit.md`, "Known limits".
 - **B-04** · P1 · Inspector — The inspector shows nothing for a selected file that isn't in the show (the stars still work). (Shakedown 2026-09-28.)
 - **B-05** · P1 · Range — The range can be set past the show's current end, so more tiles can be added into it. `spec/range-and-ruler.md`. (Shakedown 2026-09-28.)
 - **B-06** · P1 · Range — Clicking a range marker selects it, so it can be nudged. `spec/range-and-ruler.md`. (Shakedown 2026-09-28.)
@@ -120,6 +119,8 @@ row). These are the other things only Jason can do.
 - **B-79** · P3 · Video — A video can't go in the lane. The frame strip shows a video's first frame, the onion skin skips video slides, and `stcli render` draws a video slide as the background colour (only `stcli movie` and the app use `MovieMedia`). A video slide's sound is decoded whole into memory on export; fine for slides.
 - **B-80** · P3 · Viewer — The zoomed-out work area doesn't draw a lane image's overhang past the frame.
 - **B-81** · P3 · Viewer — Its right-click picks the image menu or the pasteboard menu by which image was last *clicked*, not where the right-click landed. Accepted 2026-09-24; real click-location tracking is the fix if it bites. `spec/conventions.md` §3, route item 4.
+- **B-83** · P2 · Timeline — In the popped-out Timeline window, clicking a slide didn't select it (two axtool clicks, 2026-10-02; the arrows did reach the timeline there). Not yet tried by hand, so it may be a synthetic-click artifact. `spec/panekit.md`, "Pane ⇄ panel".
+- **B-84** · P3 · Keys — `ListEmptySpace` (`NoMenuYet.swift`) and `ClickTakesKeyboard` (`EditShowView.swift`) pass `hitTest` a point in the content view's own (flipped) coordinates, not its superview's, so the view they find can be mirrored top to bottom — the bug `KeyboardArea` had, measured 2026-10-02. Check whether either misfires.
 - **B-82** · — · Transitions — Accordion was dropped (it renders as a dissolve on this macOS), and Page Curl is offered as "Page Turn". A limitation, recorded so it isn't rediscovered.
 
 ## Design notes

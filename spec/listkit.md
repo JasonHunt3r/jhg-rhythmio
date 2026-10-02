@@ -190,7 +190,6 @@ so typing in the bar's search field never reaches the list's own keys
 on its empty space (the scroll view keeps them) — the tap goes on the
 scroll view itself, where a row's own tap still wins.
 
-Not changed, on purpose: in Edit Show the timeline takes plain ↑ / ↓
-window-wide (its row navigation), before the browser — as it did before
-the `List` went. Which area owns the arrows: Jason decided 2026-09-28
-that they follow focus in Edit Show (`spec/backlog.md`, B-03).
+Which area owns the arrows in Edit Show: the one clicked last
+(`KeyboardArea`, built 2026-10-02). The timeline stands aside once a
+list is clicked, so the browser and the sidebar get their own arrows.

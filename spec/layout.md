@@ -71,6 +71,9 @@ what, and the few structural rules that go with each. Rules live in
   (`ShowView.swift`; the Slide viewer drawer over the slide list),
   `ClickTakesKeyboard` and `SingleKeys` (`EditShowView.swift`: a click
   that gives a SwiftUI List the keyboard, and window-wide single keys),
+  `KeyboardArea` (`KeyboardArea.swift`: which pane was clicked last in
+  each window, so the arrows go there; with `WindowNumberReader` and
+  `Color.selection`, a selection's accent or grey),
   `LevelLine` (the level line on song and lane-image clips: volume or
   opacity, and the fades), `MusicPlayer` (plays the songs on
   AVAudioEngine and is the show's clock while it does; `PlaybackEngine.syncMusic`

@@ -6,8 +6,7 @@ frontmost and uncovered, About, the tabbed Settings window, the drawers'
 sensitivity setting, the Transparency module, `SettingsBox`, where these
 windows open). **Open work:** see `spec/backlog.md` (B-13 one combined
 Set Up Triggers control, B-35 Smart View, B-67 PaneKit's pop-outs and
-Settings, B-71 the filter bar's seam, B-73 collapsed disclosures, B-03 the
-arrow-key race). Hands-on: `spec/shakedown.md`, "Windows and panes".
+Settings, B-71 the filter bar's seam, B-73 collapsed disclosures). Hands-on: `spec/shakedown.md`, "Windows and panes".
 
 Moved out of `spec/windows.md` on 2026-09-28, word for word except "The
 Transparency module", which is condensed here with its full story in
@@ -392,5 +391,6 @@ Condensed 2026-09-28; the dated back-and-forth is
   for `detail` while a show is open, since a show has a real toolbar of
   its own.
 - **Found and still open:** the filter bar's seam at 100% (B-71); some
-  collections' disclosures rendering collapsed on a fresh launch (B-73);
-  window-wide arrow-key monitors racing the sidebar's (B-03).
+  collections' disclosures rendering collapsed on a fresh launch (B-73).
+  Window-wide arrow-key monitors racing the sidebar's: settled
+  2026-10-02 by `KeyboardArea` (the area last clicked owns the arrows).

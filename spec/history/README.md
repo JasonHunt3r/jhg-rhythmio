@@ -41,6 +41,7 @@ are `spec/plan.md`.
 | `2026-09-28-status-archive.md` | The whole of `spec/status.md` as it stood before the docs hygiene pass, word for word (652 lines): its built-most-recently narratives, What's next, Parked, Still needs Jason's hands, Open questions, Known issues. Also records "Audit G1 and the audio-naming pass" closed as done by Jason | `spec/status.md`, `spec/backlog.md`, `spec/shakedown.md` |
 | `2026-09-28-docs-hygiene-pass.md` | The work order for the 2026-09-28 docs hygiene pass (written with App Claude), with Jason's shakedown of that day in its appendix, raw notes included | `spec/backlog.md`, `spec/shakedown.md`, `spec/history/verbatim/` |
 | `2026-10-02-b01-pop-out-close.md` | B-01 fixed: closing a popped-out pane's window left its content in the closed window (`windowClosed` dropped the window's record before `putBack`); checked in the app for the inspector and the timeline | `spec/panekit.md`, "Pane ⇄ panel" |
+| `2026-10-02-b03-arrows-follow-click.md` | B-03 built (`KeyboardArea`: the arrows follow the last click, selections grey elsewhere); the grid's ⇧-arrow (held arrows were swallowed; arrows stepped from a stale cursor); the `hitTest` coordinate trap | `spec/conventions.md` §2, `spec/backlog.md` B-83, B-84 |
 | `verbatim/` | Byte-identical copies of `spec/plan.md` and `spec/windows.md` as retired 2026-09-28, never edited; its README maps every heading to where it lives now | The files its README lists |
 
 ## Where this came from
