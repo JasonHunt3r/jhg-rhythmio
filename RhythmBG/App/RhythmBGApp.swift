@@ -47,6 +47,9 @@ final class RhythmBGApp: NSObject, NSApplicationDelegate, NSWindowDelegate {
         let env = ProcessInfo.processInfo.environment
         if env["RHYTHMBG_OPEN_WINDOW"] != nil { showWindow() }
         if env["RHYTHMBG_OPEN_PANEL"] != nil { panel?.open() }
+        let early = pendingURLs ?? []
+        pendingURLs = nil
+        handle(early)
     }
 
     /// A monitor going away (item 11, `RhythmIO Feedback — Worklist for
@@ -72,6 +75,21 @@ final class RhythmBGApp: NSObject, NSApplicationDelegate, NSWindowDelegate {
     /// `rhythmbg://open` shows the panel (the Control Center tile, B5);
     /// `rhythmbg://window` opens the window.
     func application(_ application: NSApplication, open urls: [URL]) {
+        if pendingURLs != nil {
+            pendingURLs?.append(contentsOf: urls)
+            return
+        }
+        handle(urls)
+    }
+
+    /// URLs that arrive before launch has finished, handled at its end. A
+    /// tile press that starts RhythmBG delivers its URL before
+    /// `applicationDidFinishLaunching` has made the panel (the log: "url",
+    /// then "launch"), so `panel?.toggle()` did nothing and the tile needed
+    /// a second press (B-15). Nil once launch has finished.
+    private var pendingURLs: [URL]? = []
+
+    private func handle(_ urls: [URL]) {
         for url in urls where url.scheme == "rhythmbg" {
             Log.write("url \(url)")
             if url.host == "window" { showWindow() }
