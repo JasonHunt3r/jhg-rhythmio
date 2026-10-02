@@ -60,20 +60,12 @@ in xcode-port.md's story, the set-aside library, the repo URL, this file).
 
 ## The rename: Jason's morning
 
-B-86, done 2026-10-02 except what needs his hands. **Preferences** were
-copied (`com.jhg.rhythmio` is identical to the old `com.jhg.showtools`;
-RhythmBG kept its window position under its new key). **A fresh library:**
-Jason chose not to move the old one, so RhythmIO made `~/Pictures/RhythmIO
-Library.noindex`, empty; `ShowTools Library.noindex` stays where it was,
-and so does `Application Support/BGTools` (RhythmBG starts fresh).
-**Installed:** `~/Applications/RhythmIO.app`; its tiles' extension is
-registered. Merged to `main` and pushed; the repo is `jhg-rhythmio`.
-
-**Still Jason's:** allow the permission prompts under the new ids; press
-both Control Center tiles; turn RhythmBG on at login (RhythmBG ▸ Desktop
-Show…); glance at the Dock and About. The old `~/Applications/ShowTools.app`
-is still installed (moving it to the Trash was refused by the permission
-check): trash it by hand, or its tiles and player sit beside the new ones.
+Done 2026-10-02 (B-86 closed). Preferences copied; a fresh library at
+`~/Pictures/RhythmIO Library.noindex` (the ShowTools-era ones and
+`Application Support/BGTools` untouched); old ShowTools.app trashed and
+its BGTools quit; RhythmBG registered at login — launchd lists
+`com.jhg.rhythmbg` enabled, so the un-nested id works; "Launch RhythmBG
+when RhythmIO launches" is on. Registering started a second copy (B-08).
 
 ## Where it stands
 
@@ -104,10 +96,9 @@ RhythmBG and doesn't restart it: start it again from RhythmBG ▸ Desktop Show�
 
 ## What's next
 
-1. **B-86**: what's still Jason's, above.
-2. **The range batch, B-02, B-05, B-06, B-11** (P1/P2).
-3. **RhythmBG, B-08, B-14, B-17**; B-16 waits on B-39.
-4. **B-83, B-84**: two click oddities.
+1. **The range batch, B-02, B-05, B-06, B-11** (P1/P2).
+2. **RhythmBG, B-08 (cause found), B-14, B-17**; B-16 waits on B-39.
+3. **B-83, B-84**: two click oddities.
 
 Built and waiting on Jason's shakedown rows: B-01, B-03 and the held-arrow
 fixes; the inspector batch (B-04, B-07: a file not in the show shows its

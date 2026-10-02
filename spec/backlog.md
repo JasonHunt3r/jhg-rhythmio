@@ -28,7 +28,7 @@ Claude can do these.
 - **B-02** · P1 · Range — Dragging a range end (I or O) runs faster than the mouse, so the marker zips away. Real, not the tool artifact the old status suspected. `spec/range-and-ruler.md`. (Shakedown 2026-09-28.)
 - **B-05** · P1 · Range — The range can be set past the show's current end, so more tiles can be added into it. `spec/range-and-ruler.md`. (Shakedown 2026-09-28.)
 - **B-06** · P1 · Range — Clicking a range marker selects it, so it can be nudged. `spec/range-and-ruler.md`. (Shakedown 2026-09-28.)
-- **B-08** · P2 · RhythmBG — Double-clicking to launch: Jason suspects the first launch starts a second copy while one is already running. Investigate. `spec/rhythmbg.md`. (Shakedown 2026-09-28.)
+- **B-08** · P2 · RhythmBG — A second copy on first launch: **found 2026-10-02.** RhythmBG ▸ Desktop Show… calls `registerAtLogin()`, and registering a login item starts it at once (launchd, pid shown as `com.jhg.rhythmbg`); then `openDesktop()` opens RhythmBG too, in the same second, so two run. Only when the menu item does the registering. `RhythmBGHelper.openDesktop`, `spec/rhythmbg.md`. (Shakedown 2026-09-28.)
 - **B-09** · P2 · Rhythm — Tempo detection reads double: Fly Me to the Moon as 145 BPM, where it's about 72. Needs an octave (half-time) check. `spec/rhythm.md`. (Shakedown 2026-09-28.)
 - **B-10** · P2 · PaneKit — Ways to pop out the inspector besides the View menu: a right-click item, a button, or a click action. `spec/panekit.md`, "Pane ⇄ panel". (Shakedown 2026-09-28.)
 - **B-11** · P2 · Range — A numeric field for exact In and Out values. `spec/range-and-ruler.md`. (Shakedown 2026-09-28.)
@@ -56,7 +56,6 @@ Claude can do these.
 The feature-by-feature checks are in `spec/shakedown.md` (every unticked
 row). These are the other things only Jason can do.
 
-- **B-86** · P1 · Rename — After the rename to RhythmIO: allow the permission prompts under the new ids, press both Control Center tiles, turn RhythmBG on at login (its id is no longer nested under RhythmIO's: unmeasured), glance at the Dock and About, and trash the old `~/Applications/ShowTools.app`. `spec/status.md`, "The rename: Jason's morning". (2026-10-02.)
 - **B-30** · P2 · Library — Set up a big test library (4,000+ images), so Claude can measure scroll-scrubbing getting ahead of image loading. (was item 36)
 - **B-31** · P2 · Rhythm — List what's still to do on the Rhythm tool (Jason, 2026-09-28: "largely fleshed out", with "some things to do"). `spec/rhythm.md`.
 - **B-32** · P3 · Range — Read one edge case in Fill Range: a slide wholly inside the range continues past its end as a second use of the same file. Reasoned through and tested, but the plan never said so. `spec/range-and-ruler.md`, "Fill the range with images".
