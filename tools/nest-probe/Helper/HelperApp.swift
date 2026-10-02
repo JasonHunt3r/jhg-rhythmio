@@ -1,6 +1,6 @@
 import AppKit
 
-/// The nested helper: RhythmBG' stand-in. No window; it only logs that it
+/// The nested helper: RhythmBG's stand-in. No window; it only logs that it
 /// ran and what URLs reached it.
 @main
 @MainActor

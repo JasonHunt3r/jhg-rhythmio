@@ -108,7 +108,7 @@ final class DesktopController {
     private(set) var players: [String: Player] = [:]
     /// Every monitor and Space there is now, for the window.
     private(set) var screens: [ScreenInfo] = []
-    /// While RhythmBG' window is open, libraries it's shown stay open, so
+    /// While RhythmBG's window is open, libraries it's shown stay open, so
     /// its pickers don't close and reopen them.
     @ObservationIgnored var keepReaders = false
     @ObservationIgnored private var windows: [ScreenKey: DesktopWindow] = [:]
@@ -388,7 +388,7 @@ final class DesktopController {
         updatePaused()
     }
 
-    /// The libraries to offer: RhythmIO' own and any a setting names.
+    /// The libraries to offer: RhythmIO's own and any a setting names.
     func libraryChoices() -> [LibraryChoice] {
         let named = settings.screens.values.map(\.library)
             + [settings.allSameSetting?.library, settings.newScreens?.library].compactMap { $0 }

@@ -3,7 +3,7 @@ import AppKit
 import SwiftUI
 import WidgetKit
 
-/// RhythmBG' Control Center tiles (spec/rhythmbg.md, B5). A tile's action
+/// RhythmBG's Control Center tiles (spec/rhythmbg.md, B5). A tile's action
 /// runs here, in the sandboxed extension, never in the app (measured), so
 /// each reaches RhythmBG by a `rhythmbg://` URL opened without activating
 /// it; that also launches RhythmBG if it isn't running (measured).
@@ -43,7 +43,7 @@ enum ControlState {
 
 struct OpenRhythmBGIntent: AppIntent {
     static let title: LocalizedStringResource = "Open RhythmBG"
-    static let description = IntentDescription("Shows RhythmBG' panel.")
+    static let description = IntentDescription("Shows RhythmBG's panel.")
     static let openAppWhenRun = false
 
     func perform() async throws -> some IntentResult {
@@ -71,7 +71,7 @@ struct OpenRhythmBGControl: ControlWidget {
             }
         }
         .displayName("Open RhythmBG")
-        .description("Shows RhythmBG' panel.")
+        .description("Shows RhythmBG's panel.")
     }
 }
 

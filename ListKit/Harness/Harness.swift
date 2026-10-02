@@ -5,7 +5,7 @@ import ListKit
 /// a `List` — proving `ListNavigation` gives back what a `List` would while
 /// the bar above genuinely composites `.withinWindow` vibrancy over the
 /// scrolled rows, which a real `List`'s `NSTableView` never does
-/// (RhythmIO' Catalog, 2026-09-27). Moved here from PaneKit's harness when
+/// (RhythmIO's Catalog, 2026-09-27). Moved here from PaneKit's harness when
 /// ListKit became its own package.
 @main
 struct ListHarnessApp: App {

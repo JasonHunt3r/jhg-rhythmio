@@ -14,7 +14,7 @@ import AppKit
 /// settings should have also brought the other app windows back as a
 /// package" — a panel that's always `.floating` never left in the first
 /// place, so there was nothing to bring back; this is what actually makes
-/// it part of RhythmIO' own window group instead of sitting permanently
+/// it part of RhythmIO's own window group instead of sitting permanently
 /// above everyone else's.
 ///
 /// Call once, right after setting a panel's initial `.level = .floating`,

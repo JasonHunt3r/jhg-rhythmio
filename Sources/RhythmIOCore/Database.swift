@@ -31,7 +31,7 @@ final class Database {
     }
 
     /// Changes whenever another connection commits (SQLite's
-    /// `data_version`): polled to notice RhythmIO' saves.
+    /// `data_version`): polled to notice RhythmIO's saves.
     var dataVersion: Int {
         (try? prepare("PRAGMA data_version").firstInt()) ?? 0
     }

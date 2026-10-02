@@ -1,8 +1,8 @@
 import Foundation
 import RhythmIOCore
 
-/// Where a `PlaybackEngine` gets its show and files. RhythmIO' `AppModel`
-/// is one (the library it edits); RhythmBG' read-only reader is another.
+/// Where a `PlaybackEngine` gets its show and files. RhythmIO's `AppModel`
+/// is one (the library it edits); RhythmBG's read-only reader is another.
 /// The engine asks every tick, so a show edited elsewhere is picked up.
 @MainActor
 public protocol ShowSource: AnyObject {

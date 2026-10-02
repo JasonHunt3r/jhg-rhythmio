@@ -92,7 +92,7 @@ final class PaneLayoutTests: XCTestCase {
         XCTAssertEqual(r.panes["files"], rect)
     }
 
-    /// RhythmIO' shape, the demanding example: a timeline pane edge to edge
+    /// RhythmIO's shape, the demanding example: a timeline pane edge to edge
     /// under a Library pane, and three columns beside it — built from
     /// `.row(…)`, the same recipe Edit Show's preview/list/inspector uses.
     static let rhythmIO: PaneNode =

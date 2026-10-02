@@ -56,9 +56,9 @@ enum RhythmBGHelper {
     }
 
     /// Item 21, `RhythmIO Feedback — Worklist for Next CC Session.md`:
-    /// "Launch BGT when launching RhythmIO." No window request — this is
+    /// "Launch RhythmBG when launching RhythmIO." No window request — this is
     /// meant to be silent, just getting the desktop background ready, not
-    /// popping RhythmBG' own window in front of RhythmIO' every time it
+    /// popping RhythmBG's own window in front of RhythmIO's every time it
     /// opens. A no-op if it's already running (its own accessory-app
     /// activation policy means a second launch would still just reopen it
     /// quietly, but there's no reason to ask twice).

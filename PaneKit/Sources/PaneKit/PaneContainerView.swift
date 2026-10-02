@@ -265,7 +265,7 @@ public final class PaneContainerView: NSView {
 }
 
 /// Holds one pane's content, and takes the mouse **only inside its own
-/// frame** (RhythmIO' `ColumnHost`): a SwiftUI hosting view hit-tests all
+/// frame** (RhythmIO's `ColumnHost`): a SwiftUI hosting view hit-tests all
 /// its content, clipped or not, and would steal a neighbour's clicks.
 @MainActor
 final class PaneHostView: NSView {
@@ -382,7 +382,7 @@ final class PaneDividerView: NSView, PaneResizeCursorView {
 
 /// How every drawer's edge handle (`PaneEdgeHandleView`) fills its
 /// background: solid, as always, unless the app says otherwise. An app
-/// with its own translucent bars can have the handles match them (RhythmIO'
+/// with its own translucent bars can have the handles match them (RhythmIO's
 /// "Include handles", Jason 2026-09-27: "There are many handle rows, on
 /// each drawer"). `translucency` gives, for dark or light, how opaque the
 /// window's background is laid over the OS's own header material — 0 the

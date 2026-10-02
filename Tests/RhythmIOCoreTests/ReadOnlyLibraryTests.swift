@@ -1,7 +1,7 @@
 import XCTest
 @testable import RhythmIOCore
 
-/// RhythmBG' way in (spec/rhythmbg.md, "RhythmBG' read path").
+/// RhythmBG's way in (spec/rhythmbg.md, "RhythmBG's read path").
 final class ReadOnlyLibraryTests: XCTestCase {
     var root: URL!
 

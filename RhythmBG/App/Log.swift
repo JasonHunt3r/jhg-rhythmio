@@ -1,6 +1,6 @@
 import Foundation
 
-/// RhythmBG' log, `~/Library/Logs/RhythmBG.log`. A file, because `log show`
+/// RhythmBG's log, `~/Library/Logs/RhythmBG.log`. A file, because `log show`
 /// sees nothing from these apps in Claude's sandbox.
 enum Log {
     static let url = FileManager.default.homeDirectoryForCurrentUser

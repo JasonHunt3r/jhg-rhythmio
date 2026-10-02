@@ -381,12 +381,12 @@ struct AppCommands: Commands {
         // Item 21, `RhythmIO Feedback — Worklist for Next CC Session.md`:
         // a dedicated menu for launching RhythmBG, more discoverable than
         // the toolbar group it lived in before. "Open at Login" stays in
-        // RhythmBG' own window (View ▸ RhythmBG ▸ Desktop Show…, its
+        // RhythmBG's own window (View ▸ RhythmBG ▸ Desktop Show…, its
         // Settings tab) — this menu is only for launching it, and the new
-        // "launch with RhythmIO" setting, which lives in RhythmIO'
+        // "launch with RhythmIO" setting, which lives in RhythmIO's
         // own Settings alongside its other startup-time preferences.
         CommandMenu("RhythmBG") {
-            // Phase 5: the desktop is RhythmBG' job, and it lives inside
+            // Phase 5: the desktop is RhythmBG's job, and it lives inside
             // this app (spec/rhythmbg.md, spec/xcode-port.md).
             Button("Desktop Show…") {
                 do { try RhythmBGHelper.openDesktop() } catch { NSAlert(error: error).runModal() }
@@ -583,7 +583,7 @@ private struct LibrarySettingsTab: View {
                     get: { model.libraryIsPrivate },
                     set: { on in Task { await model.setPrivate(on) } }))
                     .disabled(model.library == nil)
-                Text("Opening a private library asks for Touch ID or your Mac's password, and it's never listed in Open Recent. Turning this off asks too. It locks RhythmIO' door only: the photos are still ordinary files to anyone using this Mac account. To lock the files themselves, keep the library in an encrypted disk image (Disk Utility can make one).")
+                Text("Opening a private library asks for Touch ID or your Mac's password, and it's never listed in Open Recent. Turning this off asks too. It locks RhythmIO's door only: the photos are still ordinary files to anyone using this Mac account. To lock the files themselves, keep the library in an encrypted disk image (Disk Utility can make one).")
                     .font(.callout)
                     .foregroundStyle(.secondary)
             }
@@ -765,7 +765,7 @@ private struct WindowsSettingsTab: View {
 }
 
 /// Item 21, `RhythmIO Feedback — Worklist for Next CC Session.md`.
-/// "Open RhythmBG at Login" already lives in RhythmBG' own window (View ▸
+/// "Open RhythmBG at Login" already lives in RhythmBG's own window (View ▸
 /// RhythmBG ▸ Launch RhythmBG, then its Settings tab) — this is the
 /// separate ask: RhythmBG starting alongside RhythmIO itself, not just at
 /// login. Its own tab since RhythmBG is a whole companion app, not one

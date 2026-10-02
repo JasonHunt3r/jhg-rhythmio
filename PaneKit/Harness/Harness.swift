@@ -4,7 +4,7 @@
 //
 // A window laid out by PaneKit with coloured dummy panes, in three shapes
 // (the Layout menu): Finder's two panes, Mail's three columns, and
-// RhythmIO' own layout, the demanding example. Nothing here knows about
+// RhythmIO's own layout, the demanding example. Nothing here knows about
 // RhythmIO beyond that one tree; PaneKit is meant for any Mac app.
 //
 // What to check (Claude Code on the Mac runs it; Jason feels it):
@@ -14,7 +14,7 @@
 //   stays on the edge. Drag the handle out, or double-click it, to reopen.
 //   Double-clicking a divider closes its pane.
 // - View ▸ "<pane> in Its Own Window" pops a pane out (panels float;
-//   RhythmIO' Timeline is an ordinary window). The main window closes up.
+//   RhythmIO's Timeline is an ordinary window). The main window closes up.
 //   Closing the pane's window puts it back in its slot, at its old size.
 // - Quit and relaunch: sizes, closed panes, popped-out panes and their
 //   window positions all come back.
@@ -102,7 +102,7 @@ enum Shape: String, CaseIterable {
                                farSize: 320, farRange: 260...480)),
                    .pane("timeline", title: "Timeline", popOut: .window))
         case .headerHandle:
-            // RhythmIO' viewer drawer over a grid: the grid's own header
+            // RhythmIO's viewer drawer over a grid: the grid's own header
             // bar is the drawer's handle (`PaneHandleStyle.external`).
             .split("drawer", .vertical, sized: .first, size: 220, range: 80...500, title: "Viewer",
                    handle: .external,

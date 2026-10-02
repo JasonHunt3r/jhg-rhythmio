@@ -1,8 +1,8 @@
 import Foundation
 import RhythmIOCore
 
-/// The libraries RhythmBG offers: RhythmIO' main library and its recent
-/// ones (read from RhythmIO' own preferences, never written), plus any a
+/// The libraries RhythmBG offers: RhythmIO's main library and its recent
+/// ones (read from RhythmIO's own preferences, never written), plus any a
 /// setting already names. A test launch (`RHYTHMBG_SETTINGS`) offers only
 /// those its settings name, so it can't wander into the real library.
 struct LibraryChoice: Identifiable, Hashable {

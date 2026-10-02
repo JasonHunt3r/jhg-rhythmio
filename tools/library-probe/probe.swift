@@ -3,7 +3,7 @@
 // real one:
 //
 //   library-probe writer <library> <seconds>
-//       saves the first show over and over through RhythmIO' own Library
+//       saves the first show over and over through RhythmIO's own Library
 //       code, as the app does. Each save changes slide lengths, and adds or
 //       removes a slide, and stamps the show's name with
 //       "probe <n> <slide count> <time>" in the same transaction.

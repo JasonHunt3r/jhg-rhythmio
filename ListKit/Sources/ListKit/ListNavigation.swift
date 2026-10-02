@@ -4,7 +4,7 @@ import AppKit
 /// What `List(selection:)` gives an app for free that a plain `ScrollView`
 /// doesn't. Built for a translucent sidebar that can't be a real `List` —
 /// `NSTableView` doesn't compose with `.withinWindow` vibrancy at all
-/// (measured, RhythmIO' Catalog, 2026-09-27: identical, completely flat
+/// (measured, RhythmIO's Catalog, 2026-09-27: identical, completely flat
 /// result whether the effect view was nested via `.safeAreaInset` or a true
 /// sibling via `.overlay`) — but nothing here is RhythmIO-specific.
 ///
@@ -271,7 +271,7 @@ public struct ListNavigation<ID: Hashable>: ViewModifier {
 /// question an app used to ask with `firstResponder is NSTableView`, which
 /// a hand-rolled list never answers yes to. An app's own window-wide key
 /// handlers (a grid's arrows) ask this to stand aside, as they did for a
-/// `List` (RhythmIO' Library grid took the sidebar's arrows, 2026-09-27).
+/// `List` (RhythmIO's Library grid took the sidebar's arrows, 2026-09-27).
 @MainActor public enum ListKeyboard {
     /// Each window's lists that have the keyboard, by their own token —
     /// one list taking it as another lets go mustn't clear the first.

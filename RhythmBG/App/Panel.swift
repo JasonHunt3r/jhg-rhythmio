@@ -4,7 +4,7 @@ import RhythmBGCore
 import RhythmIOCore
 import RhythmIOPlayback
 
-/// Which page RhythmBG' window shows: shared with the panel, so "Open in
+/// Which page RhythmBG's window shows: shared with the panel, so "Open in
 /// RhythmBG…" lands on the right screen.
 @MainActor
 @Observable
@@ -250,7 +250,7 @@ private struct PanelRow: View {
             .menuStyle(.borderlessButton)
             .menuIndicator(.hidden)
             .fixedSize()
-            .help("Stills only, Sound, and more in RhythmBG' window")
+            .help("Stills only, Sound, and more in RhythmBG's window")
             .accessibilityLabel("Options")
         }
         .frame(height: 44)

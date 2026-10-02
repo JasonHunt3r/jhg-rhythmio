@@ -113,7 +113,7 @@ final class LibraryPanel: NSObject, NSWindowDelegate {
         // second view needed, just the grid in a window of its own.
         window.minSize = NSSize(width: 240, height: 300)
         window.isFloatingPanel = true
-        // Stays `.floating` over every app, not just RhythmIO' own,
+        // Stays `.floating` over every app, not just RhythmIO's own,
         // unlike `InfoPanel`/`RhythmPanel`/`SlideEditorWindow`
         // (`floatOnlyWhileActive`, `spec/windows.md`, "The windows pass,"
         // 2026-09-27): dragging a file in from Finder makes *Finder* the

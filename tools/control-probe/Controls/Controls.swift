@@ -21,7 +21,7 @@ struct OpenRhythmBGControl: ControlWidget {
             }
         }
         .displayName("Open RhythmBG")
-        .description("Opens RhythmBG' window.")
+        .description("Opens RhythmBG's window.")
     }
 }
 

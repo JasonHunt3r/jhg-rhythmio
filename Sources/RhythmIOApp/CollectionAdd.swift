@@ -4,7 +4,7 @@ import RhythmIOCore
 import RhythmIOPlayback
 
 /// Library files dragged within the app, from the Collection Browser: a
-/// list of their ids, under RhythmIO' own type (declared in Info.plist).
+/// list of their ids, under RhythmIO's own type (declared in Info.plist).
 /// On the main actor, where the drops arrive.
 @MainActor
 enum ItemDrag {
@@ -40,7 +40,7 @@ enum ItemDrag {
 }
 
 /// A group dragged within the app, from the Library pane: its own id, under
-/// RhythmIO' own type (declared in Info.plist). Carries one group at a
+/// RhythmIO's own type (declared in Info.plist). Carries one group at a
 /// time — the pane's rows aren't multi-selectable the way the grid's are.
 @MainActor
 enum GroupDrag {

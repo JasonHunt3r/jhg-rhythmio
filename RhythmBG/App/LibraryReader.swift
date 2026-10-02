@@ -2,7 +2,7 @@ import Foundation
 import RhythmBGCore
 import RhythmIOCore
 
-/// One library, read-only (spec/rhythmbg.md, "RhythmBG' read path"). Polls
+/// One library, read-only (spec/rhythmbg.md, "RhythmBG's read path"). Polls
 /// SQLite's change counter and rereads everything in one snapshot when
 /// RhythmIO saves; `generation` goes up each time, for the players.
 @MainActor

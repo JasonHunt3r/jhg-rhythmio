@@ -3,7 +3,7 @@ import SwiftUI
 import UniformTypeIdentifiers
 
 // Drag-to-reorder's view-side pieces (`spec/plan.md`, "Reordering"), kept
-// apart from `LibraryGridView` and free of RhythmIO' own types so they can
+// apart from `LibraryGridView` and free of RhythmIO's own types so they can
 // move into a package of their own, like PaneKit, once the behaviour is
 // settled. The pure geometry and ordering is `RhythmIOCore.Reorder`.
 

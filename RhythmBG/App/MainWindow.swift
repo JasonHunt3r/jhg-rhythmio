@@ -11,7 +11,7 @@ enum Selection: Hashable {
     case randomPictures
 }
 
-/// RhythmBG' window (spec/rhythmbg.md, B4a): monitors and Spaces on the
+/// RhythmBG's window (spec/rhythmbg.md, B4a): monitors and Spaces on the
 /// left, drawn as they're arranged; the selected one's preview and
 /// settings on the right.
 struct MainWindow: View {

@@ -73,7 +73,7 @@ swift build --product mio >/dev/null
 
 # The video slide needs a real video that has sound AND a picture that
 # visibly moves, so it's obvious whether it plays or holds one frame.
-# Easiest honest way to make one: export a small show with RhythmIO' own
+# Easiest honest way to make one: export a small show with RhythmIO's own
 # exporter. (It also dogfoods the thing being tested.)
 echo "==> building a 10s video with sound"
 SRC="$DIR/src.noindex"

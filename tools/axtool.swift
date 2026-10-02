@@ -147,13 +147,13 @@ func requireRhythmIOInFront() {
     }
 }
 
-/// A click or drag must also land inside one of RhythmIO' windows: being in
+/// A click or drag must also land inside one of RhythmIO's windows: being in
 /// front isn't enough (a bad coordinate once clicked another app's window).
 func requireInsideRhythmIO(_ points: [CGPoint]) {
     let pid = NSWorkspace.shared.frontmostApplication?.processIdentifier ?? 0
     let wins = (attr(AXUIElementCreateApplication(pid), kAXWindowsAttribute) as? [AXUIElement] ?? []).compactMap(frame)
     for p in points where !wins.contains(where: { $0.contains(p) }) {
-        print("REFUSED: \(Int(p.x)),\(Int(p.y)) is outside RhythmIO' windows")
+        print("REFUSED: \(Int(p.x)),\(Int(p.y)) is outside RhythmIO's windows")
         exit(2)
     }
 }
