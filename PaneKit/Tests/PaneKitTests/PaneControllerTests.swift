@@ -1,5 +1,6 @@
 import XCTest
 import CoreGraphics
+import AppKit
 @testable import PaneKit
 
 /// `PaneController`'s own transactions — collapse/reopen under
@@ -138,5 +139,31 @@ final class PaneControllerTests: XCTestCase {
         XCTAssertEqual(s.splits["s"]?.size, 250)
         XCTAssertTrue(s.isCollapsed("s"))
         XCTAssertFalse(s.isOnOtherSide("s"))
+    }
+
+    /// B-01: closing a popped-out pane's window must bring its content back
+    /// into the main window, as the menu's put-back does. It stayed in the
+    /// closed window: the inspector came back empty, the timeline not at all.
+    func testClosingPoppedOutWindowReturnsContent() {
+        let root: PaneNode = .split("s", .horizontal, sized: .second, size: 200, range: 100...300,
+                                    .pane("main"), .pane("side", title: "Side", popOut: .panel))
+        let c = PaneController(id: "test.\(UUID())", root: root,
+                               store: UserDefaults(suiteName: #function + UUID().uuidString)!)
+        let side = NSView()
+        let container = PaneContainerView(controller: c, content: ["main": NSView(), "side": side])
+        let main = NSWindow(contentRect: rect, styleMask: [.titled], backing: .buffered, defer: false)
+        main.isReleasedWhenClosed = false
+        main.contentView = container
+        defer { main.close() }
+
+        c.popOut("side")
+        let popped = c.poppedOutWindows.first
+        XCTAssertNotNil(popped)
+        XCTAssertTrue(side.window === popped)
+
+        popped?.performClose(nil)
+        XCTAssertFalse(c.isPoppedOut("side"))
+        XCTAssertTrue(c.poppedOutWindows.isEmpty)
+        XCTAssertTrue(side.window === main)
     }
 }

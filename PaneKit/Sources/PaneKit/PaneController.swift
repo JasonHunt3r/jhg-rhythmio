@@ -193,8 +193,12 @@ public final class PaneController {
     }
 
     /// The user closed a popped-out pane's window: it goes back in its slot.
+    /// The content comes back here, not in `syncWindows`: the window is
+    /// already closing, and once its record is gone `syncWindows` has no
+    /// host to return (B-01: the content stayed in the closed window).
     func windowClosed(_ paneID: String) {
-        windows[paneID] = nil
+        guard let w = windows.removeValue(forKey: paneID) else { return }
+        container?.returnHost(w.releaseHost(), for: paneID)
         if isPoppedOut(paneID) { putBack(paneID) }
     }
 
