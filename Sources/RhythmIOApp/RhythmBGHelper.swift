@@ -19,11 +19,19 @@ enum RhythmBGHelper {
     /// RhythmIO owns the decision to start RhythmBG at login; RhythmBG no
     /// longer registers itself on first run. Its "Open at login" switch
     /// flips this same registration.
-    static func registerAtLogin() {
+    ///
+    /// True when this call registered it. Registering starts it at once
+    /// (launchd), so the caller mustn't open a second copy (B-08).
+    @discardableResult
+    static func registerAtLogin() -> Bool {
         let service = SMAppService.loginItem(identifier: bundleID)
-        guard service.status != .enabled else { return }
-        do { try service.register() } catch {
+        guard service.status != .enabled else { return false }
+        do {
+            try service.register()
+            return service.status == .enabled
+        } catch {
             NSLog("RhythmBG login registration failed: \(error)")
+            return false
         }
     }
 
@@ -42,7 +50,33 @@ enum RhythmBGHelper {
     /// Launches RhythmBG and opens its window.
     static func openDesktop() throws {
         guard let nestedURL else { throw RhythmBGError.notBundled }
-        registerAtLogin()
+        if registerAtLogin() {
+            // Registering just started RhythmBG as the login item; opening it
+            // too in the same breath started a second copy, the two racing
+            // past each other (B-08, measured 2026-10-02: pids 6124 and 6130,
+            // the same second). Wait for that copy, then ask it for its window.
+            askForWindowOnceRunning(orOpen: nestedURL, triesLeft: 30)
+            return
+        }
+        open(nestedURL)
+    }
+
+    /// Polls every 0.1 s for a running RhythmBG; opens it after `triesLeft`
+    /// runs out (registered but not started — waiting for approval, say).
+    private static func askForWindowOnceRunning(orOpen url: URL, triesLeft: Int) {
+        let running = NSRunningApplication.runningApplications(withBundleIdentifier: bundleID)
+        if running.contains(where: \.isFinishedLaunching) {
+            NSWorkspace.shared.open(URL(string: "rhythmbg://window")!)
+        } else if triesLeft == 0 {
+            open(url)
+        } else {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                askForWindowOnceRunning(orOpen: url, triesLeft: triesLeft - 1)
+            }
+        }
+    }
+
+    private static func open(_ nestedURL: URL) {
         let config = NSWorkspace.OpenConfiguration()
         config.activates = true
         NSWorkspace.shared.openApplication(at: nestedURL, configuration: config) { _, error in
