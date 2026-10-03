@@ -96,6 +96,11 @@ struct StorylineView: View {
     /// What a press on the ruler started on (N3): the playhead itself
     /// (selected, and not moved by the click), or empty space.
     @State private var rulerPressOnPlayhead: Bool?
+    /// A press on the range's bar that was a double-click's second (N7):
+    /// the rest of it doesn't scrub.
+    @State private var barDoubleClick = false
+    /// Where on the bar it was double-clicked, for Edit Range to point at.
+    @State private var barClickX: CGFloat?
 
     /// A range end being dragged (W6, work order item 6): which one, and its
     /// time while the drag is in progress.
@@ -482,6 +487,17 @@ struct StorylineView: View {
                         .contentShape(Rectangle())
                         .gesture(scrubGesture)
                         .overlay(alignment: .topLeading) { rangeOnRuler }
+                        // Edit Range points at what was double-clicked. One
+                        // popover on the ruler, at an exact spot in its own
+                        // coordinates: on the ends and the bar themselves it
+                        // pointed at the ruler's start, since they're placed
+                        // by `.offset` and a popover goes by the layout frame
+                        // (seen 2026-10-03).
+                        .popover(isPresented: Binding(get: { session.editRangeAnchor != nil },
+                                                      set: { if !$0 { session.editRangeAnchor = nil } }),
+                                 attachmentAnchor: .rect(.rect(editRangeAnchorRect)), arrowEdge: .bottom) {
+                            editRangePopover
+                        }
                         .overlay(alignment: .topLeading) { markersOnRuler }
                     rowsScrollView(placed, group)
                 }
@@ -687,24 +703,27 @@ struct StorylineView: View {
             if NSEvent.modifierFlags.contains(.option) {
                 engine.updateEditor { $0.rangeLines.toggle() }
             } else {
-                // Its own line; with the range's lines off, this turns them
-                // back on to show it.
-                engine.updateEditor { e in
-                    let showing = e.rangeLines && (isIn ? e.rangeInLine : e.rangeOutLine)
-                    if !e.rangeLines { e.rangeLines = true }
-                    if isIn { e.rangeInLine = !showing } else { e.rangeOutLine = !showing }
-                }
+                // Edit Range (N7, Jason 2026-10-03); an end's own line moved
+                // to the range's right-click menu.
+                openEditRange(isIn ? .rangeIn : .rangeOut)
             }
         }
+
         .gesture(rangeEndDragGesture(isIn: isIn))
         .contextMenu { rangeMenu }
         .help((isIn ? "Range start" : "Range end")
-              + ". Drag to move it" + (locked ? " (locked)" : "") + "; double-click to show or hide its line; "
-              + "⌥-double-click for both ends; right-click for the lock and more.")
+              + ". Drag to move it" + (locked ? " (locked)" : "") + "; double-click to type exact times; "
+              + "⌥-double-click shows or hides both ends' lines; right-click for each line, the lock and more.")
     }
 
     /// Shared by either end and the shaded span itself.
     @ViewBuilder private var rangeMenu: some View {
+        Button("Edit Range…") { barClickX = nil; openEditRange(.bar) }
+            .disabled(editor.rangeLocked)
+        Divider()
+        Toggle("Show In Line", isOn: rangeLineBinding(isIn: true))
+        Toggle("Show Out Line", isOn: rangeLineBinding(isIn: false))
+        Divider()
         Toggle("Lock Range", isOn: Binding(get: { editor.rangeLocked },
                                             set: { _ in engine.updateEditor { $0.rangeLocked.toggle() } }))
         Divider()
@@ -717,6 +736,42 @@ struct StorylineView: View {
                 fillRangeSheet = FillRangeSheet.Request(range: lo...hi)
             }
         }
+    }
+
+    /// An end's own line: what double-clicking the end used to do. With the
+    /// range's lines off, turning one on turns them back on to show it.
+    private func rangeLineBinding(isIn: Bool) -> Binding<Bool> {
+        Binding(get: { editor.rangeLines && (isIn ? editor.rangeInLine : editor.rangeOutLine) },
+                set: { on in
+                    engine.updateEditor { e in
+                        if on, !e.rangeLines { e.rangeLines = true }
+                        if isIn { e.rangeInLine = on } else { e.rangeOutLine = on }
+                    }
+                })
+    }
+
+    /// Edit Range (`spec/range-and-ruler.md`, "B-11: exact In and Out"),
+    /// pointing at what was double-clicked. Not on a locked range.
+    private func openEditRange(_ anchor: ShowSession.EditRangeAnchor) {
+        guard !editor.rangeLocked else { NSSound.beep(); return }
+        session.editRangeAnchor = anchor
+    }
+
+    /// Where Edit Range points, in the ruler's coordinates: the end that was
+    /// double-clicked, or the spot on the bar (its In, from the menu).
+    private var editRangeAnchorRect: CGRect {
+        let x: CGFloat = switch session.editRangeAnchor {
+        case .rangeOut: Self.inset + CGFloat((editor.rangeOut ?? timeline.duration) * pps)
+        case .bar: barClickX ?? Self.inset + CGFloat((editor.rangeIn ?? 0) * pps)
+        default: Self.inset + CGFloat((editor.rangeIn ?? 0) * pps)
+        }
+        return CGRect(x: x - 1, y: 0, width: 2, height: Self.rulerHeight)
+    }
+
+    private var editRangePopover: some View {
+        EditRangePopover(show: show, timeline: timeline, mutate: mutate,
+                         close: { session.editRangeAnchor = nil })
+            .environment(model)
     }
 
     /// One lock for the whole range (Jason, 2026-09-24): a drag does
@@ -1566,6 +1621,18 @@ struct StorylineView: View {
     private var rangeScrubGesture: some Gesture {
         DragGesture(minimumDistance: 0, coordinateSpace: .named("storyline"))
             .onChanged { g in
+                if barDoubleClick { return }
+                // A double-click on the bar (N7, Jason's option 2): the
+                // first click moved the playhead at once; the second puts
+                // it back — its own Go Back step, taken back off the
+                // history — and opens Edit Range.
+                if rulerPressOnPlayhead == nil, (NSApp.currentEvent?.clickCount ?? 1) >= 2 {
+                    barDoubleClick = true
+                    if let step = session.goBackHistory.popLast() { engine.seek(step.time) }
+                    barClickX = g.startLocation.x
+                    openEditRange(.bar)
+                    return
+                }
                 if rulerPressOnPlayhead == nil { rulerPressOnPlayhead = pressRuler(atX: g.startLocation.x) }
                 if rulerPressOnPlayhead == true, g.translation.width == 0 { return }
                 recordScrubJump()
@@ -1573,7 +1640,7 @@ struct StorylineView: View {
                 let t = max(0, Double(g.location.x - Self.inset) / pps)
                 engine.seek(min(t, max(timeline.duration - 0.001, 0)))
             }
-            .onEnded { _ in scrubJumpRecorded = false; rulerPressOnPlayhead = nil }
+            .onEnded { _ in scrubJumpRecorded = false; rulerPressOnPlayhead = nil; barDoubleClick = false }
     }
 
     /// One Go Back step per click-and-release or scrub drag (W8, item 7;

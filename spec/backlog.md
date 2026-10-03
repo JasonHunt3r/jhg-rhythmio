@@ -25,13 +25,10 @@ where it came from.
 
 Claude can do these.
 
-- **B-05** · P1 · Range — The range can be set past the show's current end, so more tiles can be added into it. `spec/range-and-ruler.md`. (Shakedown 2026-09-28.)
-- **B-06** · P1 · Range — Clicking a range marker selects it, so it can be nudged. `spec/range-and-ruler.md`. (Shakedown 2026-09-28.)
 - **B-08** · P2 · RhythmBG — A second copy on first launch. **Fix built 2026-10-02, not yet seen working:** Desktop Show… no longer opens RhythmBG when registering it just started it (registering a login item starts it at once; opening it too in the same second made two). It waits for that copy instead, then asks it for its window. Checking it needs RhythmBG unregistered first (System Settings ▸ General ▸ Login Items, while B-87 stands), then Desktop Show…, then one copy running. `RhythmBGHelper.openDesktop`, `spec/rhythmbg.md`. (Shakedown 2026-09-28.)
 - **B-87** · P2 · RhythmBG — Its own "Open at login" switch (the window's ⋯ menu) can't work: it calls `SMAppService.loginItem(identifier:)` from inside RhythmBG, where the status reads not-registered and `register()` fails with SMAppService error 22, "Invalid argument" (2026-10-02). Only the host, RhythmIO, can register or unregister it. Never used before (no "login item" line in either log). `RhythmBG/App/LoginItem.swift`.
 - **B-09** · P2 · Rhythm — Tempo detection reads double: Fly Me to the Moon as 145 BPM, where it's about 72. Needs an octave (half-time) check. `spec/rhythm.md`. (Shakedown 2026-09-28.)
 - **B-10** · P2 · PaneKit — Ways to pop out the inspector besides the View menu: a right-click item, a button, or a click action. `spec/panekit.md`, "Pane ⇄ panel". (Shakedown 2026-09-28.)
-- **B-11** · P2 · Range — A numeric field for exact In and Out values. `spec/range-and-ruler.md`. (Shakedown 2026-09-28.)
 - **B-12** · P2 · Library — An Info drawer on the right of the Library view, where the inspector sits elsewhere: one click on the Info button opens the drawer, a double-click opens the Info window that exists. Jason first asked 2026-09-24 ("Design notes", below). (Shakedown 2026-09-28.)
 - **B-13** · P2 · Settings — Set Up Triggers: one control where the Responsiveness slider and the practice drawer sit together, instead of two items. `spec/window-behavior.md`, "A reusable modal box"; `spec/panekit.md`, "The clutch". (Shakedown 2026-09-28.)
 - **B-14** · P1 · RhythmBG — Per-screen stop: a green on/off switch in each monitor's title bar **and** a "Plays Nothing" entry in the per-Space list (Jason, 2026-09-26: "Simple, do both"). `spec/rhythmbg.md`, "The 2026-09-25 feedback items". (was item 24)

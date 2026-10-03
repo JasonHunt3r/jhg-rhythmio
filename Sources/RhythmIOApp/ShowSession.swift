@@ -39,6 +39,11 @@ final class ShowSession {
         var message: String? = nil
     }
 
+    /// Edit Range's popover (N7), and what it points at: the end or the
+    /// shaded bar that was double-clicked.
+    enum EditRangeAnchor: Hashable { case rangeIn, rangeOut, bar }
+    var editRangeAnchor: EditRangeAnchor?
+
     /// Markers flashing red after a collision (N5): put back where they
     /// were, or refused.
     var collidedMarkers: Set<UUID> = []

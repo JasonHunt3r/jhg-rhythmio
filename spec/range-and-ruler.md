@@ -7,8 +7,8 @@ clicks, Fill Range with Images). **Open work:** see `spec/backlog.md`
 B-06 selecting a marker to nudge it, B-11 exact In and Out, B-32 an edge
 case to read). Hands-on: `spec/shakedown.md`, "The range package".
 **B-05, B-06 and B-11 designed 2026-10-03** (Jason): "Nudging, timecode
-and exact In and Out", below, built in steps N1–N8 there. **N1–N6
-built 2026-10-03.**
+and exact In and Out", below, built in steps N1–N8 there: **all built
+2026-10-03** (`spec/history/2026-10-03-range-batch.md`).
 
 The range itself (I, O, its lines, the editing state it's saved in) was
 settled 2026-09-21: `spec/rhythm.md`. Moved out of `spec/plan.md` on
@@ -103,7 +103,7 @@ From Jason's first-test notes (`spec/history/2026-09-24-work-order.md`).
 ## Nudging, timecode and exact In and Out (Jason, 2026-10-03)
 
 **Status:** Designed 2026-10-03 (B-05, B-06, B-11; B-02 was found and fixed
-in N6's check). Building: N1–N6 built 2026-10-03. Jason's reply,
+in N6's check). Built 2026-10-03, N1–N8; what's left is Jason's hands (`spec/shakedown.md`). Jason's reply,
 recorded as given.
 
 **B-05.** The range is as long as needed, so it can place slides that
@@ -269,7 +269,17 @@ range, plus its 200 pt; Fill Range fills a range past the end and the
 show grows to Out. Limits: I and O stop at the end, as the playhead does;
 a range wholly past the end gets its fill after the last slide (slides
 sit back to back; no gaps); ⌘L loops through the background past the
-last slide · N7 the Edit Range popover with its frame previews · N8 B-02's drag
+last slide · N7 the Edit Range popover with its frame previews — **built
+2026-10-03**: `EditRangePopover`. Double-click an end, or the bar (the
+first click's playhead move is taken back, with its Go Back step), or
+Edit Range… in the range's menu; a locked range beeps. One popover on
+the ruler, anchored at what was clicked. Frames by `RangeFrameRenderer`:
+the export's `MovieMedia` through the Compositor, so a video slide shows
+its exact frame and an animation its own; past the show's end, the
+background. Each frame: IN/OUT, the slide's title (both across a
+transition), `m:ss:ff`, the frame number. The range menu gained Show In
+Line / Show Out Line (what an end's double-click did); ⌥-double-click
+still toggles both · N8 B-02's drag
 — **fixed 2026-10-03**, found checking N6: the drag added the gesture's
 translation (the whole distance since the drag began) to the end's
 *latest* position, so every event added it again; a fast 104 pt drag
