@@ -7,7 +7,7 @@ clicks, Fill Range with Images). **Open work:** see `spec/backlog.md`
 B-06 selecting a marker to nudge it, B-11 exact In and Out, B-32 an edge
 case to read). Hands-on: `spec/shakedown.md`, "The range package".
 **B-05, B-06 and B-11 designed 2026-10-03** (Jason): "Nudging, timecode
-and exact In and Out", below, built in steps N1–N8 there. **N1–N4
+and exact In and Out", below, built in steps N1–N8 there. **N1–N5
 built 2026-10-03.**
 
 The range itself (I, O, its lines, the editing state it's saved in) was
@@ -103,7 +103,7 @@ From Jason's first-test notes (`spec/history/2026-09-24-work-order.md`).
 ## Nudging, timecode and exact In and Out (Jason, 2026-10-03)
 
 **Status:** Designed 2026-10-03 (B-05, B-06, B-11; B-02 is measured and
-fixed in the same batch). Building: N1–N4 built 2026-10-03. Jason's reply,
+fixed in the same batch). Building: N1–N5 built 2026-10-03. Jason's reply,
 recorded as given.
 
 **B-05.** The range is as long as needed, so it can place slides that
@@ -247,6 +247,20 @@ plays; read from memory only, so a jump never starts an analysis — the
 audio row starts it when it draws a clip), `movingMarkersToNextBeat`
 (skips beats a same-kind marker holds). Markers moved to a beat land on
 it exactly; a range end keeps its grid and frame rules, so a jump past the
-other end stops short; the playhead goes exactly there · N5 marker collisions · N6 B-05, the range past the
-end · N7 the Edit Range popover with its frame previews · N8 B-02's drag.
+other end stops short; the playhead goes exactly there ·
+N5 marker collisions — **built 2026-10-03**: `FrameGrid.collide` (fewer
+than the tolerance in frames apart; 1 is the same frame), `placingMarker`
+(M merges; it used to refuse within 0.05 s), `markersCollide` (a moved
+set against its kind outside the set). A single press that would collide
+is refused and the rest of its hold ignored; a hold may pass markers and,
+released on one, undoes back to where it began (`SingleKeys` now reports
+a used key's release); a drag released on one animates back unsaved. Red
+flash 0.6 s with the beep; the alert ("Don't show this again",
+`MarkerCollisionNotice`) waits 0.7 s for it, since a modal alert stops
+the timeline drawing (measured: shown at once, the flash was never seen).
+⌘⌥ beat moves use the same tolerance. Settings ▸ Timeline: "Markers
+collide closer than N frames" (1–60) and Reset "Don't Show Again"
+Alerts; the Settings pages now open at their content's height (the
+Timeline and Windows pages had opened at 450 pt and scrolled) ·
+N6 B-05, the range past the end · N7 the Edit Range popover with its frame previews · N8 B-02's drag.
 
