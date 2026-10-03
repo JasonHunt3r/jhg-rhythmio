@@ -151,7 +151,7 @@ private struct Sidebar: View {
                                     .contextMenu { Button("Rename…") { startRenamingSpace(s) } }
                             }
                         } header: {
-                            DisplayHeader(name: d.name, model: d.model)
+                            DisplayHeader(display: d.display, name: d.name, model: d.model)
                                 .contextMenu { Button("Rename…") { startRenamingDisplay(d.display) } }
                         }
                     }
@@ -193,14 +193,36 @@ private struct Sidebar: View {
     }
 }
 
+/// A monitor's heading, with its own on/off switch, green when on (B-14).
 private struct DisplayHeader: View {
+    @Environment(DesktopController.self) private var desktop
+    let display: String
     let name: String
     let model: String
     var body: some View {
         HStack(spacing: 4) {
             Text(name)
             if name != model { Text(model).font(.caption2).foregroundStyle(.tertiary) }
+            Spacer()
+            MonitorSwitch(display: display, name: name)
         }
+    }
+}
+
+/// Off shows the wallpaper on every Space of that monitor, whatever's
+/// chosen, Synchronize included (Jason, 2026-10-03).
+struct MonitorSwitch: View {
+    @Environment(DesktopController.self) private var desktop
+    let display: String
+    let name: String
+    var body: some View {
+        Toggle(name, isOn: Binding(get: { desktop.isDisplayOn(display) },
+                                   set: { desktop.setDisplay(display, on: $0) }))
+            .labelsHidden()
+            .toggleStyle(.switch)
+            .controlSize(.mini)
+            .tint(.green)
+            .help("Plays on this monitor, or shows its wallpaper")
     }
 }
 
@@ -219,7 +241,7 @@ private struct SpaceRow: View {
                 Circle().fill(.green).frame(width: 7, height: 7).help("Showing now")
             }
         }
-        .opacity(desktop.settings.allSame ? 0.5 : 1)
+        .opacity(desktop.settings.allSame || !desktop.isDisplayOn(info.key.display) ? 0.5 : 1)
     }
 }
 
@@ -256,6 +278,7 @@ private struct Arrangement: View {
                         .overlay(RoundedRectangle(cornerRadius: 4)
                             .strokeBorder(selected ? Color.accentColor : Color.secondary.opacity(0.5), lineWidth: selected ? 2 : 1))
                         .overlay(Text(d.displayName).font(.caption2).lineLimit(2).multilineTextAlignment(.center).padding(3))
+                        .opacity(desktop.isDisplayOn(d.key.display) ? 1 : 0.4)
                         .frame(width: rect.width - 3, height: rect.height - 3)
                         .offset(x: rect.minX, y: rect.minY)
                         .onTapGesture(count: 2) {
@@ -297,11 +320,14 @@ private struct ScreenDetail: View {
                     if info.isCurrent { Text("showing now").font(.caption).foregroundStyle(.green) }
                 }
                 Preview(player: desktop.player(for: info.id), aspect: info.displayFrame.width / max(info.displayFrame.height, 1))
-                if desktop.settings.allSame {
+                if !desktop.isDisplayOn(info.key.display) {
+                    Note("This monitor is switched off, so it shows its wallpaper. Its settings are kept for when it's on.")
+                    Button("Turn On \(info.displayName)") { desktop.setDisplay(info.key.display, on: true) }
+                } else if desktop.settings.allSame {
                     Note("Synchronize is on, so this screen plays Synchronize's choice. Its own setting is kept for when Synchronize is off.")
                 }
                 if let setting = own {
-                    SettingEditor(setting: setting) { new in desktop.update { $0.screens[info.id] = new } }
+                    SettingEditor(setting: setting, offersNothing: true) { new in desktop.update { $0.screens[info.id] = new } }
                     if desktop.settings.newScreens != nil {
                         Button("Use the New screens default instead") { desktop.update { $0.screens[info.id] = nil } }
                     }
@@ -484,13 +510,18 @@ private struct OptionalSettingEditor: View {
 struct SettingEditor: View {
     @Environment(DesktopController.self) private var desktop
     let setting: ScreenSetting
+    /// A Space's own setting offers Plays Nothing (B-14); Synchronize's and
+    /// New screens' don't, having their own ways to play nothing.
+    var offersNothing = false
     let onChange: (ScreenSetting) -> Void
 
     private enum Kind: String, CaseIterable, Identifiable {
         case show = "A show", shuffled = "A show, shuffled", collection = "Random from a collection"
-        case randomShow = "A random show", allFiles = "Random from all files"
+        case randomShow = "A random show", allFiles = "Random from all files", nothing = "Plays Nothing"
         var id: String { rawValue }
     }
+
+    private var kinds: [Kind] { offersNothing ? Kind.allCases : Kind.allCases.filter { $0 != .nothing } }
 
     private var kind: Kind {
         switch setting.mode {
@@ -499,6 +530,7 @@ struct SettingEditor: View {
         case .collection: .collection
         case .randomShow: .randomShow
         case .allFiles: .allFiles
+        case .nothing: .nothing
         }
     }
 
@@ -528,17 +560,19 @@ struct SettingEditor: View {
                 Note("Private, and unlocked until the Mac sleeps or the screen locks.")
             }
             Picker("Plays", selection: Binding(get: { kind }, set: { k in onChange(with(k, contents)) })) {
-                ForEach(Kind.allCases) { Text($0.rawValue).tag($0) }
+                ForEach(kinds) { Text($0.rawValue).tag($0) }
             }
             .pickerStyle(.radioGroup)
-            Toggle("Stills only", isOn: Binding(get: { setting.stillsOnly }, set: { v in
-                var s = setting; s.stillsOnly = v; onChange(s)
-            }))
-            .help("Skips videos and animated images on this screen")
-            Toggle("Sound", isOn: Binding(get: { setting.sound }, set: { v in
-                var s = setting; s.sound = v; onChange(s)
-            }))
-            .help("Plays the show's audio and its videos' sound. Only the main display's current Space is heard.")
+            if kind != .nothing {
+                Toggle("Stills only", isOn: Binding(get: { setting.stillsOnly }, set: { v in
+                    var s = setting; s.stillsOnly = v; onChange(s)
+                }))
+                .help("Skips videos and animated images on this screen")
+                Toggle("Sound", isOn: Binding(get: { setting.sound }, set: { v in
+                    var s = setting; s.sound = v; onChange(s)
+                }))
+                .help("Plays the show's audio and its videos' sound. Only the main display's current Space is heard.")
+            }
         }
         .formStyle(.grouped)
         if let contents, let reader {
@@ -561,7 +595,7 @@ struct SettingEditor: View {
                     s.mode = .collection(picked)
                     onChange(s)
                 }
-            case .randomShow, .allFiles:
+            case .randomShow, .allFiles, .nothing:
                 EmptyView()
             }
         }
@@ -580,6 +614,7 @@ struct SettingEditor: View {
         case .collection: if let id = contents?.collections.first?.id { s.mode = .collection(id) }
         case .randomShow: s.mode = .randomShow
         case .allFiles: s.mode = .allFiles
+        case .nothing: s.mode = .nothing
         }
         return s
     }

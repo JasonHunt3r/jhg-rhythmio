@@ -10,7 +10,7 @@ could keep its id and settings later.*
 Synchronize (**done 2026-09-24**), naming screens, a map view, and the
 window opening on your screen (**done 2026-09-25**, checked with axtool
 against a scratch settings file — see below). **Open work:** see
-`spec/backlog.md` (B-08, B-14–B-17, B-63, B-64, B-78); hands-on checks in
+`spec/backlog.md` (B-08, B-15–B-17, B-63, B-64, B-78); per-screen stop (B-14) **built 2026-10-03**; hands-on checks in
 `spec/shakedown.md`.
 
 Phase 5 of RhythmIO (renamed 2026-09-22; it was "Live desktop"). This file
@@ -318,7 +318,7 @@ From `spec/history/2026-09-24-work-order.md`. *Decided* is Jason's;
 
 ## The 2026-09-25 feedback items: design notes
 
-Open work: see `spec/backlog.md` (B-15, B-14, B-16 — items 23, 24, 25 of
+Open work: see `spec/backlog.md` (B-15, B-16; B-14 built 2026-10-03 — items 23, 24, 25 of
 the 2026-09-25 feedback worklist; items 10, 21 and 22 from the same list
 are done, batch 4). Jason's own call: these are picked up once the
 RhythmIO side of that worklist is finished, not before. What follows is
@@ -338,6 +338,16 @@ the design for each.
    build both** (Jason: "Simple, do both"). Sits next to the
    naming/map work above (`MainWindow.swift`, `Arrangement`), same area
    of the sidebar.
+   **Built 2026-10-03.** A monitor that's off (`displaysOff`, by display
+   uuid) shows its wallpaper on every Space **even under Synchronize**
+   (Jason, 2026-10-03: "off beats Synchronize"); its Spaces keep their
+   settings. Plays Nothing is a play mode (`PlayMode.nothing`) offered only
+   for a Space's own setting, so Synchronize overrides it like any other
+   per-Space choice. The switch is in the monitor's heading in the
+   window's list and in the panel (the panel lists monitors only while
+   Synchronize is off); the map dims a monitor that's off. A screen that
+   now plays nothing loses its window on the spot (`update` rebuilds),
+   or it would draw black instead of the wallpaper.
 3. **RhythmBG pan & zoom, length and transition options** (item 25) — a
    feature port. RhythmBG's desktop defaults
    (`Sources/RhythmBGCore/DesktopSettings.swift`, `randomDefaults`) already

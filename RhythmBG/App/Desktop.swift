@@ -234,12 +234,14 @@ final class DesktopController {
         if settings.on != wasOn { publishForTiles() }
         do { try store.save(settings) } catch { Log.write("can't save settings: \(error)") }
         settingsModified = store.modified
-        // A renamed monitor or Space doesn't change the window layout, so
-        // `rebuild` alone wouldn't refresh `screens`' names (its own guard
-        // bails out early when the layout signature hasn't changed) —
-        // `wanted()` recomputes them as a side effect either way.
-        _ = wanted()
-        apply()
+        // A screen that now plays nothing (a monitor switched off, Plays
+        // Nothing) must lose its window, or it shows black instead of the
+        // wallpaper; only `rebuild` closes windows. It bails out early when
+        // the layout hasn't changed, so apply then — `wanted()`, which it
+        // calls first, still refreshes `screens`' names after a rename.
+        let layout = lastLayout
+        rebuild(reason: "settings")
+        if lastLayout == layout { apply() }
     }
 
     /// The Desktop Show tile can't read the settings (it's sandboxed, and
@@ -404,6 +406,8 @@ final class DesktopController {
     /// One line for the list: what a screen plays.
     func summary(for screenID: String) -> String {
         guard settings.on else { return "Off" }
+        guard isDisplayOn(DesktopSettings.display(of: screenID)) else { return "Monitor off" }
+        if !settings.allSame, case .nothing = settings.screens[screenID]?.mode { return "Plays nothing" }
         guard let s = settings.setting(for: screenID) else { return "Wallpaper" }
         if isLocked(s) { return "Private · locked" }
         let what = Self.describe(s.mode, in: readers[s.library]?.contents)
@@ -420,7 +424,15 @@ final class DesktopController {
         case .collection(let id): return "Random from \(contents?.collections.first { $0.id == id }?.name ?? "a collection")"
         case .randomShow: return "A random show"
         case .allFiles: return "Random from all files"
+        case .nothing: return "Plays nothing"
         }
+    }
+
+    /// A monitor's own switch (B-14).
+    func isDisplayOn(_ display: String) -> Bool { !settings.displaysOff.contains(display) }
+
+    func setDisplay(_ display: String, on: Bool) {
+        update { if on { $0.displaysOff.remove(display) } else { $0.displaysOff.insert(display) } }
     }
 
     /// The player a screen shows (Synchronize's under Synchronize).

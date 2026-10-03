@@ -70,7 +70,7 @@ final class Player: ShowSource {
     var usesRandomDefaults: Bool {
         switch setting.mode {
         case .collection, .allFiles: return true
-        case .show, .shuffled, .randomShow: return false
+        case .show, .shuffled, .randomShow, .nothing: return false
         }
     }
 

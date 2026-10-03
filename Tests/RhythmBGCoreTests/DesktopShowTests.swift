@@ -125,6 +125,47 @@ final class DesktopSettingsTests: XCTestCase {
         XCTAssertEqual(s.setting(for: "x"), a, "a screen's own setting is kept under Synchronize")
     }
 
+    /// B-14: a monitor switched off plays nothing, Synchronize or not; a
+    /// Space set to Plays Nothing plays nothing, but Synchronize beats it.
+    func testPerScreenStop() {
+        var s = DesktopSettings()
+        let a = ScreenSetting(library: "/a", mode: .allFiles)
+        s.newScreens = a
+        s.screens["D/U"] = ScreenSetting(library: "/a", mode: .nothing)
+        XCTAssertNil(s.setting(for: "D/U"), "Plays Nothing, despite a New screens default")
+        XCTAssertEqual(s.setting(for: "D/V"), a)
+        s.allSame = true
+        s.allSameSetting = a
+        XCTAssertEqual(s.setting(for: "D/U"), a, "Synchronize beats Plays Nothing")
+        s.displaysOff = ["D"]
+        XCTAssertNil(s.setting(for: "D/U"), "a monitor off beats Synchronize")
+        XCTAssertNil(s.setting(for: "D/V"))
+        XCTAssertEqual(s.setting(for: "E/desktop1"), a, "only that monitor")
+        XCTAssertEqual(DesktopSettings.display(of: "D/desktop1"), "D")
+    }
+
+    func testPlaysNothingBuildsNothing() {
+        var rng = SystemRandomNumberGenerator()
+        let lib = DesktopShow.Library(shows: [], collections: [], items: [:])
+        XCTAssertNil(DesktopShow.build(ScreenSetting(library: "/a", mode: .nothing), from: lib,
+                                       randomDefaults: ShowDefaults(), rng: &rng))
+    }
+
+    func testMonitorsOffRoundTripAndDefaultEmpty() throws {
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("bg-\(UUID().uuidString)/s.json")
+        defer { try? FileManager.default.removeItem(at: url.deletingLastPathComponent()) }
+        let store = DesktopSettingsStore(url: url)
+        var s = DesktopSettings()
+        s.displaysOff = ["D"]
+        s.screens["E/desktop1"] = ScreenSetting(library: "/l", mode: .nothing)
+        try store.save(s)
+        XCTAssertEqual(store.load(), s)
+        var json = try JSONSerialization.jsonObject(with: Data(contentsOf: url)) as! [String: Any]
+        json["displaysOff"] = nil
+        try JSONSerialization.data(withJSONObject: json).write(to: url)
+        XCTAssertEqual(store.load().displaysOff, [], "a file from before B-14 reads as every monitor on")
+    }
+
     func testScreenIDsNameTheFirstDesktop() {
         XCTAssertEqual(DesktopSettings.screenID(display: "D", space: ""), "D/desktop1")
         XCTAssertEqual(DesktopSettings.screenID(display: "D", space: "U"), "D/U")

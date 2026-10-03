@@ -13,11 +13,16 @@ public enum PlayMode: Codable, Hashable, Sendable {
     case randomShow
     /// Pictures at random from the whole library, with the desktop defaults.
     case allFiles
+    /// "Plays Nothing": this Space shows the wallpaper, though a New
+    /// screens default exists (B-14). Synchronize still overrides it.
+    case nothing
 
     /// Modes that pick again at the end of every pass.
     public var rerollsEachPass: Bool {
-        if case .show = self { return false }
-        return true
+        switch self {
+        case .show, .nothing: false
+        default: true
+        }
     }
 }
 
@@ -70,6 +75,10 @@ public struct DesktopSettings: Codable, Hashable, Sendable {
     /// number, but can be renamed on its own, keyed by `screenID`.
     public var displayNames: [String: String] = [:]
     public var spaceNames: [String: String] = [:]
+    /// Monitors switched off, by display uuid: they show the wallpaper
+    /// whatever is chosen, Synchronize included (B-14, Jason 2026-10-03:
+    /// off beats Synchronize).
+    public var displaysOff: Set<String> = []
 
     public static var startingRandomDefaults: ShowDefaults {
         var d = ShowDefaults()
@@ -94,17 +103,26 @@ public struct DesktopSettings: Codable, Hashable, Sendable {
         randomDefaults = get(.randomDefaults, Self.startingRandomDefaults)
         displayNames = get(.displayNames, [:])
         spaceNames = get(.spaceNames, [:])
+        displaysOff = get(.displaysOff, [])
     }
 
     public static func screenID(display: String, space: String) -> String {
         "\(display)/\(space.isEmpty ? "desktop1" : space)"
     }
 
-    /// What a screen plays now: Synchronize's choice while it's on, else its
-    /// own, else the "new screens" default. Nil plays nothing.
+    /// The display uuid a screen id starts with.
+    public static func display(of screenID: String) -> String {
+        String(screenID.prefix { $0 != "/" })
+    }
+
+    /// What a screen plays now: nothing on a monitor switched off, else
+    /// Synchronize's choice while it's on, else its own, else the "new
+    /// screens" default. Nil plays nothing.
     public func setting(for screenID: String) -> ScreenSetting? {
-        if allSame { return allSameSetting ?? newScreens }
-        return screens[screenID] ?? newScreens
+        guard !displaysOff.contains(Self.display(of: screenID)) else { return nil }
+        let s = allSame ? allSameSetting ?? newScreens : screens[screenID] ?? newScreens
+        if case .nothing = s?.mode { return nil }
+        return s
     }
 }
 

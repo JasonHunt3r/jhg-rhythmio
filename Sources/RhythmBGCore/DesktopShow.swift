@@ -48,6 +48,8 @@ public enum DesktopShow {
                 if let built = fromShow(s, setting, lib, shuffle: false, rng: &rng) { return built }
             }
             return nil
+        case .nothing:
+            return nil
         }
     }
 

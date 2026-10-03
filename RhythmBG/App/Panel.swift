@@ -109,14 +109,14 @@ private struct PanelView: View {
     let close: () -> Void
     let openWindow: (Selection?) -> Void
 
-    private var displays: [(name: String, spaces: [ScreenInfo])] {
+    private var displays: [(display: String, name: String, spaces: [ScreenInfo])] {
         var order: [String] = []
         var byDisplay: [String: [ScreenInfo]] = [:]
         for s in desktop.screens {
             if byDisplay[s.key.display] == nil { order.append(s.key.display) }
             byDisplay[s.key.display, default: []].append(s)
         }
-        return order.map { (byDisplay[$0]![0].displayName, byDisplay[$0]!) }
+        return order.map { ($0, byDisplay[$0]![0].displayName, byDisplay[$0]!) }
     }
 
     var body: some View {
@@ -145,12 +145,17 @@ private struct PanelView: View {
                          open: { openWindow(.allSame) })
             } else {
                 ForEach(displays, id: \.name) { d in
-                    Text(d.name).font(.caption.weight(.semibold)).foregroundStyle(.secondary).padding(.top, 2)
+                    HStack {
+                        Text(d.name).font(.caption.weight(.semibold)).foregroundStyle(.secondary)
+                        Spacer()
+                        MonitorSwitch(display: d.display, name: d.name)
+                    }
+                    .padding(.top, 2)
                     ForEach(d.spaces) { s in
                         PanelRow(title: s.spaceIndex > 0 ? "Space \(s.spaceIndex)" : "Every Space",
                                  subtitle: desktop.summary(for: s.id), highlighted: s.isCurrent,
                                  player: desktop.player(for: s.id),
-                                 setting: desktop.settings.setting(for: s.id),
+                                 setting: desktop.settings.setting(for: s.id), offersNothing: true,
                                  change: { new in desktop.update { $0.screens[s.id] = new } },
                                  open: { openWindow(.screen(s.id)) })
                     }
@@ -211,6 +216,7 @@ private struct PanelRow: View {
     let highlighted: Bool
     let player: Player?
     let setting: ScreenSetting?
+    var offersNothing = false
     let change: (ScreenSetting?) -> Void
     let open: () -> Void
 
@@ -229,7 +235,7 @@ private struct PanelRow: View {
                 Text(subtitle).font(.caption).foregroundStyle(.secondary).lineLimit(1)
             }
             Spacer(minLength: 4)
-            SettingMenu(setting: setting, label: nil, change: change)
+            SettingMenu(setting: setting, label: nil, offersNothing: offersNothing, change: change)
             Button { player?.engine.step(1) } label: { Image(systemName: "forward.end.fill") }
                 .buttonStyle(.borderless)
                 .disabled(player == nil)
@@ -264,6 +270,8 @@ private struct SettingMenu: View {
     let setting: ScreenSetting?
     /// Nil shows only the ▾.
     let label: String?
+    /// A Space's menu offers Plays Nothing (B-14).
+    var offersNothing = false
     let change: (ScreenSetting?) -> Void
 
     var body: some View {
@@ -283,6 +291,10 @@ private struct SettingMenu: View {
                 }
                 Button("A random show") { set(.randomShow) }
                 Button("Random from all files") { set(.allFiles) }
+                if offersNothing {
+                    Divider()
+                    Button("Plays Nothing") { set(.nothing) }
+                }
             }
             if setting != nil, label != nil {
                 Divider()
