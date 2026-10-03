@@ -22,6 +22,9 @@ struct EditRangePopover: View {
     @State private var lengthText = ""
     @State private var inFrame: CGImage?
     @State private var outFrame: CGImage?
+    /// The last change came from ↑ ↓ or a swipe: the frames redraw at once,
+    /// following the scrub, rather than after the typing pause.
+    @State private var stepped = false
     /// Drawn as the export draws them: a video slide at its exact frame.
     @State private var renderer = RangeFrameRenderer()
 
@@ -75,7 +78,8 @@ struct EditRangePopover: View {
         .onChange(of: lengthText) { _, _ in if focus == .length { followLength() } }
         // The frames, a moment after the typing stops.
         .task(id: PreviewKey(rangeIn: inOK ? inValue : nil, rangeOut: outOK ? outValue : nil)) {
-            try? await Task.sleep(for: .milliseconds(250))
+            if !stepped { try? await Task.sleep(for: .milliseconds(250)) }
+            stepped = false
             guard !Task.isCancelled else { return }
             await renderFrames()
         }
@@ -94,7 +98,27 @@ struct EditRangePopover: View {
                 .foregroundStyle(ok ? Color.primary : Color.red)
                 .overlay(RoundedRectangle(cornerRadius: 5).strokeBorder(ok ? Color.clear : Color.red, lineWidth: 1.5))
                 .onSubmit(apply)
+                .numberStepping(announce: true) { text, direction, size in stepTimecode(text, direction, size, field: field) }
         }
+    }
+
+    /// ↑ ↓ or a swipe on a timecode field: the Nudge ladder (the step, one
+    /// frame, the ⇧ step, by Settings ▸ Timeline), on the frame grid. In and
+    /// Out stay at 0 or later, Length at a frame or more; the field's own
+    /// rules then move the others, as typing does.
+    private func stepTimecode(_ text: String, _ direction: Int, _ size: NumberStepping.Size,
+                              field: Field) -> String? {
+        guard let t = grid.parse(text) else { return nil }
+        let key: NudgeKey = switch size {
+        case .unit: .plain
+        case .fine: .option
+        case .big: .shift
+        }
+        guard case .by(let delta) = NudgeSettings.saved.move(key, direction: direction, grid: grid) else { return nil }
+        let lowest = field == .length ? grid.frameLength : 0
+        let new = NudgeSettings.apply(delta, to: t, grid: grid, within: lowest...Double.greatestFiniteMagnitude)
+        stepped = true
+        return grid.format(new)
     }
 
     private func load() {

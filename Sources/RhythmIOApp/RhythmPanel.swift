@@ -450,6 +450,10 @@ struct RhythmPanelContent: View {
                     }), format: .number.precision(.fractionLength(0...1)))
                     .frame(width: 54)
                     .multilineTextAlignment(.trailing)
+                    .numberStepping(unit: 1, range: 20...300, decimals: 1, commit: { v in
+                        bpm = min(max(v, 20), 300)
+                        followSong = false
+                    })
                 Text("BPM").foregroundStyle(.secondary)
             }
         }

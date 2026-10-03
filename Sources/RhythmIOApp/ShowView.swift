@@ -717,6 +717,7 @@ struct SecondsField: View {
                       format: .number.precision(.fractionLength(0...2)))
                 .frame(width: 48)
                 .multilineTextAlignment(.trailing)
+                .numberStepping(unit: 0.1, range: 0.1...36_000, decimals: 2, commit: { set(max(0.1, $0)) })
             Text("s").foregroundStyle(.secondary)
             Stepper("", value: Binding(get: { value }, set: { set(max(0.5, ($0 * 2).rounded() / 2)) }),
                     step: 0.5)

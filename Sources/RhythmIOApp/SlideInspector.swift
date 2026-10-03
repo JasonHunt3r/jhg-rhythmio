@@ -356,25 +356,27 @@ struct SlideInspector: View {
     }
 
     private func pointRow(_ point: LevelPoint, curve: LevelCurve, length: Double) -> some View {
-        HStack(spacing: 4) {
-            TextField("", value: Binding(
-                get: { point.time },
-                set: { t in
-                    editAudio("Move Volume Point") {
-                        $0.moving(point.id, toTime: min(max(t, 0), max(length, 0)), level: point.level)
-                    }
-                }), format: .number.precision(.fractionLength(1)))
+        let setTime = { (t: Double) in
+            editAudio("Move Volume Point") {
+                $0.moving(point.id, toTime: min(max(t, 0), max(length, 0)), level: point.level)
+            }
+        }
+        let setLevel = { (l: Double) in
+            editAudio("Change Volume Point") {
+                $0.moving(point.id, toTime: point.time, level: min(max(l / 100, 0), 1))
+            }
+        }
+        return HStack(spacing: 4) {
+            TextField("", value: Binding(get: { point.time }, set: setTime),
+                      format: .number.precision(.fractionLength(1)))
                 .frame(width: 48)
+                .numberStepping(unit: 0.1, range: 0...max(length, 0), decimals: 1, commit: setTime)
             Text("s").foregroundStyle(.secondary)
             Spacer(minLength: 4)
-            TextField("", value: Binding(
-                get: { (point.level * 100).rounded() },
-                set: { l in
-                    editAudio("Change Volume Point") {
-                        $0.moving(point.id, toTime: point.time, level: min(max(l / 100, 0), 1))
-                    }
-                }), format: .number.precision(.fractionLength(0)))
+            TextField("", value: Binding(get: { (point.level * 100).rounded() }, set: setLevel),
+                      format: .number.precision(.fractionLength(0)))
                 .frame(width: 40)
+                .numberStepping(unit: 1, range: 0...100, decimals: 0, commit: setLevel)
             Text("%").foregroundStyle(.secondary)
             Button {
                 editAudio("Remove Volume Point") { $0.removing(point.id) }

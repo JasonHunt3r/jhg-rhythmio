@@ -51,6 +51,13 @@ struct CommitSlider: View {
                 }), format: .number.precision(.fractionLength(0...1)))
                     .frame(width: 44)
                     .multilineTextAlignment(.trailing)
+                    // ↑ ↓ and a swipe, while editing: a unit a step, drawn
+                    // in the preview as it goes, saved when editing ends.
+                    .numberStepping(unit: 1, range: (fieldRange ?? range).lowerBound * display...(fieldRange ?? range).upperBound * display,
+                                    decimals: 1, live: { v in preview?(v / display) }, commit: { v in
+                        let r = fieldRange ?? range
+                        send(min(max(v / display, r.lowerBound), r.upperBound), from: "field")
+                    })
                 Text(unit).foregroundStyle(.secondary).frame(width: 22, alignment: .leading)
             }
         }

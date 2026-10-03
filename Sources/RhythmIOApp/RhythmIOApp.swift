@@ -606,6 +606,10 @@ private struct EditingSettingsTab: View {
     @AppStorage(FinderTagsSetting.key) private var writeFinderTags = false
     @AppStorage(CollectionAddNotice.autoAddKey) private var autoAddToCollection = false
     @AppStorage(SlideRemovalNotice.suppressKey) private var suppressRemovalNotice = false
+    @AppStorage(NumberStepping.axisKey) private var swipeAxis = NumberStepping.Axis.horizontal.rawValue
+    @AppStorage(NumberStepping.bigKey) private var bigFactor = 10.0
+    @AppStorage(NumberStepping.fineKey) private var fineFactor = 10.0
+    @AppStorage(NumberStepping.distanceKey) private var swipeDistance = 10.0
 
     var body: some View {
         SettingsPage {
@@ -618,6 +622,33 @@ private struct EditingSettingsTab: View {
             Section("Collections") {
                 Toggle("Add files to the collection automatically", isOn: $autoAddToCollection)
                 Text("When a file that isn't in a show's collection goes into the show, add it to the collection without asking. Off: RhythmIO asks first.")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+            }
+            Section("Number Fields") {
+                LabeledContent("Swipe to step") {
+                    Picker("", selection: $swipeAxis) {
+                        ForEach(NumberStepping.Axis.allCases, id: \.self) { Text($0.title).tag($0.rawValue) }
+                    }
+                    .labelsHidden().pickerStyle(.segmented).fixedSize()
+                }
+                LabeledContent("⇧ steps") {
+                    Stepper("× \(Int(bigFactor))", value: $bigFactor, in: 2...100)
+                }
+                LabeledContent("⌥ steps") {
+                    Stepper("÷ \(Int(fineFactor))", value: $fineFactor, in: 2...100)
+                }
+                LabeledContent("Swipe per step") {
+                    Slider(value: $swipeDistance, in: 3...40) {
+                        EmptyView()
+                    } minimumValueLabel: {
+                        Text("Fast").foregroundStyle(.secondary)
+                    } maximumValueLabel: {
+                        Text("Slow").foregroundStyle(.secondary)
+                    }
+                    .frame(width: 220)
+                }
+                Text("While you're editing a number, ↑ ↓ step it, and so does a two-finger swipe over it — right and up go up. A step is the field's own unit (1 %, 1°, 0.1 s); ⇧ and ⌥ make it bigger or smaller. Edit Range's timecode steps by Settings ▸ Timeline ▸ Nudge instead. The number is saved when you finish editing, so a whole scrub is one undo step.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
             }
@@ -690,6 +721,12 @@ private struct TimelineSettingsTab: View {
                     .labelsHidden()
                     .multilineTextAlignment(.trailing)
                     .frame(width: 64)
+                    .numberStepping(unit: step.wrappedValue.unit == .frames ? 1 : 0.1,
+                                    range: step.wrappedValue.unit == .frames ? 1...9_999 : 0.01...3_600,
+                                    decimals: step.wrappedValue.unit == .frames ? 0 : 2,
+                                    commit: { v in
+                                        step.wrappedValue.value = step.wrappedValue.unit == .frames ? max(v.rounded(), 1) : max(v, 0.01)
+                                    })
                 Picker("", selection: step.unit) {
                     ForEach(NudgeSettings.Step.Unit.allCases, id: \.self) { Text($0.title).tag($0) }
                 }
