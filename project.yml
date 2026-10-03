@@ -61,6 +61,9 @@ targets:
         product: RhythmIOCore
       - package: RhythmIO
         product: RhythmIOPlayback
+      # Play on Desktop names monitors as RhythmBG does (B-17).
+      - package: RhythmIO
+        product: RhythmBGCore
       - package: PaneKit
         product: PaneKit
       - package: ListKit

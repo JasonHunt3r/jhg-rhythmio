@@ -126,6 +126,32 @@ public struct DesktopSettings: Codable, Hashable, Sendable {
     }
 }
 
+extension DesktopSettings {
+    /// Play on Desktop (B-17): RhythmIO hands over a show, to one screen (a
+    /// monitor's current Space) or, with nil, to every screen. One screen:
+    /// its own setting, its monitor switched on, and Synchronize off, which
+    /// would hide it. Every screen: Synchronize's choice, Synchronize on,
+    /// and a monitor switched off stays off. Desktop Show comes on either
+    /// way. A screen's Stills only and Sound are kept.
+    public mutating func play(show: Int64, library: String, to screenID: String?) {
+        on = true
+        if let screenID {
+            var s = screens[screenID] ?? ScreenSetting(library: library, mode: .show(show))
+            s.library = library
+            s.mode = .show(show)
+            screens[screenID] = s
+            allSame = false
+            displaysOff.remove(Self.display(of: screenID))
+        } else {
+            var s = allSameSetting ?? ScreenSetting(library: library, mode: .show(show))
+            s.library = library
+            s.mode = .show(show)
+            allSameSetting = s
+            allSame = true
+        }
+    }
+}
+
 /// Reads and writes the settings file. A missing or unreadable file gives
 /// empty settings; it's never overwritten until something is changed.
 public struct DesktopSettingsStore: Sendable {

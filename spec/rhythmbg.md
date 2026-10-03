@@ -10,7 +10,7 @@ could keep its id and settings later.*
 Synchronize (**done 2026-09-24**), naming screens, a map view, and the
 window opening on your screen (**done 2026-09-25**, checked with axtool
 against a scratch settings file — see below). **Open work:** see
-`spec/backlog.md` (B-08, B-15–B-17, B-63, B-64, B-78); per-screen stop (B-14) **built 2026-10-03**; hands-on checks in
+`spec/backlog.md` (B-08, B-15, B-16, B-63, B-64, B-78); per-screen stop (B-14) and Play on Desktop (B-17) **built 2026-10-03**; hands-on checks in
 `spec/shakedown.md`.
 
 Phase 5 of RhythmIO (renamed 2026-09-22; it was "Live desktop"). This file
@@ -348,6 +348,18 @@ the design for each.
    Synchronize is off); the map dims a monitor that's off. A screen that
    now plays nothing loses its window on the spot (`update` rebuilds),
    or it would draw black instead of the wallpaper.
+
+**Play on Desktop (B-17), built 2026-10-03.** A show row's menu in
+RhythmIO: Play on Desktop ▸ each monitor (RhythmBG's name for it, read
+from its settings file) and Every Screen; with one monitor, a plain item
+(Jason, 2026-10-03). RhythmIO sends
+`rhythmbg://play?show=<id>&library=<path>[&display=<uuid>]` to its own
+nested RhythmBG, starting it if need be. One monitor: its current Space
+gets the show (Stills only and Sound kept), its switch comes on, and
+Synchronize goes off, since it would hide the show. Every Screen:
+Synchronize's choice, Synchronize on; a monitor switched off stays off.
+Desktop Show comes on either way (`DesktopSettings.play`). A private
+library still needs unlocking in RhythmBG.
 3. **RhythmBG pan & zoom, length and transition options** (item 25) — a
    feature port. RhythmBG's desktop defaults
    (`Sources/RhythmBGCore/DesktopSettings.swift`, `randomDefaults`) already

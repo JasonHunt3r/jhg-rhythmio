@@ -19,7 +19,9 @@ what, and the few structural rules that go with each. Rules live in
   `project.yml`, and the built RhythmBG is nested inside RhythmIO at
   `Contents/Library/LoginItems/RhythmBG.app`.
   It opens libraries with `Library(readingOnly:)` only. Its settings and
-  the show each mode builds are in `Sources/RhythmBGCore` (tested). How to
+  the show each mode builds are in `Sources/RhythmBGCore` (tested), which
+  RhythmIO also imports, only to read RhythmBG's monitor names for Play on
+  Desktop (B-17); it never writes RhythmBG's settings, it sends a URL. How to
   launch and drive it is in the `rhythmio-testing` skill.
 - `ListKit/` (top level): our own lists for when `List` can't be used,
   **for any Mac app**, its own Swift package depending on nothing

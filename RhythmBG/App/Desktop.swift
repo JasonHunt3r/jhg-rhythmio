@@ -428,6 +428,27 @@ final class DesktopController {
         }
     }
 
+    /// RhythmIO's Play on Desktop (B-17):
+    /// `rhythmbg://play?show=<id>&library=<path>[&display=<uuid>]`. With a
+    /// display, it plays on that monitor's current Space; without, on every
+    /// screen.
+    func play(_ url: URL) {
+        let query = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems ?? []
+        func value(_ name: String) -> String? { query.first { $0.name == name }?.value }
+        guard let show = value("show").flatMap(Int64.init), let library = value("library") else {
+            return Log.write("play: can't read \(url)")
+        }
+        var screenID: String?
+        if let display = value("display") {
+            guard let current = screens.first(where: { $0.key.display == display && $0.isCurrent }) else {
+                return Log.write("play: no monitor \(display.prefix(8))")
+            }
+            screenID = current.id
+        }
+        Log.write("play show \(show) on \(screenID ?? "every screen")")
+        update { $0.play(show: show, library: library, to: screenID) }
+    }
+
     /// A monitor's own switch (B-14).
     func isDisplayOn(_ display: String) -> Bool { !settings.displaysOff.contains(display) }
 

@@ -711,6 +711,28 @@ extension MainView {
         }
     }
 
+    /// Hands the show to RhythmBG (B-17, Jason 2026-10-03): a submenu of
+    /// monitors plus Every Screen, or a plain item with one monitor.
+    @ViewBuilder func playOnDesktop(_ show: Show) -> some View {
+        let monitors = RhythmBGHelper.monitors()
+        let disabled = show.slides.isEmpty || model.library == nil || RhythmBGHelper.nestedURL == nil
+        let play = { (monitor: String?) in
+            guard let root = model.library?.root else { return }
+            RhythmBGHelper.playOnDesktop(show: show.id, library: root, monitor: monitor)
+        }
+        if monitors.count > 1 {
+            Menu("Play on Desktop") {
+                ForEach(monitors) { m in Button(m.name) { play(m.id) } }
+                Divider()
+                Button("Every Screen") { play(nil) }
+            }
+            .disabled(disabled)
+        } else {
+            Button("Play on Desktop") { play(monitors.first?.id) }
+                .disabled(disabled)
+        }
+    }
+
     func showRow(_ show: Show) -> some View {
         sidebarRowChrome(.show(show.id), icon: "play.rectangle", title: show.name, count: show.slides.count,
                          renames: true)
@@ -720,9 +742,7 @@ extension MainView {
                     .disabled(show.slides.isEmpty)
                 Button("Play Full Screen") { Player.open(show: show, model: model, fullScreen: true) }
                     .disabled(show.slides.isEmpty)
-                // Hands the show to RhythmBG (spec/rhythmbg.md); not built —
-                // settled 2026-09-24 to go in greyed out until it is.
-                Button("Play on Desktop") {}.disabled(true)
+                playOnDesktop(show)
                 Divider()
                 Button("Duplicate Show") { model.duplicateShow(show.id, undo: undoManager) }
                 Divider()

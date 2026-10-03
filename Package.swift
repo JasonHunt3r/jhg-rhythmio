@@ -23,7 +23,7 @@ let package = Package(
         // bundle is built by Xcode; see project.yml), so SwiftPM must be told
         // it isn't a resource.
         .executableTarget(name: "RhythmIOApp",
-                          dependencies: ["RhythmIOCore", "RhythmIOPlayback", "PaneKit", "ListKit"],
+                          dependencies: ["RhythmIOCore", "RhythmIOPlayback", "RhythmBGCore", "PaneKit", "ListKit"],
                           exclude: ["Info.plist"]),
         .executableTarget(name: "mio", dependencies: ["RhythmIOCore"]),
         .testTarget(name: "RhythmIOCoreTests", dependencies: ["RhythmIOCore"]),

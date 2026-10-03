@@ -216,7 +216,7 @@ divider, and empty groups are skipped:
 | Inspector: the header bar (the slide's name and length) | **Settled 2026-09-24.** Play from Here ✓ · Replace Image… ✓ · Show in Library ✓ |
 | Inspector: a single control (a slider, a picker) | **Settled 2026-09-24.** Reset to Default |
 | Browser: empty space | **Settled 2026-09-24.** Import…, Add from Library… (not built: a "No menu yet" note names them) |
-| Library pane: a show | **Settled 2026-09-24.** Play ✓, Play Full Screen ✓, Play on Desktop (on the menu, greyed out until the RhythmBG handoff) · Duplicate Show ✓ · Export ▸ (Show…, Movie…) ✓ · Rename ✓ (in place, 2026-09-27) · Delete Show… ✓ |
+| Library pane: a show | **Settled 2026-09-24.** Play ✓, Play Full Screen ✓, Play on Desktop ✓ (2026-10-03, B-17: a submenu of monitors by RhythmBG's names plus Every Screen; a plain item with one monitor) · Duplicate Show ✓ · Export ▸ (Show…, Movie…) ✓ · Rename ✓ (in place, 2026-09-27) · Delete Show… ✓ |
 | Library pane: a collection | **Settled 2026-09-24.** Play (greyed out until playing without a show is built; not on the menu yet) · New Show in… ✓ · Rename ✓ (in place, 2026-09-27) · Delete Collection… ✓ |
 | Library pane: the Library row | **Settled 2026-09-24.** Import… ✓, New Collection ✓, Open Library Panel ✓ · Show in Finder (the library's folder) ✓ |
 | An empty row | Place Image Here… ✓ (images row); for an audio row, see the timeline rows above |

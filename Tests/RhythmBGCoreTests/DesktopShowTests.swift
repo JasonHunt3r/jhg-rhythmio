@@ -166,6 +166,27 @@ final class DesktopSettingsTests: XCTestCase {
         XCTAssertEqual(store.load().displaysOff, [], "a file from before B-14 reads as every monitor on")
     }
 
+    /// B-17: Play on Desktop, to one screen and to every screen.
+    func testPlayOnDesktop() {
+        var s = DesktopSettings()
+        s.on = false
+        s.allSame = true
+        s.displaysOff = ["D", "E"]
+        s.screens["D/U"] = ScreenSetting(library: "/old", mode: .allFiles, stillsOnly: true)
+        s.play(show: 7, library: "/l", to: "D/U")
+        XCTAssertTrue(s.on)
+        XCTAssertFalse(s.allSame, "Synchronize would hide it")
+        XCTAssertEqual(s.displaysOff, ["E"], "its monitor comes on, no other")
+        XCTAssertEqual(s.setting(for: "D/U"), ScreenSetting(library: "/l", mode: .show(7), stillsOnly: true))
+
+        s.play(show: 8, library: "/l", to: nil)
+        XCTAssertTrue(s.allSame)
+        XCTAssertEqual(s.allSameSetting, ScreenSetting(library: "/l", mode: .show(8)))
+        XCTAssertEqual(s.setting(for: "D/V"), ScreenSetting(library: "/l", mode: .show(8)))
+        XCTAssertNil(s.setting(for: "E/desktop1"), "a monitor switched off stays off")
+        XCTAssertEqual(s.screens["D/U"]?.mode, .show(7), "a screen's own setting waits under Synchronize")
+    }
+
     func testScreenIDsNameTheFirstDesktop() {
         XCTAssertEqual(DesktopSettings.screenID(display: "D", space: ""), "D/desktop1")
         XCTAssertEqual(DesktopSettings.screenID(display: "D", space: "U"), "D/U")

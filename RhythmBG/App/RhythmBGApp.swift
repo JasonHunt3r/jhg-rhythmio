@@ -73,7 +73,8 @@ final class RhythmBGApp: NSObject, NSApplicationDelegate, NSWindowDelegate {
     }
 
     /// `rhythmbg://open` shows the panel (the Control Center tile, B5);
-    /// `rhythmbg://window` opens the window.
+    /// `rhythmbg://window` opens the window; `rhythmbg://play?…` is
+    /// RhythmIO's Play on Desktop (B-17).
     func application(_ application: NSApplication, open urls: [URL]) {
         if pendingURLs != nil {
             pendingURLs?.append(contentsOf: urls)
@@ -95,6 +96,7 @@ final class RhythmBGApp: NSObject, NSApplicationDelegate, NSWindowDelegate {
             if url.host == "window" { showWindow() }
             if url.host == "open" { panel?.toggle() }
             if url.host == "show" { desktop?.update { $0.on = url.lastPathComponent == "on" } }
+            if url.host == "play" { desktop?.play(url) }
         }
     }
 

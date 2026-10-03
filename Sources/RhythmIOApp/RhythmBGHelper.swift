@@ -1,6 +1,7 @@
 import AppKit
 import ServiceManagement
 import RhythmIOCore
+import RhythmBGCore
 
 /// RhythmBG lives inside RhythmIO, at `Contents/Library/LoginItems/RhythmBG.app`
 /// (spec/xcode-port.md). Nothing is copied out any more: View ▸ Desktop Show…
@@ -104,6 +105,42 @@ enum RhythmBGHelper {
     }
 
     static let launchWithRhythmIOKey = "launchRhythmBGWithRhythmIO"
+
+    /// A monitor for Play on Desktop's submenu (B-17).
+    struct Monitor: Identifiable {
+        let id: String      // the display's uuid, RhythmBG's key for it
+        let name: String
+    }
+
+    /// The monitors as RhythmBG names them: its own name for one, else
+    /// macOS's model name.
+    static func monitors() -> [Monitor] {
+        let names = DesktopSettingsStore.standard().load().displayNames
+        return NSScreen.screens.compactMap { screen in
+            guard let n = screen.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? UInt32,
+                  let u = CGDisplayCreateUUIDFromDisplayID(n)?.takeRetainedValue() else { return nil }
+            let id = CFUUIDCreateString(nil, u) as String
+            return Monitor(id: id, name: names[id].flatMap { $0.isEmpty ? nil : $0 } ?? screen.localizedName)
+        }
+    }
+
+    /// Hands a show to RhythmBG, starting it if need be: to one monitor (its
+    /// current Space), or with nil to every screen (B-17). Sent to this
+    /// RhythmIO's own RhythmBG, not whichever copy answers `rhythmbg://`.
+    static func playOnDesktop(show: Int64, library: URL, monitor: String?) {
+        guard let nestedURL else { return NSLog("Play on Desktop: no RhythmBG in this build") }
+        var c = URLComponents()
+        c.scheme = "rhythmbg"
+        c.host = "play"
+        c.queryItems = [URLQueryItem(name: "show", value: String(show)),
+                        URLQueryItem(name: "library", value: library.path)]
+            + (monitor.map { [URLQueryItem(name: "display", value: $0)] } ?? [])
+        guard let url = c.url else { return }
+        NSWorkspace.shared.open([url], withApplicationAt: nestedURL,
+                                configuration: NSWorkspace.OpenConfiguration()) { _, error in
+            if let error { NSLog("Play on Desktop: RhythmBG didn't open: \(error)") }
+        }
+    }
 }
 
 enum RhythmBGError: LocalizedError {
