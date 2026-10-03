@@ -57,6 +57,7 @@ row). These are the other things only Jason can do.
 ## Needs a decision, or parked
 
 **Waiting on a talk or a plan (P3):**
+- **B-88** · P3 · Timeline — What a slide's info popover holds (double-click a slide; built 2026-10-03 with the old hover info's contents). Jason: "the slide has different properties than the range", to discuss. `spec/conventions.md` §1, Double-click.
 - **B-33** · Viewer — With a group selected in the viewer drawer, ← / → move the highlight within the collection, but ↑ / ↓ let go of the group and go back to one selection. Decide what's intended. `spec/viewer-drawer.md`. (Shakedown 2026-09-28.)
 - **B-34** · Browser — The "Other Collections" switcher: what belongs in its drop-down. Also whether "In this show" narrowing to the overlap (usually empty, browsing another collection) is useful. `spec/groups.md`, "The browser filter". (Shakedown 2026-09-28; follows item 38.)
 - **B-35** · Windows — The "Smart View" preference: panes open and close by context, or keep your own choices. Today a one-paragraph sketch; its "timeline closes with no show" part was overruled 2026-09-27. `spec/slides-as-mini-movies.md`, "Smart View"; `spec/window-behavior.md`.
@@ -111,7 +112,6 @@ row). These are the other things only Jason can do.
 - **B-79** · P3 · Video — A video can't go in the lane. The frame strip shows a video's first frame, the onion skin skips video slides, and `mio render` draws a video slide as the background colour (only `mio movie` and the app use `MovieMedia`). A video slide's sound is decoded whole into memory on export; fine for slides.
 - **B-80** · P3 · Viewer — The zoomed-out work area doesn't draw a lane image's overhang past the frame.
 - **B-81** · P3 · Viewer — Its right-click picks the image menu or the pasteboard menu by which image was last *clicked*, not where the right-click landed. Accepted 2026-09-24; real click-location tracking is the fix if it bites. `spec/conventions.md` §3, route item 4.
-- **B-83** · P2 · Timeline — In the popped-out Timeline window, clicking a slide didn't select it (two axtool clicks, 2026-10-02; the arrows did reach the timeline there). Not yet tried by hand, so it may be a synthetic-click artifact. `spec/panekit.md`, "Pane ⇄ panel".
 - **B-82** · — · Transitions — Accordion was dropped (it renders as a dissolve on this macOS), and Page Curl is offered as "Page Turn". A limitation, recorded so it isn't rediscovered.
 
 ## Design notes

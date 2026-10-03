@@ -193,6 +193,8 @@ struct StorylineView: View {
     }
     @State private var transitionEdit: TransitionEdit?
     @State private var hoveredJoin: Int64?
+    /// The slide whose info popover is open (double-click; Jason, 2026-10-03).
+    @State private var infoSlide: Int64?
     /// Something is being dragged over the images row: it lights up.
     @State private var imagesDropTargeted = false
     /// Files being dragged over the storyline: where the pointer is, for the
@@ -1042,7 +1044,11 @@ struct StorylineView: View {
             .contentShape(Rectangle())
             .onTapGesture { click(p.id) }
             .gesture(moveGesture(p))
-            .modifier(HoverInfo(slide: p.slide, length: length(p.slide)))
+            .popover(isPresented: Binding(get: { infoSlide == p.id },
+                                          set: { if !$0, infoSlide == p.id { infoSlide = nil } }),
+                     arrowEdge: .top) {
+                SlideInfo(slide: p.slide, length: length(p.slide))
+            }
             .contextMenu {
                 let ids = selection.contains(p.id) ? selection : [p.id]
                 Button("Open in Slide Editor") { openSlideEditor(p.id) }
@@ -1097,7 +1103,11 @@ struct StorylineView: View {
         engine.showSlide(id: id)
         // Checked on the event rather than with a double-tap gesture, which
         // would hold every single click back while it waits for a second.
-        if (NSApp.currentEvent?.clickCount ?? 1) >= 2 { openSlideEditor(id) }
+        // Double-click: the slide's info, staying until Esc or a click
+        // elsewhere; ⌥-double-click: the Slide Editor (Jason, 2026-10-03).
+        if (NSApp.currentEvent?.clickCount ?? 1) >= 2 {
+            if mods.contains(.option) { openSlideEditor(id) } else { infoSlide = id }
+        }
     }
 
     private func moveGesture(_ p: Placed) -> some Gesture {
@@ -1760,59 +1770,46 @@ struct VideoStrip: View {
     }
 }
 
-/// Slide info after the pointer rests on a block for a second.
-struct HoverInfo: ViewModifier {
+/// A slide's info, in the popover a double-click opens. It used to open
+/// after the pointer rested on a block for a second, and closed when it
+/// left; a click landing while it was up could be spent closing it (B-83).
+/// What it holds is still to be settled with Jason.
+struct SlideInfo: View {
     let slide: ResolvedSlide
     let length: Double
-    @State private var shown = false
-    @State private var pending: Task<Void, Never>?
 
-    func body(content: Content) -> some View {
-        content
-            .onHover { inside in
-                pending?.cancel()
-                if inside {
-                    pending = Task {
-                        try? await Task.sleep(for: .seconds(1))
-                        if !Task.isCancelled { shown = true }
-                    }
-                } else {
-                    shown = false
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text("\(slide.index + 1). \(slide.item.fileName)").font(.headline)
+            Grid(alignment: .leading, horizontalSpacing: 10, verticalSpacing: 3) {
+                GridRow { Text("Starts").foregroundStyle(.secondary); Text(formatDuration(slide.start)) }
+                GridRow { Text("Length").foregroundStyle(.secondary); Text(formatSeconds(length)) }
+                GridRow {
+                    Text("Transition in").foregroundStyle(.secondary)
+                    Text(slide.transitionIn.style == .cut ? "Cut"
+                         : "\(slide.transitionIn.style.title), \(formatSeconds(slide.transitionIn.duration))")
+                }
+                GridRow {
+                    Text("Pan and Zoom").foregroundStyle(.secondary)
+                    Text(slide.panAndZoom == nil ? "Off"
+                         : String(format: "zoom %.2f → %.2f", slide.panAndZoom!.start.zoom, slide.panAndZoom!.end.zoom))
+                }
+                GridRow { Text("Fit").foregroundStyle(.secondary); Text(slide.fit.title) }
+                GridRow {
+                    let m = slide.peakMagnification(outputSize: outputPixelSize)
+                    Text("Sharpness").foregroundStyle(.secondary)
+                    Text(m > ResolvedSlide.softAbove
+                         ? String(format: "soft: up to %.1f× the file's pixels", m)
+                         : String(format: "sharp (up to %.2f× the file's pixels)", m))
+                }
+                GridRow {
+                    Text("Image").foregroundStyle(.secondary)
+                    Text("\(slide.item.pixelWidth) × \(slide.item.pixelHeight) · \(orientation)")
                 }
             }
-            .popover(isPresented: $shown, arrowEdge: .top) {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("\(slide.index + 1). \(slide.item.fileName)").font(.headline)
-                    Grid(alignment: .leading, horizontalSpacing: 10, verticalSpacing: 3) {
-                        GridRow { Text("Starts").foregroundStyle(.secondary); Text(formatDuration(slide.start)) }
-                        GridRow { Text("Length").foregroundStyle(.secondary); Text(formatSeconds(length)) }
-                        GridRow {
-                            Text("Transition in").foregroundStyle(.secondary)
-                            Text(slide.transitionIn.style == .cut ? "Cut"
-                                 : "\(slide.transitionIn.style.title), \(formatSeconds(slide.transitionIn.duration))")
-                        }
-                        GridRow {
-                            Text("Pan and Zoom").foregroundStyle(.secondary)
-                            Text(slide.panAndZoom == nil ? "Off"
-                                 : String(format: "zoom %.2f → %.2f", slide.panAndZoom!.start.zoom, slide.panAndZoom!.end.zoom))
-                        }
-                        GridRow { Text("Fit").foregroundStyle(.secondary); Text(slide.fit.title) }
-                        GridRow {
-                            let m = slide.peakMagnification(outputSize: outputPixelSize)
-                            Text("Sharpness").foregroundStyle(.secondary)
-                            Text(m > ResolvedSlide.softAbove
-                                 ? String(format: "soft: up to %.1f× the file's pixels", m)
-                                 : String(format: "sharp (up to %.2f× the file's pixels)", m))
-                        }
-                        GridRow {
-                            Text("Image").foregroundStyle(.secondary)
-                            Text("\(slide.item.pixelWidth) × \(slide.item.pixelHeight) · \(orientation)")
-                        }
-                    }
-                    .font(.caption)
-                }
-                .padding(10)
-            }
+            .font(.caption)
+        }
+        .padding(10)
     }
 
     private var orientation: String {

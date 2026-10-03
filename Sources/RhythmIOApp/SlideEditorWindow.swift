@@ -5,8 +5,9 @@ import RhythmIOPlayback
 
 /// The Slide Editor (`spec/windows.md`): a slide alone, large, in front of
 /// everything, with its settings beside it — the deep version of the
-/// inspector, opened on purpose (double-click a slide, in either mode;
-/// `spec/conventions.md` §"Double-click", settled 2026-09-24). "Like a big
+/// inspector, opened on purpose (double-click a slide in Edit Slides'
+/// list, ⌥-double-click one in the timeline; `spec/conventions.md`
+/// §"Double-click", settled 2026-09-24, the timeline's 2026-10-03). "Like a big
 /// popover: you work in it, and when you're done it goes away" — one at a
 /// time, like `InfoPanel`.
 ///

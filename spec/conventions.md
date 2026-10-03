@@ -114,6 +114,11 @@ candidates, real testing picks one:
   - a Library tile: Quick Look, or Get Info (B6). Quick Look is the
     natural one, now that Space is play/pause (§2). **Built: Quick Look**
     (B5), on the second click and on ⌘Y;
+  - **a slide in the timeline: its info popover; ⌥-double-click, the
+    Slide Editor** (Jason, 2026-10-03). The popover had opened on a
+    second's hover and vanished when the pointer left, like a tooltip; now
+    it stays, like Edit Range's, until Esc or a click elsewhere. Its
+    contents are B-88. Edit Slides' list keeps what follows;
   - **a slide, in either mode: the Slide Editor.** Settled 2026-09-24
     (PaneKit step 4's first piece, `spec/windows.md`, `spec/panekit.md`):
     the Slide Editor won double-click over the inspector, since it matches
@@ -125,7 +130,7 @@ candidates, real testing picks one:
   - the Library item in the Library pane: the library panel.
 
 **Built 2026-09-24:** double-click a slide, in Edit Slides' list or the
-storyline, opens the Slide Editor (`SlideEditorWindow.swift`) — the image
+storyline (⌥-double-click there since 2026-10-03), opens the Slide Editor (`SlideEditorWindow.swift`) — the image
 with its Transform/Rotation handles, and the full inspector beside it, in
 one window that replaces itself when a different slide is opened. Also on
 "Open in Slide Editor" in both places' context menus, and (2026-09-24)

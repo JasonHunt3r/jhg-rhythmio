@@ -79,7 +79,7 @@ struct ShowView: View {
                 // The shortcut lives on the View menu's own Toggle now
                 // (F2, batch 5), not here too — one menu item, one shortcut.
                 Button { inspectorShown.toggle() } label: { Label("Inspector", systemImage: "sidebar.right") }
-                    .help("Show or hide the inspector (⌥⌘I) — or double-click a slide")
+                    .help("Show or hide the inspector (⌥⌘I)")
             }
         }
         .focusedSceneValue(\.activeShowID, showID)
