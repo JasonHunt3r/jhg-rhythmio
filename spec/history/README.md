@@ -49,6 +49,7 @@ are `spec/plan.md`.
 | `2026-10-02-rename-rhythmio.md` | ShowTools → RhythmIO, BGTools → RhythmBG, overnight (B-85): what a mechanical rename gets wrong (possessives, `stcli` in `SetlistClip`, measured ids in a spec, the tiles' old `kind` prefix) and what was left for Jason's morning | `spec/status.md` (B-86) |
 | `2026-10-02-inspector-batch.md` | B-04 and B-07 were one cause: picking a file not in the show left the slide selection as it was; reproduced with axtool, fixed with the inspector showing the file's info | `spec/anatomy.md` §5, `spec/shakedown.md` |
 | `2026-10-03-range-batch.md` | The range batch, N1–N8: what the checks found (B-02's double-counted drag, a modal alert hiding the flash, popovers and `.offset`, a looping show's wrapped frame, the export's frames for Edit Range, Settings pages' height) | `spec/range-and-ruler.md`, `spec/shakedown.md` |
+| `2026-10-03-rhythmbg-batch.md` | B-14, B-87, B-17: Jason's three answers, the black-window catch in `update()`, RhythmIO's new URL scheme, what wasn't seen | `spec/rhythmbg.md`, `spec/shakedown.md` |
 | `2026-10-02-rename-inventory.md` | The rename's hit list (B-85): every mention of ShowTools, BGTools and stcli outside history, taken before anything was renamed | The rename itself (`2026-10-02-rename-rhythmio.md`) |
 | `verbatim/` | Byte-identical copies of `spec/plan.md` and `spec/windows.md` as retired 2026-09-28, never edited; its README maps every heading to where it lives now | The files its README lists |
 
