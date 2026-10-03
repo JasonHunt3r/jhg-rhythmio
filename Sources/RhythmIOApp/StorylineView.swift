@@ -102,6 +102,9 @@ struct StorylineView: View {
     private struct RangeEndDrag {
         let isIn: Bool
         var t: Double
+        /// Where the end was when the drag began: the drag's translation is
+        /// measured from there.
+        let start: Double
     }
     @State private var rangeEndDrag: RangeEndDrag?
 
@@ -726,8 +729,14 @@ struct StorylineView: View {
                 let end: RangeEnd = isIn ? .rangeIn : .rangeOut
                 if session.selectedRangeEnd != end { session.selectedRangeEnd = end }
                 guard !editor.rangeLocked else { return }
-                let base = rangeEndDrag?.isIn == isIn ? rangeEndDrag!.t : (isIn ? editor.rangeIn : editor.rangeOut) ?? 0
-                let raw = base + Double(g.translation.width) / pps
+                // B-02: from where the end was when the drag began. The
+                // translation is the whole distance so far, so adding it to
+                // the drag's latest position added it again on every event,
+                // and the end ran ahead of the mouse (found 2026-10-03: a fast
+                // 104 pt drag left moved it 34 s, not 6).
+                let start = rangeEndDrag?.isIn == isIn ? rangeEndDrag!.start
+                                                       : (isIn ? editor.rangeIn : editor.rangeOut) ?? 0
+                let raw = start + Double(g.translation.width) / pps
                 let snappedTime = snap.flatMap { Snap.nearest(raw, in: $0.targets, within: $0.tolerance) } ?? raw
                 // On the frame grid, and at least a frame long (`spec/range-and-ruler.md`,
                 // "Timecode as the model" and "Constraints").
@@ -736,7 +745,7 @@ struct StorylineView: View {
                 let otherBound = isIn ? (editor.rangeOut ?? .greatestFiniteMagnitude) : (editor.rangeIn ?? 0)
                 let clamped = isIn ? min(max(grid.snap(snappedTime), 0), otherBound - grid.frameLength)
                                    : max(grid.snap(snappedTime), otherBound + grid.frameLength)
-                rangeEndDrag = RangeEndDrag(isIn: isIn, t: clamped)
+                rangeEndDrag = RangeEndDrag(isIn: isIn, t: clamped, start: start)
                 focused = true
             }
             .onEnded { _ in

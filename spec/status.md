@@ -96,7 +96,7 @@ RhythmBG and doesn't restart it: start it again from RhythmBG ▸ Desktop Show�
 
 ## What's next
 
-1. **The range batch, B-02, B-05, B-06, B-11**: designed, building in steps N1–N8 (`range-and-ruler.md`); N1–N6 built.
+1. **The range batch, B-05, B-06, B-11**: designed, building in steps N1–N8 (`range-and-ruler.md`); N1–N6 built, and B-02 fixed (N8). Next: N7, the Edit Range popover.
 2. **RhythmBG, B-08 (cause found), B-14, B-17**; B-16 waits on B-39.
 3. **B-83, B-84**: two click oddities.
 

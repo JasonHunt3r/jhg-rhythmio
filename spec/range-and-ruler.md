@@ -3,7 +3,7 @@
 **Status:** Built 2026-09-24 (the range package, W6–W10: dragging and
 locking the ends, Go Back / Go Forward, the range button's modifier
 clicks, Fill Range with Images). **Open work:** see `spec/backlog.md`
-(B-02 the end dragging faster than the mouse, B-05 past the show's end,
+(B-05 past the show's end,
 B-06 selecting a marker to nudge it, B-11 exact In and Out, B-32 an edge
 case to read). Hands-on: `spec/shakedown.md`, "The range package".
 **B-05, B-06 and B-11 designed 2026-10-03** (Jason): "Nudging, timecode
@@ -102,8 +102,8 @@ From Jason's first-test notes (`spec/history/2026-09-24-work-order.md`).
 
 ## Nudging, timecode and exact In and Out (Jason, 2026-10-03)
 
-**Status:** Designed 2026-10-03 (B-05, B-06, B-11; B-02 is measured and
-fixed in the same batch). Building: N1–N6 built 2026-10-03. Jason's reply,
+**Status:** Designed 2026-10-03 (B-05, B-06, B-11; B-02 was found and fixed
+in N6's check). Building: N1–N6 built 2026-10-03. Jason's reply,
 recorded as given.
 
 **B-05.** The range is as long as needed, so it can place slides that
@@ -269,5 +269,10 @@ range, plus its 200 pt; Fill Range fills a range past the end and the
 show grows to Out. Limits: I and O stop at the end, as the playhead does;
 a range wholly past the end gets its fill after the last slide (slides
 sit back to back; no gaps); ⌘L loops through the background past the
-last slide · N7 the Edit Range popover with its frame previews · N8 B-02's drag.
+last slide · N7 the Edit Range popover with its frame previews · N8 B-02's drag
+— **fixed 2026-10-03**, found checking N6: the drag added the gesture's
+translation (the whole distance since the drag began) to the end's
+*latest* position, so every event added it again; a fast 104 pt drag
+moved Out 34 s, not 6. Now from where the end started (77.567 s against
+77.58 expected). Left: Jason's real drag.
 

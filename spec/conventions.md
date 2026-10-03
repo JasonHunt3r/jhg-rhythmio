@@ -71,7 +71,7 @@ itself. Names follow `spec/anatomy.md`.
 | **⌘⌥-click a timeline row** | Open that row's drawer | ⌥-click on a row *handle* opens or closes every drawer (built, `StorylineView.toggleDrawer`) | Settled (Jason, 2026-09-24); not built (checked 2026-09-28) |
 | **⌥⌘-click the range button** | Set the range to the part of the timeline in view | A locked range refuses it, with a beep | Settled (Jason, 2026-09-24); built (W7, `EditShowView.rangeButton`; also in the Show menu). Not yet tried by hand |
 | **⇧⌥⌘-click the range button** | Set the range to the whole show | A locked range refuses it | Settled (Jason, 2026-09-24); built (W7), not yet tried by hand |
-| **Drag a range end** (I or O) on the ruler | Move that end; one undo step | Not while the range is locked | Settled (Jason, 2026-09-24); built (W6). By hand (2026-09-28) the end runs faster than the mouse: a bug, `spec/backlog.md` B-02 |
+| **Drag a range end** (I or O) on the ruler | Move that end; one undo step | Not while the range is locked | Settled (Jason, 2026-09-24); built (W6). By hand (2026-09-28) the end ran faster than the mouse (B-02): fixed 2026-10-03, the drag now measures from where the end started |
 | **⌘[ / ⌘]** | Go Back / Go Forward: the playhead's own history, with the timeline's scroll and zoom. The playhead is never in ⌘Z | — | Settled (Jason, 2026-09-24); built (W8, View menu), checked by Jason 2026-09-28 |
 | **⌥-double-click a screen's box** (RhythmBG) | Move the settings window to that monitor | A plain double-click selects the screen | Modified double-click settled (Jason, 2026-09-24); ⌥ was Claude's proposal. Built (RhythmBG `MainWindow.swift`) |
 

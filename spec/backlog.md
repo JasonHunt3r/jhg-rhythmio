@@ -25,7 +25,6 @@ where it came from.
 
 Claude can do these.
 
-- **B-02** · P1 · Range — Dragging a range end (I or O) runs faster than the mouse, so the marker zips away. Real, not the tool artifact the old status suspected. `spec/range-and-ruler.md`. (Shakedown 2026-09-28.)
 - **B-05** · P1 · Range — The range can be set past the show's current end, so more tiles can be added into it. `spec/range-and-ruler.md`. (Shakedown 2026-09-28.)
 - **B-06** · P1 · Range — Clicking a range marker selects it, so it can be nudged. `spec/range-and-ruler.md`. (Shakedown 2026-09-28.)
 - **B-08** · P2 · RhythmBG — A second copy on first launch. **Fix built 2026-10-02, not yet seen working:** Desktop Show… no longer opens RhythmBG when registering it just started it (registering a login item starts it at once; opening it too in the same second made two). It waits for that copy instead, then asks it for its window. Checking it needs RhythmBG unregistered first (System Settings ▸ General ▸ Login Items, while B-87 stands), then Desktop Show…, then one copy running. `RhythmBGHelper.openDesktop`, `spec/rhythmbg.md`. (Shakedown 2026-09-28.)
