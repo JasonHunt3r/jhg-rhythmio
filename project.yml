@@ -83,6 +83,10 @@ targets:
       properties:
         CFBundleDisplayName: RhythmIO
         LSMinimumSystemVersion: "14.0"
+        # rhythmio://settings/rhythmbg: RhythmBG's "Open at Login…" (B-87).
+        CFBundleURLTypes:
+          - CFBundleURLName: com.jhg.rhythmio
+            CFBundleURLSchemes: [rhythmio]
         NSHighResolutionCapable: true
         NSSupportsAutomaticTermination: false
         # Bravura, the music font, loaded for this app alone.

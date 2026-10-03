@@ -97,7 +97,7 @@ RhythmBG and doesn't restart it: start it again from RhythmBG ▸ Desktop Show�
 ## What's next
 
 1. **The range batch is built** (B-02, B-05, B-06, B-11; N1–N8, `range-and-ruler.md`): its shakedown rows wait for Jason.
-2. **RhythmBG, B-87 (its login switch), B-17** (B-14 built 2026-10-03); B-08 waits for Jason's check; B-16 waits on B-39.
+2. **RhythmBG, B-17** (B-14 and B-87 built 2026-10-03); B-08 waits for Jason's check; B-16 waits on B-39.
 3. **B-83, B-84**: two click oddities.
 
 Built and waiting on Jason's shakedown rows: B-01, B-03 and the held-arrow

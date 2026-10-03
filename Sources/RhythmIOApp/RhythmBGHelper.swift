@@ -16,9 +16,8 @@ enum RhythmBGHelper {
         return FileManager.default.fileExists(atPath: url.path) ? url : nil
     }
 
-    /// RhythmIO owns the decision to start RhythmBG at login; RhythmBG no
-    /// longer registers itself on first run. Its "Open at login" switch
-    /// flips this same registration.
+    /// RhythmIO owns the decision to start RhythmBG at login; RhythmBG can't
+    /// change it from inside (B-87). Settings ▸ RhythmBG flips it.
     ///
     /// True when this call registered it. Registering starts it at once
     /// (launchd), so the caller mustn't open a second copy (B-08).

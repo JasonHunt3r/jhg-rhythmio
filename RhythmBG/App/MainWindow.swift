@@ -41,7 +41,8 @@ struct MainWindow: View {
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Menu {
-                    Toggle("Open at login", isOn: Binding(get: { LoginItem.isOn }, set: { LoginItem.setOn($0) }))
+                    Button("Open at Login…") { LoginItem.openSettingsInRhythmIO() }
+                        .help("Opens RhythmIO's Settings, where starting RhythmBG at login is set")
                     Divider()
                     Button("Quit RhythmBG") { NSApp.terminate(nil) }
                 } label: {

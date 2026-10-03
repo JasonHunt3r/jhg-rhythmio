@@ -147,7 +147,10 @@ check passed.
   RhythmBG's `LoginItem` lost `registerOnceIfInstalled` and now uses
   `SMAppService.loginItem(identifier:)`, not `.mainApp` — a nested app
   can't register itself as `mainApp`, and its "Open at login" switch must
-  flip the registration RhythmIO made.
+  flip the registration RhythmIO made. (It couldn't: from inside, the
+  status reads not-registered and `register()` fails with error 22. The
+  switch moved to RhythmIO ▸ Settings ▸ RhythmBG, 2026-10-03, B-87;
+  RhythmBG's ⋯ menu has "Open at Login…", which opens that tab.)
 - **P5** `install.sh` passes `RHYTHMIO_LIBRARY` through to the launch
   when it's set, so the script itself can be checked without opening the
   real library.

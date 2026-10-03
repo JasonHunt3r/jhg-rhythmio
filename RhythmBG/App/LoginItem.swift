@@ -1,25 +1,30 @@
-import Foundation
-import ServiceManagement
+import AppKit
 
 /// Starting at login. RhythmBG is nested inside RhythmIO
-/// (`Contents/Library/LoginItems`), so it registers as that host's login
-/// item by identifier, not as `mainApp`. RhythmIO registers it when the
-/// desktop is first turned on (`RhythmBGHelper.registerAtLogin`); this is
-/// the same registration, flipped by the "Open at login" switch, and it
-/// shows in System Settings ▸ General ▸ Login Items.
+/// (`Contents/Library/LoginItems`) and registered as that host's login
+/// item, which only the host can change: from in here the status reads
+/// not-registered and `register()` fails with SMAppService error 22,
+/// "Invalid argument" (B-87, 2026-10-02). So the switch lives in RhythmIO ▸
+/// Settings ▸ RhythmBG, and RhythmBG's "Open at Login…" opens that tab
+/// (Jason, 2026-10-03).
 enum LoginItem {
-    static let bundleID = "com.jhg.rhythmbg"
+    /// The RhythmIO this copy sits inside, so the request reaches it and
+    /// not some other copy that also answers `rhythmio://` (a test build).
+    static var host: URL? {
+        let url = Bundle.main.bundleURL.deletingLastPathComponent()   // LoginItems
+            .deletingLastPathComponent()                               // Library
+            .deletingLastPathComponent()                               // Contents
+            .deletingLastPathComponent()                               // RhythmIO.app
+        return url.pathExtension == "app" ? url : nil
+    }
 
-    private static var service: SMAppService { .loginItem(identifier: bundleID) }
-
-    static var isOn: Bool { service.status == .enabled }
-
-    static func setOn(_ on: Bool) {
-        do {
-            if on { try service.register() } else { try service.unregister() }
-            Log.write("login item \(on ? "registered" : "removed"): \(service.status.rawValue)")
-        } catch {
-            Log.write("login item \(on ? "register" : "remove") failed: \(error)")
+    static func openSettingsInRhythmIO() {
+        guard let host else { return Log.write("login item: not nested in RhythmIO") }
+        let config = NSWorkspace.OpenConfiguration()
+        config.activates = true
+        NSWorkspace.shared.open([URL(string: "rhythmio://settings/rhythmbg")!], withApplicationAt: host,
+                                configuration: config) { _, error in
+            if let error { Log.write("login item: RhythmIO didn't open: \(error)") }
         }
     }
 }

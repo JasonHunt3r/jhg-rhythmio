@@ -22,6 +22,7 @@ struct RhythmIOApp: App {
                 .environment(model)
                 .frame(minWidth: 1100, minHeight: 700)
                 .task { DevHooks.run(model); RhythmBGHelper.launchAtRhythmIOStartupIfEnabled() }
+                .modifier(SettingsURL())
         }
         .defaultSize(width: 1320, height: 820)
         .commands { AppCommands(model: model, undoState: undoState) }
@@ -380,11 +381,8 @@ struct AppCommands: Commands {
 
         // Item 21, `RhythmIO Feedback — Worklist for Next CC Session.md`:
         // a dedicated menu for launching RhythmBG, more discoverable than
-        // the toolbar group it lived in before. "Open at Login" stays in
-        // RhythmBG's own window (View ▸ RhythmBG ▸ Desktop Show…, its
-        // Settings tab) — this menu is only for launching it, and the new
-        // "launch with RhythmIO" setting, which lives in RhythmIO's
-        // own Settings alongside its other startup-time preferences.
+        // the toolbar group it lived in before. Its startup settings, at
+        // login and with RhythmIO, are in Settings ▸ RhythmBG (B-87).
         CommandMenu("RhythmBG") {
             // Phase 5: the desktop is RhythmBG's job, and it lives inside
             // this app (spec/rhythmbg.md, spec/xcode-port.md).
@@ -501,22 +499,33 @@ enum PanelHidingSetting {
 /// for free, matching the HIG's own description of Settings that Claude
 /// read out for the layer-fix discussion a day earlier.
 struct SettingsView: View {
+    /// The selected tab, kept so a `rhythmio://settings/<tab>` URL can pick
+    /// one (B-87); it still reopens on the last one used.
+    @AppStorage(SettingsURL.tabKey) private var tab = "library"
+
     var body: some View {
-        TabView {
+        TabView(selection: $tab) {
             LibrarySettingsTab()
                 .tabItem { Label("Library", systemImage: "internaldrive") }
+                .tag("library")
             EditingSettingsTab()
                 .tabItem { Label("Editing", systemImage: "pencil") }
+                .tag("editing")
             TimelineSettingsTab()
                 .tabItem { Label("Timeline", systemImage: "ruler") }
+                .tag("timeline")
             PlaybackSettingsTab()
                 .tabItem { Label("Playback", systemImage: "play.rectangle") }
+                .tag("playback")
             ExportSettingsTab()
                 .tabItem { Label("Export", systemImage: "square.and.arrow.up") }
+                .tag("export")
             WindowsSettingsTab()
                 .tabItem { Label("Windows", systemImage: "macwindow") }
+                .tag("windows")
             RhythmBGSettingsTab()
                 .tabItem { Label("RhythmBG", systemImage: "display") }
+                .tag("rhythmbg")
         }
         .background(WindowAccessor { SettingsWindowCoordinator.captured($0) })
     }
@@ -876,23 +885,50 @@ private struct WindowsSettingsTab: View {
     }
 }
 
-/// Item 21, `RhythmIO Feedback — Worklist for Next CC Session.md`.
-/// "Open RhythmBG at Login" already lives in RhythmBG's own window (View ▸
-/// RhythmBG ▸ Launch RhythmBG, then its Settings tab) — this is the
-/// separate ask: RhythmBG starting alongside RhythmIO itself, not just at
-/// login. Its own tab since RhythmBG is a whole companion app, not one
-/// setting among others.
+/// RhythmBG's two ways of starting on its own. "Open RhythmBG at login"
+/// lives here because only RhythmIO, its host, can change that login item
+/// (B-87); RhythmBG's "Open at Login…" opens this tab. "Launch RhythmBG
+/// when RhythmIO launches" is item 21 of `RhythmIO Feedback — Worklist for
+/// Next CC Session.md`. Its own tab since RhythmBG is a whole companion
+/// app, not one setting among others.
 private struct RhythmBGSettingsTab: View {
     @AppStorage(RhythmBGHelper.launchWithRhythmIOKey) private var launchRhythmBGWithRhythmIO = false
+    /// The login item's status isn't observable, so it's read on appear and
+    /// again after each change.
+    @State private var atLogin = RhythmBGHelper.isRegisteredAtLogin
 
     var body: some View {
         SettingsPage {
             Section("RhythmBG") {
+                Toggle("Open RhythmBG at login", isOn: Binding(get: { atLogin }, set: { on in
+                    if on { RhythmBGHelper.registerAtLogin() } else { RhythmBGHelper.unregisterAtLogin() }
+                    atLogin = RhythmBGHelper.isRegisteredAtLogin
+                }))
+                Text("Plays your desktop shows from the moment you log in. Also listed in System Settings ▸ General ▸ Login Items.")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
                 Toggle("Launch RhythmBG when RhythmIO launches", isOn: $launchRhythmBGWithRhythmIO)
                 Text("Starts the desktop background player in the background, without opening its window.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
             }
+        }
+        .onAppear { atLogin = RhythmBGHelper.isRegisteredAtLogin }
+    }
+}
+
+/// `rhythmio://settings/<tab>` opens Settings on that tab (B-87: RhythmBG's
+/// "Open at Login…" sends `rhythmio://settings/rhythmbg`).
+struct SettingsURL: ViewModifier {
+    static let tabKey = "settingsTab"
+    @Environment(\.openSettings) private var openSettings
+
+    func body(content: Content) -> some View {
+        content.onOpenURL { url in
+            guard url.scheme == "rhythmio", url.host == "settings" else { return }
+            let tab = url.lastPathComponent
+            if !tab.isEmpty, tab != "/" { UserDefaults.standard.set(tab, forKey: Self.tabKey) }
+            openSettings()
         }
     }
 }
