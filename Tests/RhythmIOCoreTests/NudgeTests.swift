@@ -131,3 +131,52 @@ final class RangeNudgeTests: XCTestCase {
         XCTAssertEqual(range(59, nil).nudgingRange(.rangeIn, by: 5, grid: g, end: 60)?.rangeIn, 60)
     }
 }
+
+/// ⌘ and ⌘⌥ jumps (N4).
+final class JumpTests: XCTestCase {
+    func testNextThatWayWithoutWrapping() {
+        let t = [2.0, 5, 9]
+        XCTAssertEqual(Jump.next(from: 3, direction: 1, in: t), 5)
+        XCTAssertEqual(Jump.next(from: 3, direction: -1, in: t), 2)
+        XCTAssertEqual(Jump.next(from: 5, direction: 1, in: t), 9)      // the one you're on doesn't count
+        XCTAssertNil(Jump.next(from: 9, direction: 1, in: t))
+        XCTAssertNil(Jump.next(from: 1, direction: -1, in: t))
+        XCTAssertNil(Jump.next(from: 1, direction: 1, in: []))
+    }
+
+    private func showWithSong() -> (Show, [Int64: SongRhythm]) {
+        var clip = AudioClip(itemID: 7, start: 10, length: 4)
+        clip.inPoint = 1                        // plays song 1…5 at show 10…14
+        clip.markers = [Marker(time: 2)]        // a beat marker at show 11
+        let show = Show(id: 1, name: "s", music: [clip], markers: [Marker(time: 12.5)])
+        let rhythm = SongRhythm(beats: [0, 1, 2, 3, 4, 5, 6], bars: [], beatsPerMinute: 60, sections: [])
+        return (show, [7: rhythm])
+    }
+
+    func testBeatsAreInShowTimeInsideTheClip() {
+        let (show, rhythms) = showWithSong()
+        XCTAssertEqual(show.beatTimes(rhythms), [10, 11, 12, 13, 14])
+        XCTAssertEqual(show.beatTimes([:]), [])
+        XCTAssertEqual(show.rulerMarkers.map(\.time), [11, 12.5])
+    }
+
+    /// A beat marker skips beats another beat marker holds; a hand marker
+    /// may share one with a beat marker.
+    func testMovingToTheNextBeatSkipsOnlyTheSameKind() throws {
+        let (show, rhythms) = showWithSong()
+        let beats = show.beatTimes(rhythms)
+        let g = FrameGrid(fps: 30)
+        let hand = show.markers[0].id
+        let back = try XCTUnwrap(show.movingMarkersToNextBeat([hand], direction: -1, beats: beats, duration: 60, grid: g))
+        XCTAssertEqual(back.markers[0].time, 12, accuracy: 1e-9)
+        let further = try XCTUnwrap(back.movingMarkersToNextBeat([hand], direction: -1, beats: beats, duration: 60, grid: g))
+        XCTAssertEqual(further.markers[0].time, 11, accuracy: 1e-9)       // shares 11 with the beat marker
+
+        var two = show
+        two.music[0].markers.append(Marker(time: 3))                      // a beat marker at show 12
+        let beatMarker = two.music[0].markers[0].id                       // at 11
+        let moved = try XCTUnwrap(two.movingMarkersToNextBeat([beatMarker], direction: 1, beats: beats, duration: 60, grid: g))
+        XCTAssertEqual(moved.music[0].markers[0].time, 4, accuracy: 1e-9) // skips 12, lands on show 13 = song 4
+        XCTAssertNil(show.movingMarkersToNextBeat([hand], direction: 1, beats: [], duration: 60, grid: g))
+    }
+}

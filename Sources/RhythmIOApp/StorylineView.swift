@@ -587,8 +587,12 @@ struct StorylineView: View {
         if let r = session.nudgeReadout {
             let grid = show.frameGrid
             HStack(spacing: 6) {
-                Text(grid.format(r.time))
-                Text(grid.formatDelta(r.delta)).foregroundStyle(.secondary)
+                if let message = r.message {
+                    Text(message)
+                } else {
+                    Text(grid.format(r.time))
+                    Text(grid.formatDelta(r.delta)).foregroundStyle(.secondary)
+                }
             }
             .font(.caption2.monospacedDigit())
             .padding(.horizontal, 6).padding(.vertical, 1)

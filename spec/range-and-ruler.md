@@ -7,7 +7,7 @@ clicks, Fill Range with Images). **Open work:** see `spec/backlog.md`
 B-06 selecting a marker to nudge it, B-11 exact In and Out, B-32 an edge
 case to read). Hands-on: `spec/shakedown.md`, "The range package".
 **B-05, B-06 and B-11 designed 2026-10-03** (Jason): "Nudging, timecode
-and exact In and Out", below, built in steps N1–N8 there. **N1–N3
+and exact In and Out", below, built in steps N1–N8 there. **N1–N4
 built 2026-10-03.**
 
 The range itself (I, O, its lines, the editing state it's saved in) was
@@ -103,7 +103,7 @@ From Jason's first-test notes (`spec/history/2026-09-24-work-order.md`).
 ## Nudging, timecode and exact In and Out (Jason, 2026-10-03)
 
 **Status:** Designed 2026-10-03 (B-05, B-06, B-11; B-02 is measured and
-fixed in the same batch). Building: N1–N3 built 2026-10-03. Jason's reply,
+fixed in the same batch). Building: N1–N4 built 2026-10-03. Jason's reply,
 recorded as given.
 
 **B-05.** The range is as long as needed, so it can place slides that
@@ -240,6 +240,13 @@ shows for the playhead with nothing selected. Every way of setting an end
 (I/O, the range button's set-to-view and whole show, Set Range to Clip,
 a drag) lands on the frame grid, and a drag keeps a frame's length (was
 0.1 s). Still open for N7: a double-click on an end toggles its line ·
-N4 ⌘ and ⌘⌥ jumps · N5 marker collisions · N6 B-05, the range past the
+N4 ⌘ and ⌘⌥ jumps — **built 2026-10-03**: `Jump.next` (the one you're on
+doesn't count; no wrapping), `Show.rulerMarkers`, `Show.beatTimes` (every
+clip's beats from the per-file cache, in show time, inside the part that
+plays; read from memory only, so a jump never starts an analysis — the
+audio row starts it when it draws a clip), `movingMarkersToNextBeat`
+(skips beats a same-kind marker holds). Markers moved to a beat land on
+it exactly; a range end keeps its grid and frame rules, so a jump past the
+other end stops short; the playhead goes exactly there · N5 marker collisions · N6 B-05, the range past the
 end · N7 the Edit Range popover with its frame previews · N8 B-02's drag.
 

@@ -347,8 +347,8 @@ struct EditShowTimelinePane: View {
     /// movement"). Whatever's selected on the ruler takes the key ladder: a
     /// range end, markers, or the playhead. Otherwise a row with a selection
     /// keeps its own arrows (B-03: ← → through its items, ⇧ extends);
-    /// otherwise the playhead takes the ladder. ⌘ and ⌘⌥ (the jumps) aren't
-    /// built yet: N4.
+    /// otherwise the playhead takes the ladder. ⌘ and ⌘⌥ jump to the next
+    /// marker or beat (N4).
     private func horizontalArrow(_ event: NSEvent, engine: PlaybackEngine) -> Bool {
         let direction = event.keyCode == 123 ? -1 : 1
         let key: NudgeKey? = switch event.plainModifiers {
@@ -370,8 +370,12 @@ struct EditShowTimelinePane: View {
             }
             return true
         }
-        guard case .by(let delta) = NudgeSettings.saved.move(key, direction: direction, grid: show.frameGrid)
-        else { return false }
+        let delta: Double
+        switch NudgeSettings.saved.move(key, direction: direction, grid: show.frameGrid) {
+        case .by(let d): delta = d
+        case .nextMarker: jumpToMarker(direction, held: event.isARepeat, engine: engine); return true
+        case .nextBeat: jumpToBeat(direction, held: event.isARepeat, engine: engine); return true
+        }
         if let end = session.selectedRangeEnd {
             nudgeRange(end, by: delta, held: event.isARepeat, engine: engine)
         } else if !session.selectedMarkers.isEmpty {
@@ -403,6 +407,89 @@ struct EditShowTimelinePane: View {
             mutate(end == .rangeIn ? "Nudge Range Start" : "Nudge Range End") { $0 = moved }
         }
         showReadout(end == .rangeIn ? "in" : "out", from: from, to: to)
+    }
+
+    // MARK: ⌘ and ⌘⌥ jumps (`spec/range-and-ruler.md`, N4)
+
+    /// ⌘ ← →. On selected markers it moves the *selection* to the next
+    /// marker (the markers stay), so: nudge one, hop, nudge the next. On a
+    /// range end or the playhead it moves that to the next marker.
+    private func jumpToMarker(_ direction: Int, held: Bool, engine: PlaybackEngine) {
+        let current = model.show(show.id) ?? show
+        let all = current.rulerMarkers
+        if !session.selectedMarkers.isEmpty {
+            let times = all.filter { session.selectedMarkers.contains($0.id) }.map(\.time)
+            guard let from = direction > 0 ? times.max() : times.min(),
+                  let to = Jump.next(from: from, direction: direction, in: all.map(\.time)),
+                  let next = (direction > 0 ? all.first { $0.time == to } : all.last { $0.time == to })
+            else { return }
+            session.selectedMarkers = [next.id]
+            return
+        }
+        jump(direction, to: all.map(\.time), held: held, engine: engine)
+    }
+
+    /// ⌘⌥ ← →: to the next detected beat, marked or not. Selected markers
+    /// skip beats a marker of their kind already holds. With no beats
+    /// detected it does nothing but say so.
+    private func jumpToBeat(_ direction: Int, held: Bool, engine: PlaybackEngine) {
+        let current = model.show(show.id) ?? show
+        var rhythms: [Int64: SongRhythm] = [:]
+        for c in current.music {
+            if let item = model.itemsByID[c.itemID], let r = Rhythms.shared.rhythm(item) { rhythms[c.itemID] = r }
+        }
+        let beats = current.beatTimes(rhythms)
+        guard !beats.isEmpty else {
+            let at = session.selectedRangeEnd.flatMap { current.editor.time(of: $0) }
+                ?? current.markerTimes(session.selectedMarkers).first?.time
+                ?? engine.timeline.wrap(engine.now)
+            flash("No beats detected", at: at)
+            return
+        }
+        if !session.selectedMarkers.isEmpty {
+            let ids = session.selectedMarkers
+            guard let from = current.markerTimes(ids).first?.time,
+                  let moved = current.movingMarkersToNextBeat(ids, direction: direction, beats: beats,
+                                                              duration: engine.duration, grid: show.frameGrid),
+                  let to = moved.markerTimes(ids).first?.time else { return }
+            if held { model.update(moved) } else {
+                mutate(ids.count == 1 ? "Move Marker to Beat" : "Move Markers to Beat") { $0 = moved }
+            }
+            showReadout("markers " + ids.map(\.uuidString).sorted().joined(), from: from, to: to)
+            return
+        }
+        jump(direction, to: beats, held: held, engine: engine)
+    }
+
+    /// A range end or the playhead to the next of `targets` that way: a
+    /// range end keeps its rules (on the grid, a frame from the other end),
+    /// the playhead goes exactly there.
+    private func jump(_ direction: Int, to targets: [Double], held: Bool, engine: PlaybackEngine) {
+        if let end = session.selectedRangeEnd {
+            let current = model.show(show.id) ?? show
+            guard let from = current.editor.time(of: end),
+                  let target = Jump.next(from: from, direction: direction, in: targets,
+                                         within: show.frameGrid.frameLength / 2) else { return }
+            nudgeRange(end, by: target - from, held: held, engine: engine)
+            return
+        }
+        let now = engine.timeline.wrap(engine.now)
+        guard let target = Jump.next(from: now, direction: direction, in: targets, within: 0.001) else { return }
+        recordPlayheadJump(engine)
+        if engine.isPlaying { engine.pause() }
+        let to = min(max(target, 0), max(engine.duration - 0.001, 0))
+        engine.seek(to)
+        showReadout("playhead", from: now, to: to)
+    }
+
+    /// A word in the readout's place, fading like it.
+    private func flash(_ message: String, at time: Double) {
+        let token = (session.nudgeReadout?.token ?? 0) + 1
+        session.nudgeReadout = .init(time: time, delta: 0, target: "message", token: token, message: message)
+        let session = session
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+            if session.nudgeReadout?.token == token { session.nudgeReadout = nil }
+        }
     }
 
     /// Shows the readout for a move of `target` (the playhead, a range

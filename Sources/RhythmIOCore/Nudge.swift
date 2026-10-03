@@ -177,3 +177,59 @@ extension ShowEditorState {
 
     public func time(of which: RangeEnd) -> Double? { which == .rangeIn ? rangeIn : rangeOut }
 }
+
+// MARK: ⌘ and ⌘⌥ jumps (N4)
+
+/// "The next one that way" for the jumps (`spec/range-and-ruler.md`, "⌘
+/// and ⌘⌥ jumps"): from between targets, the next in the arrow's
+/// direction; one already within `within` of `t` doesn't count (it's
+/// where you are); nil past the first or last (no wrapping).
+public enum Jump {
+    public static func next(from t: Double, direction: Int, in targets: [Double],
+                            within: Double = 1e-6) -> Double? {
+        direction > 0 ? targets.filter { $0 > t + within }.min()
+                      : targets.filter { $0 < t - within }.max()
+    }
+}
+
+extension Show {
+    /// Every marker on the ruler, of both kinds (a detected marker only
+    /// where its clip shows it), at its show time, with its id, earliest first.
+    public var rulerMarkers: [(id: UUID, time: Double, isBeat: Bool)] {
+        let hand = markers.map { (id: $0.id, time: $0.time, isBeat: false) }
+        let beat = detectedMarkers.map { (id: $0.marker.id, time: $0.time, isBeat: true) }
+        return (hand + beat).sorted { $0.time < $1.time }
+    }
+
+    /// Every detected beat of every audio clip, in show time, inside the
+    /// part of the clip that plays, earliest first. `rhythms` by the clip's
+    /// file id; a song not analysed yet has none.
+    public func beatTimes(_ rhythms: [Int64: SongRhythm]) -> [Double] {
+        music.flatMap { c -> [Double] in
+            guard let r = rhythms[c.itemID] else { return [] }
+            return r.beats.filter { $0 >= c.inPoint - 1e-9 && $0 <= c.inPoint + c.length + 1e-9 }
+                .map { c.showTime(ofSongTime: $0) }
+        }
+        .sorted()
+    }
+
+    /// ⌘⌥ on selected markers: the next beat that way from the earliest of
+    /// them, skipping beats a marker of the same kind already holds (one
+    /// of these selected ones doesn't count), and the markers moved
+    /// together so the earliest lands on it. Nil when there's no such beat.
+    public func movingMarkersToNextBeat(_ ids: Set<UUID>, direction: Int, beats: [Double],
+                                        duration: Double, grid: FrameGrid) -> Show? {
+        let selected = rulerMarkers.filter { ids.contains($0.id) }
+        guard let anchor = selected.first else { return nil }
+        let half = grid.frameLength / 2
+        let others = rulerMarkers.filter { !ids.contains($0.id) && $0.isBeat == anchor.isBeat }.map(\.time)
+        let free = beats.filter { b in !others.contains { abs($0 - b) < half } }
+        guard let beat = Jump.next(from: anchor.time, direction: direction, in: free, within: half)
+        else { return nil }
+        let move = beat - anchor.time
+        guard selected.allSatisfy({ $0.time + move >= -1e-9 && $0.time + move <= duration + 1e-9 }) else { return nil }
+        var s = self
+        for m in selected { s.updateMarker(m.id) { $0.time += move } }
+        return s
+    }
+}

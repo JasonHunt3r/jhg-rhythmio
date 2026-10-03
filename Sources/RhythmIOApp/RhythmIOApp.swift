@@ -651,7 +651,7 @@ private struct TimelineSettingsTab: View {
                     }
                     .labelsHidden().pickerStyle(.segmented).fixedSize()
                 }
-                Text("The arrows move whatever's selected on the ruler — a marker, a range end — or the playhead when nothing is. \(frameKeys) always moves exactly one frame of the show's frame rate.")
+                Text("The arrows move whatever's selected on the ruler — a marker, a range end — or the playhead when nothing is. \(frameKeys) always moves exactly one frame of the show's frame rate. ⌘ ← → jumps to the next marker (on a selected marker, the selection hops instead), ⌘⌥ ← → to the next detected beat.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
             }

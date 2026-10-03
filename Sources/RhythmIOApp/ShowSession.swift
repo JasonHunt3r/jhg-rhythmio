@@ -35,6 +35,8 @@ final class ShowSession {
         var delta: Double
         var target: String
         var token: Int
+        /// Shown instead of the timecode: "No beats detected."
+        var message: String? = nil
     }
 
     /// Lets go of the ruler's own selections (a range end, the playhead).
