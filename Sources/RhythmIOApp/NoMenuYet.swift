@@ -71,7 +71,10 @@ enum ListEmptySpace {
         guard event.type == .rightMouseDown
                 || event.modifierFlags.intersection(.deviceIndependentFlagsMask) == .control,
               let content = event.window?.contentView,
-              let hit = content.hitTest(content.convert(event.locationInWindow, from: nil)) else { return false }
+              // `hitTest` takes the superview's coordinates; the content
+              // view's own are flipped and would mirror the click (B-84).
+              let hit = content.hitTest(content.superview?.convert(event.locationInWindow, from: nil)
+                                        ?? event.locationInWindow) else { return false }
         var view: NSView? = hit
         while let v = view, !(v is NSTableView) { view = v.superview }
         guard let table = view as? NSTableView,

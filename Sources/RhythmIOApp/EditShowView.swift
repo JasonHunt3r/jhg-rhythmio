@@ -689,7 +689,10 @@ struct ClickTakesKeyboard: NSViewRepresentable {
             guard let window, event.window === window,
                   bounds.contains(convert(event.locationInWindow, from: nil)),
                   let content = window.contentView else { return }
-            var view = content.hitTest(content.convert(event.locationInWindow, from: nil))
+            // `hitTest` takes the superview's coordinates; the content
+            // view's own are flipped and would mirror the click (B-84).
+            var view = content.hitTest(content.superview?.convert(event.locationInWindow, from: nil)
+                                       ?? event.locationInWindow)
             while let v = view, !(v is NSTableView) { view = v.superview }
             guard let table = view as? NSTableView else { return }
             // After the click itself, so the row's own selection happens first.

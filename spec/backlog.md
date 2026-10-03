@@ -112,7 +112,6 @@ row). These are the other things only Jason can do.
 - **B-80** · P3 · Viewer — The zoomed-out work area doesn't draw a lane image's overhang past the frame.
 - **B-81** · P3 · Viewer — Its right-click picks the image menu or the pasteboard menu by which image was last *clicked*, not where the right-click landed. Accepted 2026-09-24; real click-location tracking is the fix if it bites. `spec/conventions.md` §3, route item 4.
 - **B-83** · P2 · Timeline — In the popped-out Timeline window, clicking a slide didn't select it (two axtool clicks, 2026-10-02; the arrows did reach the timeline there). Not yet tried by hand, so it may be a synthetic-click artifact. `spec/panekit.md`, "Pane ⇄ panel".
-- **B-84** · P3 · Keys — `ListEmptySpace` (`NoMenuYet.swift`) and `ClickTakesKeyboard` (`EditShowView.swift`) pass `hitTest` a point in the content view's own (flipped) coordinates, not its superview's, so the view they find can be mirrored top to bottom — the bug `KeyboardArea` had, measured 2026-10-02. Check whether either misfires.
 - **B-82** · — · Transitions — Accordion was dropped (it renders as a dissolve on this macOS), and Page Curl is offered as "Page Turn". A limitation, recorded so it isn't rediscovered.
 
 ## Design notes
