@@ -648,6 +648,13 @@ struct DefaultsBar: View {
                     for i in s.slides.indices { s.slides[i].settings = SlideSettings() }
                 }
             }
+            // The show's frame grid (`spec/range-and-ruler.md`, "Timecode as
+            // the model"). Here, not on the bar: both its rows are full.
+            Picker("Frame Rate", selection: Binding(get: { show.defaults.frameRate },
+                                                    set: { r in mutate("Change Frame Rate") { $0.defaults.frameRate = r } })) {
+                ForEach(MovieFrameRate.allCases, id: \.self) { Text($0.name).tag($0) }
+            }
+            .pickerStyle(.menu)
             Divider()
             Button("Reset to App Defaults") {
                 mutate("Reset Show Defaults") { $0.defaults = ShowDefaults() }

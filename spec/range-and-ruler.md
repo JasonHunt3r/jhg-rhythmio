@@ -7,8 +7,8 @@ clicks, Fill Range with Images). **Open work:** see `spec/backlog.md`
 B-06 selecting a marker to nudge it, B-11 exact In and Out, B-32 an edge
 case to read). Hands-on: `spec/shakedown.md`, "The range package".
 **B-05, B-06 and B-11 designed 2026-10-03** (Jason): "Nudging, timecode
-and exact In and Out", below. Four points wait on him there ("Open").
-The build is in steps N1–N8 there.
+and exact In and Out", below, built in steps N1–N8 there. **N1 built
+2026-10-03.**
 
 The range itself (I, O, its lines, the editing state it's saved in) was
 settled 2026-09-21: `spec/rhythm.md`. Moved out of `spec/plan.md` on
@@ -102,8 +102,9 @@ From Jason's first-test notes (`spec/history/2026-09-24-work-order.md`).
 
 ## Nudging, timecode and exact In and Out (Jason, 2026-10-03)
 
-**Status:** Designed 2026-10-03, not built (B-05, B-06, B-11; B-02 is
-measured and fixed in the same batch). Jason's reply, recorded as given.
+**Status:** Designed 2026-10-03 (B-05, B-06, B-11; B-02 is measured and
+fixed in the same batch). Building: N1 built 2026-10-03. Jason's reply,
+recorded as given.
 
 **B-05.** The range is as long as needed, so it can place slides that
 would run past the current end of the timeline.
@@ -194,27 +195,32 @@ The ruler, the popover and the readouts show the same value. The frame
 rate is the show's export frame rate (24, 30 or 60); the playhead's
 hard-wired 30 fps becomes per show.
 
-### Open (asked 2026-10-03)
+### Settled with Jason (2026-10-03, all four as proposed)
 
-1. **B-05 against "clamp to the show's duration".** Proposed: the range's
+1. **B-05 against "clamp to the show's duration".** The range's
    ends are exempt (they may run past the end, per B-05); the playhead and
    markers clamp to the duration.
 2. **A show has no export frame rate yet.** The export sheet starts at 30
-   every time and keeps nothing. Proposed: a per-show **Frame rate** (24,
-   30, 60; default 30) in the show's defaults bar, saved with the show,
-   which the export sheet then starts from.
+   every time and kept nothing. Now a per-show **Frame rate** (24, 30,
+   60; default 30), saved with the show, which the export sheet starts
+   from (a choice there is for that export only). It sits in the defaults
+   bar's ⋯ menu (Frame Rate ▸), since both of the bar's rows are full;
+   `show.tsv` carries it as `# frame_rate`. Built in N1.
 3. **The two marker types are show markers and beat markers.** Beat
-   markers belong to an audio clip and move with it. Proposed: "same type"
+   markers belong to an audio clip and move with it. "Same type"
    means show-marker against show-marker and beat-marker against
    beat-marker, across clips.
 4. **"Detected beats" for ⌘⌥** come from the per-file analysis cache, in
-   song time. Proposed: every audio clip's beats, in show time, inside its
+   song time. They're used as every audio clip's beats, in show time, inside its
    trimmed part.
 
 ### Build steps
 
 N1 timecode (frame-aligned seconds ↔ `m:ss:ff`, the loose parser) and the
-per-show frame rate · N2 the nudge settings and the key ladder · N3 the
+per-show frame rate — **built 2026-10-03**: `FrameGrid` (`Timecode.swift`;
+a frame count is typed with an `f`, `2490f`, since a bare `83` is seconds,
+the same as `1:23`), `ShowDefaults.frameRate`, the playhead's one-frame
+nudge on it · N2 the nudge settings and the key ladder · N3 the
 playhead as a selectable object, range ends selectable, the readout ·
 N4 ⌘ and ⌘⌥ jumps · N5 marker collisions · N6 B-05, the range past the
 end · N7 the Edit Range popover with its frame previews · N8 B-02's drag.

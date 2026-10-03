@@ -70,7 +70,7 @@ when RhythmIO launches" is on. Registering started a second copy (B-08).
 ## Where it stands
 
 **Everything planned is built**, and more has come from Jason's use of it.
-**353 tests** (340 core + 13 RhythmBG); PaneKit has its own 56, ListKit its
+**361 tests** (348 core + 13 RhythmBG); PaneKit has its own 56, ListKit its
 own 24. **Library schema 14.**
 
 Every phase is built (`plan.md`; each area's spec is in CLAUDE.md's
@@ -96,7 +96,7 @@ RhythmBG and doesn't restart it: start it again from RhythmBG ▸ Desktop Show�
 
 ## What's next
 
-1. **The range batch, B-02, B-05, B-06, B-11** (P1/P2).
+1. **The range batch, B-02, B-05, B-06, B-11**: designed, building in steps N1–N8 (`range-and-ruler.md`); N1 built.
 2. **RhythmBG, B-08 (cause found), B-14, B-17**; B-16 waits on B-39.
 3. **B-83, B-84**: two click oddities.
 
@@ -117,7 +117,7 @@ resets every app's login items, so they are left alone.
 ## Quick start
 
 ```sh
-swift test                                  # 340 core + 13 RhythmBG tests
+swift test                                  # 348 core + 13 RhythmBG tests
 (cd PaneKit && swift test)                  # 56 PaneKit tests
 (cd ListKit && swift test)                  # 24 ListKit tests
 ./make-app.sh                               # → build/RhythmIO.app (signed, team P82S39V2KJ)

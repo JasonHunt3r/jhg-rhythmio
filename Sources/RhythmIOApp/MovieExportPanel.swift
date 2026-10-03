@@ -89,6 +89,9 @@ func runMovieExportPanel(_ model: AppModel, showID: Int64) {
     let videoSound = MovieVideoSound.all(of: show, items: items) { lib.url(for: $0) }
     let options = MovieExportOptions(showSize: outputPixelSize,
                                      songs: songs.count + videoSound.count)
+    // Starts from the show's own frame rate (`spec/range-and-ruler.md`,
+    // "Timecode as the model"); a choice here is for this export only.
+    options.settings.frameRate = show.defaults.frameRate
 
     let panel = NSSavePanel()
     panel.prompt = "Export"

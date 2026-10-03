@@ -323,12 +323,12 @@ struct EditShowTimelinePane: View {
         }
     }
 
-    /// One frame (item 7, work order: "← → nudge the playhead"). A
-    /// deliberate nudge, so it's its own Go Back step (W8).
+    /// One frame of the show's frame rate (item 7, work order: "← → nudge
+    /// the playhead"). A deliberate nudge, so it's its own Go Back step (W8).
     private func nudgePlayhead(_ delta: Int, engine: PlaybackEngine) {
         recordPlayheadJump(engine)
         if engine.isPlaying { engine.pause() }
-        let t = engine.timeline.wrap(engine.now) + Double(delta) / 30
+        let t = engine.timeline.wrap(engine.now) + Double(delta) * engine.show.frameGrid.frameLength
         engine.seek(min(max(t, 0), max(engine.duration - 0.001, 0)))
     }
 

@@ -391,6 +391,11 @@ public enum SetlistImport {
                                       problems: &problems, parse: SetlistTSV.parseYesNo) ?? d.videoUsesClipLength
         d.loop = merge(d.loop, cell: meta["loop"], written: { $0 ? "yes" : "no" }, where: at("loop"),
                        problems: &problems, parse: SetlistTSV.parseYesNo) ?? d.loop
+        d.frameRate = merge(d.frameRate, cell: meta["frame_rate"], written: { String($0.fps) },
+                            where: at("frame_rate"), problems: &problems) {
+            guard let r = Int($0).flatMap(MovieFrameRate.init(rawValue:)) else { throw SetlistTSV.BadCell(text: $0) }
+            return r
+        } ?? d.frameRate
         return d
     }
 

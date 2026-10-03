@@ -327,6 +327,11 @@ public struct ShowDefaults: Codable, Hashable, Sendable {
     /// Video slides play their whole clip unless given a length.
     public var videoUsesClipLength: Bool = true
     public var loop: Bool = true
+    /// The show's frame grid (`spec/range-and-ruler.md`, "Timecode as the
+    /// model"): the range snaps to it, the one-frame nudge steps by it,
+    /// timecode counts it, and the export sheet starts from it. Shows saved
+    /// before it read as 30, what the playhead's nudge always used.
+    public var frameRate: MovieFrameRate = .default
 
     public init() {}
 
@@ -346,6 +351,7 @@ public struct ShowDefaults: Codable, Hashable, Sendable {
         background = get(.background, d.background)
         videoUsesClipLength = get(.videoUsesClipLength, d.videoUsesClipLength)
         loop = get(.loop, d.loop)
+        frameRate = get(.frameRate, d.frameRate)
     }
 }
 

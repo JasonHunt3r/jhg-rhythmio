@@ -183,6 +183,7 @@ public enum SetlistTSV {
         meta("default_background", colour(m.defaults.background))
         meta("video_clip_length", m.defaults.videoUsesClipLength ? "yes" : "no")
         meta("loop", m.defaults.loop ? "yes" : "no")
+        meta("frame_rate", String(m.defaults.frameRate.fps))
         for song in m.music { meta("music", song.file) }
         lines.append(columns.joined(separator: "\t"))
         for s in m.slides { lines.append(cells(for: s).joined(separator: "\t")) }
