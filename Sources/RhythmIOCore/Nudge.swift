@@ -150,11 +150,11 @@ extension ShowEditorState {
     /// One end of the range moved by one press, onto the frame grid
     /// (`spec/range-and-ruler.md`, "Constraints"): the range stays at least
     /// one frame long, an end pushed into the other stops there and never
-    /// swaps, and nothing goes below 0 or past `end` (the show's duration;
-    /// N6 lets the range run past it). Nil when it can't move: locked, no
-    /// such end, or already at the limit.
+    /// swaps, and nothing goes below 0 or past `end`. The app passes no
+    /// end: the range may run past the show's (B-05, N6). Nil when it
+    /// can't move: locked, no such end, or already at the limit.
     public func nudgingRange(_ which: RangeEnd, by delta: Double, grid: FrameGrid,
-                             end: Double) -> ShowEditorState? {
+                             end: Double = .greatestFiniteMagnitude) -> ShowEditorState? {
         guard !rangeLocked else { return nil }
         let frame = grid.frameLength
         var e = self

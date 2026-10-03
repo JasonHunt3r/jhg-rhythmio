@@ -94,6 +94,21 @@ final class RangeFillTests: XCTestCase {
         XCTAssertEqual(ot.slides.map(\.item.id), [1, 2, 10, 11, 2, 3])
     }
 
+    /// B-05: a range running past the show's end fills all of it, and the
+    /// show grows to its Out.
+    func testReplacePastTheEndGrowsTheShowToTheRangesOut() {
+        let (s, items) = show([4, 4, 4])  // 0-12
+        let t = ShowTimeline(show: s, items: items)
+        let plan = RangeFillPlan(itemIDs: [10, 11, 12], timing: .even, transition: nil, mode: .replace)
+        let out = RangeFill.apply(plan, to: s, timeline: t, rhythms: [:], in: 10...25)
+        var allItems = items
+        for id in [10, 11, 12] as [Int64] { allItems[id] = item(id) }
+        let ot = ShowTimeline(show: out, items: allItems)
+        XCTAssertEqual(ot.duration, 25, accuracy: 1e-9)
+        XCTAssertEqual(ot.slides.map(\.start), [0, 4, 8, 10, 15, 20])
+        XCTAssertEqual(ot.slides.map(\.item.id), [1, 2, 3, 10, 11, 12])
+    }
+
     func testReplaceAcrossTwoWholeSlidesRemovesWhatsBetween() {
         let (s, items) = show([4, 4, 4, 4])  // 0-4, 4-8, 8-12, 12-16
         let t = ShowTimeline(show: s, items: items)

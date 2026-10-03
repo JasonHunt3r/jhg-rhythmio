@@ -401,8 +401,8 @@ struct EditShowTimelinePane: View {
             return
         }
         guard let from = current.editor.time(of: end),
-              let editor = current.editor.nudgingRange(end, by: delta, grid: show.frameGrid,
-                                                       end: engine.duration),
+              // No end: the range may run past the show's (B-05).
+              let editor = current.editor.nudgingRange(end, by: delta, grid: show.frameGrid),
               let to = editor.time(of: end) else { return }
         var moved = current
         moved.editor = editor

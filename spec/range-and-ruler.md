@@ -7,7 +7,7 @@ clicks, Fill Range with Images). **Open work:** see `spec/backlog.md`
 B-06 selecting a marker to nudge it, B-11 exact In and Out, B-32 an edge
 case to read). Hands-on: `spec/shakedown.md`, "The range package".
 **B-05, B-06 and B-11 designed 2026-10-03** (Jason): "Nudging, timecode
-and exact In and Out", below, built in steps N1–N8 there. **N1–N5
+and exact In and Out", below, built in steps N1–N8 there. **N1–N6
 built 2026-10-03.**
 
 The range itself (I, O, its lines, the editing state it's saved in) was
@@ -103,7 +103,7 @@ From Jason's first-test notes (`spec/history/2026-09-24-work-order.md`).
 ## Nudging, timecode and exact In and Out (Jason, 2026-10-03)
 
 **Status:** Designed 2026-10-03 (B-05, B-06, B-11; B-02 is measured and
-fixed in the same batch). Building: N1–N5 built 2026-10-03. Jason's reply,
+fixed in the same batch). Building: N1–N6 built 2026-10-03. Jason's reply,
 recorded as given.
 
 **B-05.** The range is as long as needed, so it can place slides that
@@ -262,5 +262,12 @@ the timeline drawing (measured: shown at once, the flash was never seen).
 collide closer than N frames" (1–60) and Reset "Don't Show Again"
 Alerts; the Settings pages now open at their content's height (the
 Timeline and Windows pages had opened at 450 pt and scrolled) ·
-N6 B-05, the range past the end · N7 the Edit Range popover with its frame previews · N8 B-02's drag.
+N6 B-05, the range past the end — **built 2026-10-03**: range ends have no
+upper limit (`nudgingRange`'s `end` defaults to none; the drag lost its
+clamp); the timeline's content reaches the further of the show and the
+range, plus its 200 pt; Fill Range fills a range past the end and the
+show grows to Out. Limits: I and O stop at the end, as the playhead does;
+a range wholly past the end gets its fill after the last slide (slides
+sit back to back; no gaps); ⌘L loops through the background past the
+last slide · N7 the Edit Range popover with its frame previews · N8 B-02's drag.
 

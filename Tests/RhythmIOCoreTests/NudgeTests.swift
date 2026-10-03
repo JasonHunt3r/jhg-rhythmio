@@ -121,6 +121,12 @@ final class RangeNudgeTests: XCTestCase {
         XCTAssertEqual(o.rangeOut ?? 0, 10 + 1.0 / 30, accuracy: 1e-9)
     }
 
+    /// B-05: with no end given, Out runs past the show's.
+    func testTheRangeRunsPastTheShowByDefault() throws {
+        let e = try XCTUnwrap(range(10, 58).nudgingRange(.rangeOut, by: 15, grid: g))
+        XCTAssertEqual(e.rangeOut ?? 0, 73, accuracy: 1e-9)
+    }
+
     func testLimitsLocksAndMissingEnds() throws {
         XCTAssertNil(range(10, 20, locked: true).nudgingRange(.rangeIn, by: 1, grid: g, end: 60))
         XCTAssertNil(range(nil, 20).nudgingRange(.rangeIn, by: 1, grid: g, end: 60))

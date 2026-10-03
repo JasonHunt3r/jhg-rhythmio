@@ -325,8 +325,12 @@ struct StorylineView: View {
 
     /// The slides (with any trim in progress), or the longest row if one
     /// runs past them, plus room to drop things beyond the end.
+    /// The show, or a range end past it (B-05), whichever reaches further,
+    /// and room after it to drag into.
     private var contentWidth: CGFloat {
-        CGFloat(max(timeline.slides.reduce(0) { $0 + length($1) }, timeline.duration) * pps) + Self.inset * 2 + 200
+        let show = max(timeline.slides.reduce(0) { $0 + length($1) }, timeline.duration)
+        let range = max(displayRangeIn ?? 0, displayRangeOut ?? 0)
+        return CGFloat(max(show, range) * pps) + Self.inset * 2 + 200
     }
 
     /// The rows, vertically scrollable once they don't fit
@@ -728,9 +732,10 @@ struct StorylineView: View {
                 // On the frame grid, and at least a frame long (`spec/range-and-ruler.md`,
                 // "Timecode as the model" and "Constraints").
                 let grid = show.frameGrid
-                let otherBound = isIn ? (editor.rangeOut ?? timeline.duration) : (editor.rangeIn ?? 0)
+                // Past the show's end too (B-05): the range is as long as needed.
+                let otherBound = isIn ? (editor.rangeOut ?? .greatestFiniteMagnitude) : (editor.rangeIn ?? 0)
                 let clamped = isIn ? min(max(grid.snap(snappedTime), 0), otherBound - grid.frameLength)
-                                   : max(min(grid.snap(snappedTime), timeline.duration), otherBound + grid.frameLength)
+                                   : max(grid.snap(snappedTime), otherBound + grid.frameLength)
                 rangeEndDrag = RangeEndDrag(isIn: isIn, t: clamped)
                 focused = true
             }
