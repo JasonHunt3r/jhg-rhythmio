@@ -323,13 +323,70 @@ struct EditShowTimelinePane: View {
         }
     }
 
-    /// One frame of the show's frame rate (item 7, work order: "← → nudge
-    /// the playhead"). A deliberate nudge, so it's its own Go Back step (W8).
+    /// One frame of the show's frame rate: ← → on a row with nothing in
+    /// it to move to.
     private func nudgePlayhead(_ delta: Int, engine: PlaybackEngine) {
+        nudgePlayhead(by: Double(delta) * show.frameGrid.frameLength, engine: engine)
+    }
+
+    /// The playhead moved by the key ladder (B-06), onto the frame grid. A
+    /// deliberate nudge, so it's its own Go Back step (W8).
+    private func nudgePlayhead(by delta: Double, engine: PlaybackEngine) {
         recordPlayheadJump(engine)
         if engine.isPlaying { engine.pause() }
-        let t = engine.timeline.wrap(engine.now) + Double(delta) * engine.show.frameGrid.frameLength
-        engine.seek(min(max(t, 0), max(engine.duration - 0.001, 0)))
+        let now = engine.timeline.wrap(engine.now)
+        engine.seek(NudgeSettings.apply(delta, to: now, grid: show.frameGrid,
+                                        within: 0...max(engine.duration - 0.001, 0)))
+    }
+
+    /// ← → with their modifiers (`spec/range-and-ruler.md`, "B-06: keyboard
+    /// movement"). Selected markers take the key ladder; otherwise a row
+    /// with a selection keeps its own arrows (B-03: ← → through its items,
+    /// ⇧ extends); otherwise the playhead takes the ladder. ⌘ and ⌘⌥ (the
+    /// jumps) aren't built yet: N4.
+    private func horizontalArrow(_ event: NSEvent, engine: PlaybackEngine) -> Bool {
+        let direction = event.keyCode == 123 ? -1 : 1
+        let key: NudgeKey? = switch event.plainModifiers {
+        case []: .plain
+        case [.option]: .option
+        case [.shift]: .shift
+        case [.shift, .option, .command]: .shiftOptionCommand
+        case [.command]: .command
+        case [.command, .option]: .commandOption
+        default: nil
+        }
+        guard let key else { return false }
+        if session.selectedMarkers.isEmpty, currentRow != nil {
+            switch key {
+            case .plain: moveSelection(direction, extend: false, engine: engine)
+            case .shift: moveSelection(direction, extend: true, engine: engine)
+            default: return false
+            }
+            return true
+        }
+        guard case .by(let delta) = NudgeSettings.saved.move(key, direction: direction, grid: show.frameGrid)
+        else { return false }
+        if session.selectedMarkers.isEmpty {
+            nudgePlayhead(by: delta, engine: engine)
+        } else {
+            nudgeMarkers(by: delta, held: event.isARepeat, engine: engine)
+        }
+        return true
+    }
+
+    /// Selected markers moved by one press. A held arrow is one undo step:
+    /// the first press is the edit (its snapshot is what Undo restores),
+    /// and the repeats save without adding steps of their own.
+    private func nudgeMarkers(by delta: Double, held: Bool, engine: PlaybackEngine) {
+        let ids = session.selectedMarkers
+        let current = model.show(show.id) ?? show
+        guard let moved = current.nudgingMarkers(ids, by: delta, grid: show.frameGrid,
+                                                 duration: engine.duration) else { return }
+        if held {
+            model.update(moved)
+        } else {
+            mutate(ids.count == 1 ? "Nudge Marker" : "Nudge Markers") { $0 = moved }
+        }
     }
 
     // MARK: Go Back / Go Forward (W8, item 7; plan, "Go Back, not undo")
@@ -434,10 +491,7 @@ struct EditShowTimelinePane: View {
                     guard !(NSApp.keyWindow?.firstResponder is NSTableView),
                           !ListKeyboard.hasKeyboard(in: NSApp.keyWindow) else { return false }
                     selectAllSlides()
-                case (123, _, []): moveSelection(-1, extend: false, engine: engine)     // ←
-                case (123, _, [.shift]): moveSelection(-1, extend: true, engine: engine)
-                case (124, _, []): moveSelection(1, extend: false, engine: engine)      // →
-                case (124, _, [.shift]): moveSelection(1, extend: true, engine: engine)
+                case (123, _, _), (124, _, _): return horizontalArrow(event, engine: engine)   // ← →
                 case (126, _, []): moveRow(-1, engine: engine)                          // ↑
                 case (125, _, []): moveRow(1, engine: engine)                           // ↓
                 default: return false

@@ -507,6 +507,8 @@ struct SettingsView: View {
                 .tabItem { Label("Library", systemImage: "internaldrive") }
             EditingSettingsTab()
                 .tabItem { Label("Editing", systemImage: "pencil") }
+            TimelineSettingsTab()
+                .tabItem { Label("Timeline", systemImage: "ruler") }
             PlaybackSettingsTab()
                 .tabItem { Label("Playback", systemImage: "play.rectangle") }
             ExportSettingsTab()
@@ -619,6 +621,60 @@ private struct EditingSettingsTab: View {
                 Text("The notice that a slide removed from a show isn't moved to the Trash.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
+            }
+        }
+    }
+}
+
+/// Settings ▸ Timeline (`spec/range-and-ruler.md`, "B-06: keyboard
+/// movement"): the Nudge steps and which key gives one frame.
+private struct TimelineSettingsTab: View {
+    @AppStorage(NudgeSettings.defaultsKey) private var data = Data()
+
+    private var nudge: Binding<NudgeSettings> {
+        Binding(get: { NudgeSettings.decode(data) }, set: { data = $0.encoded })
+    }
+
+    var body: some View {
+        let n = nudge.wrappedValue
+        let stepKeys = n.fineKey == .option ? "← →" : "⌥ ← →"
+        let frameKeys = n.fineKey == .option ? "⌥ ← →" : "← →"
+        SettingsPage {
+            Section("Nudge") {
+                stepRow(stepKeys, nudge.step)
+                stepRow("⇧ ← →", nudge.shiftStep)
+                stepRow("⇧⌥⌘ ← →", nudge.bigStep)
+                LabeledContent("Exactly one frame") {
+                    Picker("", selection: nudge.fineKey) {
+                        Text("⌥ ← →").tag(NudgeSettings.FineKey.option)
+                        Text("← →").tag(NudgeSettings.FineKey.plainArrow)
+                    }
+                    .labelsHidden().pickerStyle(.segmented).fixedSize()
+                }
+                Text("The arrows move whatever's selected on the ruler — a marker, a range end — or the playhead when nothing is. \(frameKeys) always moves exactly one frame of the show's frame rate.")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+            }
+        }
+    }
+
+    private func stepRow(_ keys: String, _ step: Binding<NudgeSettings.Step>) -> some View {
+        LabeledContent(keys) {
+            HStack(spacing: 6) {
+                TextField("", value: Binding(get: { step.wrappedValue.value },
+                                             set: { v in
+                                                 // Frames are whole; nothing is zero or less.
+                                                 let unit = step.wrappedValue.unit
+                                                 step.wrappedValue.value = unit == .frames ? max(v.rounded(), 1) : max(v, 0.01)
+                                             }),
+                          format: .number)
+                    .labelsHidden()
+                    .multilineTextAlignment(.trailing)
+                    .frame(width: 64)
+                Picker("", selection: step.unit) {
+                    ForEach(NudgeSettings.Step.Unit.allCases, id: \.self) { Text($0.title).tag($0) }
+                }
+                .labelsHidden().fixedSize()
             }
         }
     }
