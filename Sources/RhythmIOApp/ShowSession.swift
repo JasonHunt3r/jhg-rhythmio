@@ -20,6 +20,29 @@ final class ShowSession {
     /// order: the inspector shows their info (B-04). Empty whenever
     /// anything in the show is selected.
     var inspectedFiles: [Int64] = []
+    /// The ruler's own selectable things (`spec/range-and-ruler.md`,
+    /// "Targeting and feedback"): a range end, or the playhead. Selecting one
+    /// clears every other selection, and any other selection clears them.
+    var selectedRangeEnd: RangeEnd?
+    var playheadSelected = false
+    /// The nudge readout: where the last run of presses left the thing it
+    /// moved, and how far that run moved it, until it fades (`token` tells
+    /// a newer run from the one a fade was scheduled for).
+    var nudgeReadout: NudgeReadout?
+
+    struct NudgeReadout: Equatable {
+        var time: Double
+        var delta: Double
+        var target: String
+        var token: Int
+    }
+
+    /// Lets go of the ruler's own selections (a range end, the playhead).
+    func clearRulerSelection() {
+        if selectedRangeEnd != nil { selectedRangeEnd = nil }
+        if playheadSelected { playheadSelected = false }
+    }
+
     /// Edit Show only: created when that mode is entered, torn down when
     /// it's left or another show opens (`EditShowView`'s own lifecycle,
     /// unchanged by this move).

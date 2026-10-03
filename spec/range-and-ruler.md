@@ -7,7 +7,7 @@ clicks, Fill Range with Images). **Open work:** see `spec/backlog.md`
 B-06 selecting a marker to nudge it, B-11 exact In and Out, B-32 an edge
 case to read). Hands-on: `spec/shakedown.md`, "The range package".
 **B-05, B-06 and B-11 designed 2026-10-03** (Jason): "Nudging, timecode
-and exact In and Out", below, built in steps N1–N8 there. **N1 and N2
+and exact In and Out", below, built in steps N1–N8 there. **N1–N3
 built 2026-10-03.**
 
 The range itself (I, O, its lines, the editing state it's saved in) was
@@ -103,7 +103,7 @@ From Jason's first-test notes (`spec/history/2026-09-24-work-order.md`).
 ## Nudging, timecode and exact In and Out (Jason, 2026-10-03)
 
 **Status:** Designed 2026-10-03 (B-05, B-06, B-11; B-02 is measured and
-fixed in the same batch). Building: N1 and N2 built 2026-10-03. Jason's reply,
+fixed in the same batch). Building: N1–N3 built 2026-10-03. Jason's reply,
 recorded as given.
 
 **B-05.** The range is as long as needed, so it can place slides that
@@ -227,7 +227,19 @@ both kinds (moved together, spacing kept, the earliest on the grid; a held
 arrow is one undo step: the first press is the edit, repeats save without
 steps). A row with a selection keeps its own arrows (B-03). ⌘ and ⌘⌥ wait
 for N4; the merge tolerance and the alerts reset come with N5 · N3 the
-playhead as a selectable object, range ends selectable, the readout ·
+playhead as a selectable object, range ends selectable, the readout —
+**built 2026-10-03**: a click (or a drag) selects a range end, yellow like
+a selected marker; a press within 6 pt of the playhead selects it without
+moving it (a yellow ring); any other ruler press deselects the ruler's
+things (markers, an end, the playhead) and scrubs as before, leaving
+slides selected; Esc clears them too. A selected end takes the ladder
+(`ShowEditorState.nudgingRange`), a locked range beeps. The readout is a
+capsule at the top of the ruler beside the thing, timecode and delta,
+presses close together adding up, gone 1.5 s after the last; it also
+shows for the playhead with nothing selected. Every way of setting an end
+(I/O, the range button's set-to-view and whole show, Set Range to Clip,
+a drag) lands on the frame grid, and a drag keeps a frame's length (was
+0.1 s). Still open for N7: a double-click on an end toggles its line ·
 N4 ⌘ and ⌘⌥ jumps · N5 marker collisions · N6 B-05, the range past the
 end · N7 the Edit Range popover with its frame previews · N8 B-02's drag.
 

@@ -153,7 +153,9 @@ struct EditShowTimelinePane: View {
     /// not `engine.updateEditor`. Locked ends still take the keys (a key
     /// is a deliberate act; only a drag or a modifier-click is refused).
     private func setRangeIn(_ engine: PlaybackEngine) {
-        let t = engine.roundedNow
+        // On the frame grid, like every way of setting an end
+        // (`spec/range-and-ruler.md`, "Timecode as the model").
+        let t = show.frameGrid.snap(engine.roundedNow)
         mutate("Set Range In") { s in
             s.editor.rangeIn = t
             if let o = s.editor.rangeOut, o <= t { s.editor.rangeOut = nil }
@@ -162,7 +164,7 @@ struct EditShowTimelinePane: View {
     }
 
     private func setRangeOut(_ engine: PlaybackEngine) {
-        let t = engine.roundedNow
+        let t = show.frameGrid.snap(engine.roundedNow)
         mutate("Set Range Out") { s in
             s.editor.rangeOut = t
             if let i = s.editor.rangeIn, i >= t { s.editor.rangeIn = nil }
@@ -186,8 +188,8 @@ struct EditShowTimelinePane: View {
         let hi = min(lo + Double(visibleWidth) / pps, timeline.duration)
         guard hi > lo + 0.05 else { return }
         mutate("Set Range") { s in
-            s.editor.rangeIn = (lo * 100).rounded() / 100
-            s.editor.rangeOut = (hi * 100).rounded() / 100
+            s.editor.rangeIn = show.frameGrid.snap(lo)
+            s.editor.rangeOut = show.frameGrid.snap(hi)
             s.editor.rangeOn = true
         }
     }
@@ -200,7 +202,7 @@ struct EditShowTimelinePane: View {
         guard timeline.duration > 0 else { return }
         mutate("Set Range") { s in
             s.editor.rangeIn = 0
-            s.editor.rangeOut = (timeline.duration * 100).rounded() / 100
+            s.editor.rangeOut = show.frameGrid.snap(timeline.duration)
             s.editor.rangeOn = true
         }
     }
@@ -335,15 +337,18 @@ struct EditShowTimelinePane: View {
         recordPlayheadJump(engine)
         if engine.isPlaying { engine.pause() }
         let now = engine.timeline.wrap(engine.now)
-        engine.seek(NudgeSettings.apply(delta, to: now, grid: show.frameGrid,
-                                        within: 0...max(engine.duration - 0.001, 0)))
+        let to = NudgeSettings.apply(delta, to: now, grid: show.frameGrid,
+                                     within: 0...max(engine.duration - 0.001, 0))
+        engine.seek(to)
+        showReadout("playhead", from: now, to: to)
     }
 
     /// ← → with their modifiers (`spec/range-and-ruler.md`, "B-06: keyboard
-    /// movement"). Selected markers take the key ladder; otherwise a row
-    /// with a selection keeps its own arrows (B-03: ← → through its items,
-    /// ⇧ extends); otherwise the playhead takes the ladder. ⌘ and ⌘⌥ (the
-    /// jumps) aren't built yet: N4.
+    /// movement"). Whatever's selected on the ruler takes the key ladder: a
+    /// range end, markers, or the playhead. Otherwise a row with a selection
+    /// keeps its own arrows (B-03: ← → through its items, ⇧ extends);
+    /// otherwise the playhead takes the ladder. ⌘ and ⌘⌥ (the jumps) aren't
+    /// built yet: N4.
     private func horizontalArrow(_ event: NSEvent, engine: PlaybackEngine) -> Bool {
         let direction = event.keyCode == 123 ? -1 : 1
         let key: NudgeKey? = switch event.plainModifiers {
@@ -356,7 +361,8 @@ struct EditShowTimelinePane: View {
         default: nil
         }
         guard let key else { return false }
-        if session.selectedMarkers.isEmpty, currentRow != nil {
+        let onRuler = session.selectedRangeEnd != nil || session.playheadSelected || !session.selectedMarkers.isEmpty
+        if !onRuler, currentRow != nil {
             switch key {
             case .plain: moveSelection(direction, extend: false, engine: engine)
             case .shift: moveSelection(direction, extend: true, engine: engine)
@@ -366,12 +372,50 @@ struct EditShowTimelinePane: View {
         }
         guard case .by(let delta) = NudgeSettings.saved.move(key, direction: direction, grid: show.frameGrid)
         else { return false }
-        if session.selectedMarkers.isEmpty {
-            nudgePlayhead(by: delta, engine: engine)
-        } else {
+        if let end = session.selectedRangeEnd {
+            nudgeRange(end, by: delta, held: event.isARepeat, engine: engine)
+        } else if !session.selectedMarkers.isEmpty {
             nudgeMarkers(by: delta, held: event.isARepeat, engine: engine)
+        } else {
+            nudgePlayhead(by: delta, engine: engine)
         }
         return true
+    }
+
+    /// A selected range end moved by one press (`ShowEditorState
+    /// .nudgingRange`): a frame long at least, never swapping. A locked
+    /// range beeps. A held arrow is one undo step, as with markers.
+    private func nudgeRange(_ end: RangeEnd, by delta: Double, held: Bool, engine: PlaybackEngine) {
+        let current = model.show(show.id) ?? show
+        if current.editor.rangeLocked {
+            if !held { NSSound.beep() }
+            return
+        }
+        guard let from = current.editor.time(of: end),
+              let editor = current.editor.nudgingRange(end, by: delta, grid: show.frameGrid,
+                                                       end: engine.duration),
+              let to = editor.time(of: end) else { return }
+        var moved = current
+        moved.editor = editor
+        if held {
+            model.update(moved)
+        } else {
+            mutate(end == .rangeIn ? "Nudge Range Start" : "Nudge Range End") { $0 = moved }
+        }
+        showReadout(end == .rangeIn ? "in" : "out", from: from, to: to)
+    }
+
+    /// Shows the readout for a move of `target` (the playhead, a range
+    /// end, the markers). Presses close together add up into one delta,
+    /// and it fades 1.5 s after the last.
+    private func showReadout(_ target: String, from: Double, to: Double) {
+        let carried = session.nudgeReadout.flatMap { $0.target == target ? $0.delta : nil } ?? 0
+        let token = (session.nudgeReadout?.token ?? 0) + 1
+        session.nudgeReadout = .init(time: to, delta: carried + (to - from), target: target, token: token)
+        let session = session
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+            if session.nudgeReadout?.token == token { session.nudgeReadout = nil }
+        }
     }
 
     /// Selected markers moved by one press. A held arrow is one undo step:
@@ -381,12 +425,15 @@ struct EditShowTimelinePane: View {
         let ids = session.selectedMarkers
         let current = model.show(show.id) ?? show
         guard let moved = current.nudgingMarkers(ids, by: delta, grid: show.frameGrid,
-                                                 duration: engine.duration) else { return }
+                                                 duration: engine.duration),
+              let from = current.markerTimes(ids).first?.time,
+              let to = moved.markerTimes(ids).first?.time else { return }
         if held {
             model.update(moved)
         } else {
             mutate(ids.count == 1 ? "Nudge Marker" : "Nudge Markers") { $0 = moved }
         }
+        showReadout("markers " + ids.map(\.uuidString).sorted().joined(), from: from, to: to)
     }
 
     // MARK: Go Back / Go Forward (W8, item 7; plan, "Go Back, not undo")

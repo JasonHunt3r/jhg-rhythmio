@@ -93,3 +93,41 @@ final class MarkerNudgeTests: XCTestCase {
         XCTAssertNil(show.nudgingMarkers([], by: 1, grid: FrameGrid(fps: 30), duration: 60))
     }
 }
+
+/// Range ends nudged (N3).
+final class RangeNudgeTests: XCTestCase {
+    let g = FrameGrid(fps: 30)
+
+    private func range(_ lo: Double?, _ hi: Double?, locked: Bool = false) -> ShowEditorState {
+        var e = ShowEditorState()
+        e.rangeIn = lo; e.rangeOut = hi; e.rangeLocked = locked
+        return e
+    }
+
+    func testAnEndMovesOnTheGrid() throws {
+        let e = try XCTUnwrap(range(10, 20).nudgingRange(.rangeIn, by: 1, grid: g, end: 60))
+        XCTAssertEqual(e.rangeIn ?? 0, 11, accuracy: 1e-9)
+        XCTAssertEqual(e.rangeOut, 20)
+        let o = try XCTUnwrap(range(10, 20).nudgingRange(.rangeOut, by: -1.0 / 30, grid: g, end: 60))
+        XCTAssertEqual(o.rangeOut ?? 0, 20 - 1.0 / 30, accuracy: 1e-9)
+    }
+
+    /// Pushed into the other end, it stops a frame short and never swaps.
+    func testTheRangeStaysAtLeastAFrameLong() throws {
+        let e = try XCTUnwrap(range(10, 12).nudgingRange(.rangeIn, by: 5, grid: g, end: 60))
+        XCTAssertEqual(e.rangeIn ?? 0, 12 - 1.0 / 30, accuracy: 1e-9)
+        XCTAssertNil(e.nudgingRange(.rangeIn, by: 5, grid: g, end: 60))
+        let o = try XCTUnwrap(range(10, 12).nudgingRange(.rangeOut, by: -15, grid: g, end: 60))
+        XCTAssertEqual(o.rangeOut ?? 0, 10 + 1.0 / 30, accuracy: 1e-9)
+    }
+
+    func testLimitsLocksAndMissingEnds() throws {
+        XCTAssertNil(range(10, 20, locked: true).nudgingRange(.rangeIn, by: 1, grid: g, end: 60))
+        XCTAssertNil(range(nil, 20).nudgingRange(.rangeIn, by: 1, grid: g, end: 60))
+        XCTAssertNil(range(0, 20).nudgingRange(.rangeIn, by: -1, grid: g, end: 60))
+        let o = try XCTUnwrap(range(10, 58).nudgingRange(.rangeOut, by: 15, grid: g, end: 60))
+        XCTAssertEqual(o.rangeOut, 60)
+        // With only an In, it can go up to the end.
+        XCTAssertEqual(range(59, nil).nudgingRange(.rangeIn, by: 5, grid: g, end: 60)?.rangeIn, 60)
+    }
+}

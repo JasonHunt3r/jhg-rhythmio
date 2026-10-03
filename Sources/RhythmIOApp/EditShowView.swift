@@ -61,19 +61,36 @@ struct EditShowView: View {
                     if !s.isEmpty {
                         session.selectedTransition = nil; session.selectedOverlay = nil
                         session.selectedSong = nil; session.selectedMarkers = []
-                        session.inspectedFiles = []
+                        session.inspectedFiles = []; session.clearRulerSelection()
                     }
                 }
                 .onChange(of: session.selectedOverlay) { _, o in
-                    if o != nil { session.selectedTransition = nil; session.selectedSong = nil; session.selectedMarkers = []; session.inspectedFiles = [] }
+                    if o != nil { session.selectedTransition = nil; session.selectedSong = nil; session.selectedMarkers = []; session.inspectedFiles = []; session.clearRulerSelection() }
                 }
-                .onChange(of: session.selectedSong) { _, o in if o != nil { session.selectedMarkers = [] } }
-                .onChange(of: session.selectedTransition) { _, o in if o != nil { session.selectedMarkers = [] } }
+                .onChange(of: session.selectedSong) { _, o in if o != nil { session.selectedMarkers = []; session.clearRulerSelection() } }
+                .onChange(of: session.selectedTransition) { _, o in if o != nil { session.selectedMarkers = []; session.clearRulerSelection() } }
                 .onChange(of: session.selectedMarkers) { _, m in
                     // Markers are selected on their own, so Delete knows what it's for.
                     if !m.isEmpty {
                         session.selection = []; session.selectedTransition = nil
                         session.selectedOverlay = nil; session.selectedSong = nil
+                        session.clearRulerSelection()
+                    }
+                }
+                // A range end or the playhead, selected on the ruler (N3):
+                // on its own, like markers, so the arrows know what to move.
+                .onChange(of: session.selectedRangeEnd) { _, e in
+                    if e != nil {
+                        session.selection = []; session.selectedTransition = nil
+                        session.selectedOverlay = nil; session.selectedSong = nil
+                        session.selectedMarkers = []; session.playheadSelected = false
+                    }
+                }
+                .onChange(of: session.playheadSelected) { _, on in
+                    if on {
+                        session.selection = []; session.selectedTransition = nil
+                        session.selectedOverlay = nil; session.selectedSong = nil
+                        session.selectedMarkers = []; session.selectedRangeEnd = nil
                     }
                 }
                 .task {

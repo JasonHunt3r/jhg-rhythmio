@@ -140,3 +140,40 @@ extension Show {
         return s
     }
 }
+
+/// A range end, as the ruler selects it (N3).
+public enum RangeEnd: Hashable, Sendable {
+    case rangeIn, rangeOut
+}
+
+extension ShowEditorState {
+    /// One end of the range moved by one press, onto the frame grid
+    /// (`spec/range-and-ruler.md`, "Constraints"): the range stays at least
+    /// one frame long, an end pushed into the other stops there and never
+    /// swaps, and nothing goes below 0 or past `end` (the show's duration;
+    /// N6 lets the range run past it). Nil when it can't move: locked, no
+    /// such end, or already at the limit.
+    public func nudgingRange(_ which: RangeEnd, by delta: Double, grid: FrameGrid,
+                             end: Double) -> ShowEditorState? {
+        guard !rangeLocked else { return nil }
+        let frame = grid.frameLength
+        var e = self
+        switch which {
+        case .rangeIn:
+            guard let t = rangeIn else { return nil }
+            let hi = (rangeOut.map { $0 - frame } ?? end)
+            let moved = NudgeSettings.apply(delta, to: t, grid: grid, within: 0...max(hi, 0))
+            guard moved != t else { return nil }
+            e.rangeIn = moved
+        case .rangeOut:
+            guard let t = rangeOut else { return nil }
+            let lo = (rangeIn.map { $0 + frame } ?? 0)
+            let moved = NudgeSettings.apply(delta, to: t, grid: grid, within: min(lo, end)...end)
+            guard moved != t else { return nil }
+            e.rangeOut = moved
+        }
+        return e
+    }
+
+    public func time(of which: RangeEnd) -> Double? { which == .rangeIn ? rangeIn : rangeOut }
+}

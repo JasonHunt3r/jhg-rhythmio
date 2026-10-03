@@ -93,6 +93,9 @@ struct StorylineView: View {
     /// Whether the current ruler drag has already pushed its Go Back step
     /// (W8, item 7) — reset when the drag ends.
     @State private var scrubJumpRecorded = false
+    /// What a press on the ruler started on (N3): the playhead itself
+    /// (selected, and not moved by the click), or empty space.
+    @State private var rulerPressOnPlayhead: Bool?
 
     /// A range end being dragged (W6, work order item 6): which one, and its
     /// time while the drag is in progress.
@@ -392,7 +395,8 @@ struct StorylineView: View {
                      setRange: { r in
                          guard !editor.rangeLocked else { NSSound.beep(); return }
                          mutate("Set Range") { s in
-                             s.editor.rangeIn = r.lowerBound; s.editor.rangeOut = r.upperBound
+                             s.editor.rangeIn = show.frameGrid.snap(r.lowerBound)
+                             s.editor.rangeOut = show.frameGrid.snap(r.upperBound)
                              s.editor.rangeOn = true
                          }
                      },
@@ -475,7 +479,11 @@ struct StorylineView: View {
                     rowsScrollView(placed, group)
                 }
                 .overlay(alignment: .topLeading) { linesThroughRows }
-                .overlay(alignment: .topLeading) { Playhead(engine: engine, timeline: timeline, pps: pps, inset: Self.inset) }
+                .overlay(alignment: .topLeading) {
+                    Playhead(engine: engine, timeline: timeline, pps: pps, inset: Self.inset,
+                             selected: session.playheadSelected)
+                }
+                .overlay(alignment: .topLeading) { nudgeReadout }
                 .coordinateSpace(name: "storyline")
                 // Inert: nothing inside takes the mouse or a drop, so the
                 // scroll view underneath gets the wheel.
@@ -559,15 +567,37 @@ struct StorylineView: View {
                 openDrawers = []
                 return .handled
             }
-            guard selectedOverlay != nil || selectedSong != nil || !selectedMarkers.isEmpty else { return .ignored }
+            guard selectedOverlay != nil || selectedSong != nil || !selectedMarkers.isEmpty
+                    || session.selectedRangeEnd != nil || session.playheadSelected else { return .ignored }
             selectedOverlay = nil
             selectedSong = nil
             selectedMarkers = []
+            session.clearRulerSelection()
             return .handled
         }
     }
 
     // MARK: Markers and the range
+
+    /// The nudge readout (`spec/range-and-ruler.md`, "Targeting and
+    /// feedback"): where the last presses left the thing, and how far they
+    /// moved it, in the show's timecode. Light: text on a small capsule
+    /// beside it, at the top of the ruler, gone a moment after the last press.
+    @ViewBuilder private var nudgeReadout: some View {
+        if let r = session.nudgeReadout {
+            let grid = show.frameGrid
+            HStack(spacing: 6) {
+                Text(grid.format(r.time))
+                Text(grid.formatDelta(r.delta)).foregroundStyle(.secondary)
+            }
+            .font(.caption2.monospacedDigit())
+            .padding(.horizontal, 6).padding(.vertical, 1)
+            .background(Capsule().fill(.regularMaterial))
+            .fixedSize()
+            .offset(x: Self.inset + CGFloat(r.time * pps) + 9, y: 1)
+            .allowsHitTesting(false)
+        }
+    }
 
     /// The show's editing state (range, lines), from the saved show, which
     /// SwiftUI observes.
@@ -614,13 +644,15 @@ struct StorylineView: View {
 
     private func rangeEnd(_ x: CGFloat, isIn: Bool, on: Bool, locked: Bool) -> some View {
         let w: CGFloat = 7, h = Self.rulerHeight
+        let selected = session.selectedRangeEnd == (isIn ? RangeEnd.rangeIn : .rangeOut)
+        let fill: Color = selected ? .yellow : .blue.opacity(on ? (locked ? 0.55 : 1) : 0.4)
         return Path { p in
             p.move(to: CGPoint(x: 0, y: 0))
             p.addLine(to: CGPoint(x: 0, y: 10))
             p.addLine(to: CGPoint(x: isIn ? w : -w, y: 10))
             p.closeSubpath()
         }
-        .fill(Color.blue.opacity(on ? (locked ? 0.55 : 1) : 0.4))
+        .fill(fill)
         .frame(width: w, height: 10)
         .padding(.horizontal, 2)
         .contentShape(Rectangle())
@@ -635,7 +667,12 @@ struct StorylineView: View {
         // (above) need to differ by direction, not this placement math.
         .offset(x: x - 2, y: h - 10)
         .onTapGesture {
-            guard (NSApp.currentEvent?.clickCount ?? 1) >= 2 else { return }
+            // A click selects the end, for the arrows (N3).
+            guard (NSApp.currentEvent?.clickCount ?? 1) >= 2 else {
+                session.selectedRangeEnd = isIn ? .rangeIn : .rangeOut
+                focused = true
+                return
+            }
             if NSEvent.modifierFlags.contains(.option) {
                 engine.updateEditor { $0.rangeLines.toggle() }
             } else {
@@ -677,14 +714,20 @@ struct StorylineView: View {
     private func rangeEndDragGesture(isIn: Bool) -> some Gesture {
         DragGesture(minimumDistance: 2, coordinateSpace: .named("storyline"))
             .onChanged { g in
+                // Dragging an end selects it too, so the arrows carry on.
+                let end: RangeEnd = isIn ? .rangeIn : .rangeOut
+                if session.selectedRangeEnd != end { session.selectedRangeEnd = end }
                 guard !editor.rangeLocked else { return }
                 let base = rangeEndDrag?.isIn == isIn ? rangeEndDrag!.t : (isIn ? editor.rangeIn : editor.rangeOut) ?? 0
                 let raw = base + Double(g.translation.width) / pps
                 let snappedTime = snap.flatMap { Snap.nearest(raw, in: $0.targets, within: $0.tolerance) } ?? raw
+                // On the frame grid, and at least a frame long (`spec/range-and-ruler.md`,
+                // "Timecode as the model" and "Constraints").
+                let grid = show.frameGrid
                 let otherBound = isIn ? (editor.rangeOut ?? timeline.duration) : (editor.rangeIn ?? 0)
-                let clamped = isIn ? min(max(snappedTime, 0), otherBound - 0.1)
-                                   : max(min(snappedTime, timeline.duration), otherBound + 0.1)
-                rangeEndDrag = RangeEndDrag(isIn: isIn, t: (clamped * 100).rounded() / 100)
+                let clamped = isIn ? min(max(grid.snap(snappedTime), 0), otherBound - grid.frameLength)
+                                   : max(min(grid.snap(snappedTime), timeline.duration), otherBound + grid.frameLength)
+                rangeEndDrag = RangeEndDrag(isIn: isIn, t: clamped)
                 focused = true
             }
             .onEnded { _ in
@@ -1444,6 +1487,7 @@ struct StorylineView: View {
         selectedOverlay = nil
         selectedSong = nil
         selectedMarkers = []
+        session.clearRulerSelection()
         focused = true
     }
 
@@ -1461,12 +1505,31 @@ struct StorylineView: View {
     private var scrubGesture: some Gesture {
         DragGesture(minimumDistance: 0, coordinateSpace: .local)
             .onChanged { g in
+                if rulerPressOnPlayhead == nil { rulerPressOnPlayhead = pressRuler(atX: g.startLocation.x) }
+                // A click on the playhead selects it without nudging it.
+                if rulerPressOnPlayhead == true, g.translation.width == 0 { return }
                 recordScrubJump()
                 if engine.isPlaying { engine.pause() }
                 let t = max(0, Double(g.location.x - Self.inset) / pps)
                 engine.seek(min(t, max(timeline.duration - 0.001, 0)))
             }
-            .onEnded { _ in scrubJumpRecorded = false }
+            .onEnded { _ in scrubJumpRecorded = false; rulerPressOnPlayhead = nil }
+    }
+
+    /// A press on the ruler (`spec/range-and-ruler.md`, "Targeting and
+    /// feedback"): within 6 points of the playhead it selects the playhead;
+    /// anywhere else it lets go of the ruler's selections (markers, a range
+    /// end, the playhead). True when it was the playhead.
+    private func pressRuler(atX x: CGFloat) -> Bool {
+        let playheadX = Self.inset + CGFloat(timeline.wrap(engine.now) * pps)
+        focused = true
+        if abs(x - playheadX) <= 6 {
+            session.playheadSelected = true
+            return true
+        }
+        if !selectedMarkers.isEmpty { selectedMarkers = [] }
+        session.clearRulerSelection()
+        return false
     }
 
     /// The same seek as `scrubGesture`, in the "storyline" named space
@@ -1476,12 +1539,14 @@ struct StorylineView: View {
     private var rangeScrubGesture: some Gesture {
         DragGesture(minimumDistance: 0, coordinateSpace: .named("storyline"))
             .onChanged { g in
+                if rulerPressOnPlayhead == nil { rulerPressOnPlayhead = pressRuler(atX: g.startLocation.x) }
+                if rulerPressOnPlayhead == true, g.translation.width == 0 { return }
                 recordScrubJump()
                 if engine.isPlaying { engine.pause() }
                 let t = max(0, Double(g.location.x - Self.inset) / pps)
                 engine.seek(min(t, max(timeline.duration - 0.001, 0)))
             }
-            .onEnded { _ in scrubJumpRecorded = false }
+            .onEnded { _ in scrubJumpRecorded = false; rulerPressOnPlayhead = nil }
     }
 
     /// One Go Back step per click-and-release or scrub drag (W8, item 7;
@@ -1702,6 +1767,8 @@ struct Playhead: View {
     let timeline: ShowTimeline
     let pps: Double
     let inset: CGFloat
+    /// Selected on the ruler (N3): a yellow ring on its head.
+    var selected = false
 
     var body: some View {
         TimelineView(.animation(minimumInterval: 1 / 60, paused: !engine.isPlaying)) { _ in
@@ -1711,7 +1778,8 @@ struct Playhead: View {
                 Image(systemName: "arrowtriangle.down.fill")
                     .font(.system(size: 10))
                     .foregroundStyle(.red)
-                Rectangle().fill(.red).frame(width: 2)
+                    .background(selected ? Circle().fill(Color.yellow.opacity(0.85)).frame(width: 15, height: 15) : nil)
+                Rectangle().fill(.red).frame(width: selected ? 3 : 2)
             }
             .frame(width: 12)
             .offset(x: x - 6)
