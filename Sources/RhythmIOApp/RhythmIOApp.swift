@@ -535,6 +535,10 @@ struct SettingsView: View {
 /// no case yet where a fixed width doesn't fit this content.
 private struct SettingsPage<Content: View>: View {
     @ViewBuilder var content: Content
+    /// The form's own height: a scroll view has none to offer, so without
+    /// it the window opened short and a long page (Timeline, 2026-10-03)
+    /// hid its last rows below a scroll nobody would guess at.
+    @State private var contentHeight: CGFloat?
 
     static var width: CGFloat { 640 }
 
@@ -547,9 +551,12 @@ private struct SettingsPage<Content: View>: View {
         ScrollView {
             Form { content }
                 .formStyle(.grouped)
+                .scrollDisabled(true)
                 .padding(.bottom, 8)
+                .onGeometryChange(for: CGFloat.self, of: \.size.height) { contentHeight = $0 }
         }
         .frame(width: Self.width)
+        .frame(height: contentHeight.map { min($0, maxHeight) })
         .frame(maxHeight: maxHeight)
     }
 }
@@ -654,6 +661,18 @@ private struct TimelineSettingsTab: View {
                 Text("The arrows move whatever's selected on the ruler — a marker, a range end — or the playhead when nothing is. \(frameKeys) always moves exactly one frame of the show's frame rate. ⌘ ← → jumps to the next marker (on a selected marker, the selection hops instead), ⌘⌥ ← → to the next detected beat.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
+                LabeledContent("Markers collide closer than") {
+                    Stepper("\(n.mergeTolerance) frame\(n.mergeTolerance == 1 ? "" : "s")",
+                            value: nudge.mergeTolerance, in: 1...60)
+                }
+                Text("Two markers of the same kind can't sit closer than this. Placing one there replaces the one that was there; dragging or nudging one there puts it back. At 1, only the same frame collides.")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                LabeledContent("Alerts") {
+                    Button("Reset “Don't Show Again” Alerts") {
+                        UserDefaults.standard.removeObject(forKey: MarkerCollisionNotice.suppressKey)
+                    }
+                }
             }
         }
     }

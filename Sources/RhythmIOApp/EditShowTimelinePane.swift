@@ -134,11 +134,16 @@ struct EditShowTimelinePane: View {
     }
 
     /// M, while listening: a marker at the playhead, on the show's clock.
-    /// Not a second one on top of one already there.
+    /// One placed where another sits (within the merge tolerance) replaces
+    /// it, at the new place (`spec/range-and-ruler.md`, "Marker
+    /// collisions"); one undo step brings both back.
     private func addMarker(_ engine: PlaybackEngine) {
         let t = (engine.timeline.wrap(engine.now) * 100).rounded() / 100
-        guard !show.markers.contains(where: { abs($0.time - t) < 0.05 }) else { return }
-        mutate("Add Marker") { $0.markers.append(Marker(time: t)) }
+        let current = model.show(show.id) ?? show
+        let (placed, merged) = current.placingMarker(at: t, tolerance: NudgeSettings.saved.mergeTolerance,
+                                                     grid: show.frameGrid)
+        mutate("Add Marker") { $0 = placed }
+        if merged { MarkerCollisionNotice.showSoon(merged: true) }
     }
 
     private func fitStoryline() {
@@ -411,6 +416,23 @@ struct EditShowTimelinePane: View {
 
     // MARK: ⌘ and ⌘⌥ jumps (`spec/range-and-ruler.md`, N4)
 
+    /// The end of an arrow held on selected markers: released on a marker of
+    /// their kind, they go back to where the hold started — the first
+    /// press's own undo step, animated — with the beep and the flash, once
+    /// per hold.
+    private func arrowReleased(_ event: NSEvent) {
+        guard event.keyCode == 123 || event.keyCode == 124, let hold = session.markerHold else { return }
+        session.markerHold = nil
+        guard hold == .moving else { return }
+        let ids = session.selectedMarkers
+        let current = model.show(show.id) ?? show
+        guard current.markersCollide(ids, tolerance: NudgeSettings.saved.mergeTolerance,
+                                     grid: show.frameGrid) else { return }
+        withAnimation(.easeOut(duration: 0.25)) { undoManager?.undo() }
+        session.flashCollision(ids)
+        MarkerCollisionNotice.showSoon(merged: false)
+    }
+
     /// ⌘ ← →. On selected markers it moves the *selection* to the next
     /// marker (the markers stay), so: nudge one, hop, nudge the next. On a
     /// range end or the playhead it moves that to the next marker.
@@ -450,7 +472,8 @@ struct EditShowTimelinePane: View {
             let ids = session.selectedMarkers
             guard let from = current.markerTimes(ids).first?.time,
                   let moved = current.movingMarkersToNextBeat(ids, direction: direction, beats: beats,
-                                                              duration: engine.duration, grid: show.frameGrid),
+                                                              duration: engine.duration, grid: show.frameGrid,
+                                                              tolerance: NudgeSettings.saved.mergeTolerance),
                   let to = moved.markerTimes(ids).first?.time else { return }
             if held { model.update(moved) } else {
                 mutate(ids.count == 1 ? "Move Marker to Beat" : "Move Markers to Beat") { $0 = moved }
@@ -508,8 +531,14 @@ struct EditShowTimelinePane: View {
     /// Selected markers moved by one press. A held arrow is one undo step:
     /// the first press is the edit (its snapshot is what Undo restores),
     /// and the repeats save without adding steps of their own.
+    ///
+    /// Collisions (N5): a press that would land on a marker of its kind is
+    /// refused (beep, red flash), and so is the rest of that hold. A hold
+    /// may pass other markers; one released on one goes back to where the
+    /// hold started (`arrowReleased`).
     private func nudgeMarkers(by delta: Double, held: Bool, engine: PlaybackEngine) {
         let ids = session.selectedMarkers
+        if held, session.markerHold == .refused { return }
         let current = model.show(show.id) ?? show
         guard let moved = current.nudgingMarkers(ids, by: delta, grid: show.frameGrid,
                                                  duration: engine.duration),
@@ -518,6 +547,13 @@ struct EditShowTimelinePane: View {
         if held {
             model.update(moved)
         } else {
+            if moved.markersCollide(ids, tolerance: NudgeSettings.saved.mergeTolerance, grid: show.frameGrid) {
+                session.markerHold = .refused
+                session.flashCollision(ids)
+                MarkerCollisionNotice.showSoon(merged: false)
+                return
+            }
+            session.markerHold = .moving
             mutate(ids.count == 1 ? "Nudge Marker" : "Nudge Markers") { $0 = moved }
         }
         showReadout("markers " + ids.map(\.uuidString).sorted().joined(), from: from, to: to)
@@ -631,6 +667,8 @@ struct EditShowTimelinePane: View {
                 default: return false
                 }
                 return true
+            } released: { event in
+                arrowReleased(event)
             }
         }
         .opacity(0)

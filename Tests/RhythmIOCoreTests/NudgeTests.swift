@@ -180,3 +180,44 @@ final class JumpTests: XCTestCase {
         XCTAssertNil(show.movingMarkersToNextBeat([hand], direction: 1, beats: [], duration: 60, grid: g))
     }
 }
+
+/// Marker collisions (N5).
+final class MarkerCollisionTests: XCTestCase {
+    let g = FrameGrid(fps: 30)
+
+    func testToleranceIsInFramesAndOneMeansTheSameFrame() {
+        XCTAssertTrue(g.collide(10, 10 + 4.0 / 30, tolerance: 5))
+        XCTAssertFalse(g.collide(10, 10 + 5.0 / 30, tolerance: 5))
+        XCTAssertTrue(g.collide(10, 10.01, tolerance: 1))           // the same frame
+        XCTAssertFalse(g.collide(10, 10 + 1.0 / 30, tolerance: 1))
+        XCTAssertTrue(g.collide(10, 10, tolerance: 0))               // never below 1
+    }
+
+    /// Placing merges hand markers only, at the newest placement.
+    func testPlacingCollapsesTheOldOneIntoTheNew() {
+        var clip = AudioClip(itemID: 1, start: 0, length: 60)
+        clip.markers = [Marker(time: 10.05)]                         // a beat marker nearby
+        let show = Show(id: 1, name: "s", music: [clip], markers: [Marker(time: 10), Marker(time: 20)])
+        let (placed, merged) = show.placingMarker(at: 10.1, tolerance: 5, grid: g)
+        XCTAssertTrue(merged)
+        XCTAssertEqual(placed.markers.map(\.time).sorted(), [10.1, 20])
+        XCTAssertEqual(placed.music[0].markers.count, 1)               // the other kind stays
+        let (apart, none) = show.placingMarker(at: 15, tolerance: 5, grid: g)
+        XCTAssertFalse(none)
+        XCTAssertEqual(apart.markers.count, 3)
+    }
+
+    func testMovedMarkersCollideOnlyWithTheirKindOutsideTheSelection() {
+        var clip = AudioClip(itemID: 1, start: 0, length: 60)
+        let beat = Marker(time: 12)
+        clip.markers = [beat]
+        let a = Marker(time: 10), b = Marker(time: 10.1), c = Marker(time: 30)
+        let show = Show(id: 1, name: "s", music: [clip], markers: [a, b, c])
+        XCTAssertTrue(show.markersCollide([a.id], tolerance: 5, grid: g))      // b is near
+        XCTAssertFalse(show.markersCollide([a.id, b.id], tolerance: 5, grid: g)) // moving together
+        XCTAssertFalse(show.markersCollide([c.id], tolerance: 5, grid: g))
+        var near = show
+        near.markers[2].time = 12.05                                  // by the beat marker
+        XCTAssertFalse(near.markersCollide([c.id], tolerance: 5, grid: g))   // different kind
+    }
+}

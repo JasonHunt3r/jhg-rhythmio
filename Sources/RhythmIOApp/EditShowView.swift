@@ -713,12 +713,15 @@ struct ClickTakesKeyboard: NSViewRepresentable {
 /// held ⇧-arrow keeps extending, as everywhere on the Mac.
 struct SingleKeys: NSViewRepresentable {
     let handle: (NSEvent) -> Bool
+    /// The release of a key `handle` used (an arrow's end of a hold, N5).
+    var released: ((NSEvent) -> Void)? = nil
 
     func makeNSView(context: Context) -> KeyView { KeyView() }
-    func updateNSView(_ view: KeyView, context: Context) { view.handle = handle }
+    func updateNSView(_ view: KeyView, context: Context) { view.handle = handle; view.released = released }
 
     final class KeyView: NSView {
         var handle: ((NSEvent) -> Bool)?
+        var released: ((NSEvent) -> Void)?
         private var monitor: Any?
         /// The key last used, so its auto-repeats are swallowed too.
         private var held: UInt16?
@@ -739,7 +742,10 @@ struct SingleKeys: NSViewRepresentable {
             guard let window, event.window === window, window.attachedSheet == nil,
                   !(window.firstResponder is NSText) else { return false }
             if event.type == .keyUp {
-                if event.keyCode == held { held = nil }
+                if event.keyCode == held {
+                    held = nil
+                    released?(event)
+                }
                 return false
             }
             if event.isARepeat, !(123...126).contains(event.keyCode) { return event.keyCode == held }

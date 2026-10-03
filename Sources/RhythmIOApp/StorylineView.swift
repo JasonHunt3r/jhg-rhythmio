@@ -755,7 +755,8 @@ struct StorylineView: View {
         ForEach(markerTimes, id: \.marker.id) { m, t, song in
             let selected = selectedMarkers.contains(m.id)
             MarkerShape()
-                .fill(selected ? Color.yellow : song == nil ? Color.orange : Color.teal)
+                .fill(session.collidedMarkers.contains(m.id) ? Color.red
+                      : selected ? Color.yellow : song == nil ? Color.orange : Color.teal)
                 .overlay(MarkerShape().stroke(Color.black.opacity(0.5), lineWidth: 0.5))
                 .frame(width: 9, height: 11)
                 .padding(.horizontal, 3)
@@ -848,13 +849,21 @@ struct StorylineView: View {
             }
             .onEnded { _ in
                 guard let d = markerDrag else { return }
-                markerDrag = nil
-                guard d.dt != 0 else { return }
-                mutate(d.ids.count == 1 ? "Move Marker" : "Move Markers") { s in
-                    for id in d.ids {
-                        s.updateMarker(id) { $0.time = max((($0.time + d.dt) * 100).rounded() / 100, 0) }
-                    }
+                guard d.dt != 0 else { markerDrag = nil; return }
+                var moved = show
+                for id in d.ids {
+                    moved.updateMarker(id) { $0.time = max((($0.time + d.dt) * 100).rounded() / 100, 0) }
                 }
+                // Released on a marker of its kind (N5): it goes back, with
+                // the beep and a red flash, and nothing is saved.
+                if moved.markersCollide(d.ids, tolerance: NudgeSettings.saved.mergeTolerance, grid: show.frameGrid) {
+                    withAnimation(.easeOut(duration: 0.25)) { markerDrag = nil }
+                    session.flashCollision(d.ids)
+                    MarkerCollisionNotice.showSoon(merged: false)
+                    return
+                }
+                markerDrag = nil
+                mutate(d.ids.count == 1 ? "Move Marker" : "Move Markers") { $0 = moved }
             }
     }
 

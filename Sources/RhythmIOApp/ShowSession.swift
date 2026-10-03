@@ -1,4 +1,4 @@
-import Foundation
+import AppKit
 import CoreGraphics
 import RhythmIOCore
 import RhythmIOPlayback
@@ -37,6 +37,26 @@ final class ShowSession {
         var token: Int
         /// Shown instead of the timecode: "No beats detected."
         var message: String? = nil
+    }
+
+    /// Markers flashing red after a collision (N5): put back where they
+    /// were, or refused.
+    var collidedMarkers: Set<UUID> = []
+
+    /// An arrow held on selected markers (N5): moving (the first press was
+    /// the edit) or refused (the first press would have collided, so the
+    /// repeats are ignored and it beeps once).
+    enum MarkerHold { case moving, refused }
+    var markerHold: MarkerHold?
+
+    /// Flashes markers red for a moment, with the system beep (sound may be
+    /// muted, so the flash matters).
+    func flashCollision(_ ids: Set<UUID>) {
+        NSSound.beep()
+        collidedMarkers = ids
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { [weak self] in
+            if self?.collidedMarkers == ids { self?.collidedMarkers = [] }
+        }
     }
 
     /// Lets go of the ruler's own selections (a range end, the playhead).

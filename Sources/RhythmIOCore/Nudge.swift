@@ -217,13 +217,15 @@ extension Show {
     /// them, skipping beats a marker of the same kind already holds (one
     /// of these selected ones doesn't count), and the markers moved
     /// together so the earliest lands on it. Nil when there's no such beat.
+    /// "Holds" uses the collision rule, so the move never lands in a
+    /// collision (`tolerance` in frames; 1 is the same frame only).
     public func movingMarkersToNextBeat(_ ids: Set<UUID>, direction: Int, beats: [Double],
-                                        duration: Double, grid: FrameGrid) -> Show? {
+                                        duration: Double, grid: FrameGrid, tolerance: Int = 1) -> Show? {
         let selected = rulerMarkers.filter { ids.contains($0.id) }
         guard let anchor = selected.first else { return nil }
         let half = grid.frameLength / 2
         let others = rulerMarkers.filter { !ids.contains($0.id) && $0.isBeat == anchor.isBeat }.map(\.time)
-        let free = beats.filter { b in !others.contains { abs($0 - b) < half } }
+        let free = beats.filter { b in !others.contains { grid.collide($0, b, tolerance: tolerance) } }
         guard let beat = Jump.next(from: anchor.time, direction: direction, in: free, within: half)
         else { return nil }
         let move = beat - anchor.time
@@ -231,5 +233,47 @@ extension Show {
         var s = self
         for m in selected { s.updateMarker(m.id) { $0.time += move } }
         return s
+    }
+}
+
+// MARK: Marker collisions (N5)
+
+extension FrameGrid {
+    /// Two times collide when they're fewer than `tolerance` frames apart
+    /// (`spec/range-and-ruler.md`, "Marker collisions"): at 1, only the same
+    /// frame.
+    public func collide(_ a: Double, _ b: Double, tolerance: Int) -> Bool {
+        abs(frame(a) - frame(b)) < max(tolerance, 1)
+    }
+}
+
+extension Show {
+    /// Markers of one kind (hand-placed, or detected) that collide with a
+    /// time, leaving out `excluding`.
+    public func markers(colliding t: Double, isBeat: Bool, excluding: Set<UUID> = [],
+                        tolerance: Int, grid: FrameGrid) -> [UUID] {
+        rulerMarkers.filter { $0.isBeat == isBeat && !excluding.contains($0.id)
+            && grid.collide($0.time, t, tolerance: tolerance) }.map(\.id)
+    }
+
+    /// True when any of these markers (where they are now) collides with a
+    /// marker of its kind outside them. Markers inside the set move
+    /// together and keep their spacing, so they're not checked against
+    /// each other.
+    public func markersCollide(_ ids: Set<UUID>, tolerance: Int, grid: FrameGrid) -> Bool {
+        rulerMarkers.filter { ids.contains($0.id) }.contains { m in
+            !markers(colliding: m.time, isBeat: m.isBeat, excluding: ids, tolerance: tolerance, grid: grid).isEmpty
+        }
+    }
+
+    /// A hand-placed marker at `t`: hand-placed ones colliding with it
+    /// collapse into it, and it sits at the newest placement. `merged` says
+    /// whether any did.
+    public func placingMarker(at t: Double, tolerance: Int, grid: FrameGrid) -> (show: Show, merged: Bool) {
+        let gone = Set(markers(colliding: t, isBeat: false, tolerance: tolerance, grid: grid))
+        var s = self
+        s.markers.removeAll { gone.contains($0.id) }
+        s.markers.append(Marker(time: t))
+        return (s, !gone.isEmpty)
     }
 }
