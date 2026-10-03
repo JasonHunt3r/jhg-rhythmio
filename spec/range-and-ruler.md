@@ -195,6 +195,19 @@ The ruler, the popover and the readouts show the same value. The frame
 rate is the show's export frame rate (24, 30 or 60); the playhead's
 hard-wired 30 fps becomes per show.
 
+### Edit Range's waveform (Jason, 2026-10-03)
+
+Asked after N7: the fields in a row, and between them and the frames,
+the waveform of the audio in the range, with the section's rhythmic
+analysis to show, and beat markers on or off. Settled by Q&A: a Show
+popover switching each of beats, bars, sections, tempo (with ×2 / ÷2),
+beat markers and show markers; In and Out as handles on the waveform,
+snapping to what's showing; one strip, each clip where it sits. **Built
+2026-10-03** (`RangeWaveformStrip`): the strip shows the range and 15 %
+either side (½ s at least), holding still during a drag; outside the
+range dimmed; the switches remembered (`RangeDisplay`); nothing saved
+until Apply.
+
 ### Settled with Jason (2026-10-03, all four as proposed)
 
 1. **B-05 against "clamp to the show's duration".** The range's

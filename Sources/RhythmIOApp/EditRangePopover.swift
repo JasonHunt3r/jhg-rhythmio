@@ -54,13 +54,16 @@ struct EditRangePopover: View {
                 preview("IN", inFrame, at: inOK ? inValue : nil)
                 preview("OUT", outFrame, at: outOK ? outValue : nil)
             }
-            Text(lengthOK ? "Length \(grid.format(lengthValue ?? 0))" : "Length —")
-                .font(.callout.monospacedDigit())
-                .foregroundStyle(.secondary)
-            Grid(alignment: .trailing, horizontalSpacing: 8, verticalSpacing: 6) {
-                fieldRow("In", $inText, ok: inOK, field: .rangeIn)
-                fieldRow("Out", $outText, ok: outOK, field: .rangeOut)
-                fieldRow("Length", $lengthText, ok: lengthOK, field: .length)
+            // The audio in and around the range (Jason, 2026-10-03), with
+            // In and Out to drag.
+            RangeWaveformStrip(show: show, rangeIn: inOK ? inValue : nil, rangeOut: outOK ? outValue : nil,
+                               setIn: dragIn, setOut: dragOut)
+                .frame(width: Self.frameSize.width * 2 + 10)
+            // The fields in a row (Jason, 2026-10-03).
+            HStack(spacing: 14) {
+                field("In", $inText, ok: inOK, field: .rangeIn)
+                field("Out", $outText, ok: outOK, field: .rangeOut)
+                field("Length", $lengthText, ok: lengthOK, field: .length)
             }
             Text("m:ss:ff at \(show.defaults.frameRate.name) · also 83, 1:23 or 2490f")
                 .font(.caption)
@@ -87,19 +90,35 @@ struct EditRangePopover: View {
 
     // MARK: The fields
 
-    private func fieldRow(_ title: String, _ text: Binding<String>, ok: Bool, field: Field) -> some View {
-        GridRow {
+    private func field(_ title: String, _ text: Binding<String>, ok: Bool, field: Field) -> some View {
+        HStack(spacing: 6) {
             Text(title).foregroundStyle(.secondary)
             TextField("", text: text)
                 .font(.body.monospacedDigit())
                 .multilineTextAlignment(.trailing)
-                .frame(width: 110)
+                .frame(width: 86)
                 .focused($focus, equals: field)
                 .foregroundStyle(ok ? Color.primary : Color.red)
                 .overlay(RoundedRectangle(cornerRadius: 5).strokeBorder(ok ? Color.clear : Color.red, lineWidth: 1.5))
                 .onSubmit(apply)
                 .numberStepping(announce: true) { text, direction, size in stepTimecode(text, direction, size, field: field) }
         }
+    }
+
+    /// In dragged on the waveform: Out stays, Length follows, and In stops
+    /// a frame short of Out; the frame redraws at once.
+    private func dragIn(_ t: Double) {
+        let upper = (outValue ?? .greatestFiniteMagnitude) - grid.frameLength
+        inText = grid.format(max(min(t, upper), 0))
+        stepped = true
+        followIn()
+    }
+
+    /// Out dragged: In stays, Length follows, Out a frame past In at least.
+    private func dragOut(_ t: Double) {
+        outText = grid.format(max(t, (inValue ?? 0) + grid.frameLength))
+        stepped = true
+        followOut()
     }
 
     /// ↑ ↓ or a swipe on a timecode field: the Nudge ladder (the step, one
