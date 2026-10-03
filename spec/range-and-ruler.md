@@ -6,6 +6,9 @@ clicks, Fill Range with Images). **Open work:** see `spec/backlog.md`
 (B-02 the end dragging faster than the mouse, B-05 past the show's end,
 B-06 selecting a marker to nudge it, B-11 exact In and Out, B-32 an edge
 case to read). Hands-on: `spec/shakedown.md`, "The range package".
+**B-05, B-06 and B-11 designed 2026-10-03** (Jason): "Nudging, timecode
+and exact In and Out", below. Four points wait on him there ("Open").
+The build is in steps N1–N8 there.
 
 The range itself (I, O, its lines, the editing state it's saved in) was
 settled 2026-09-21: `spec/rhythm.md`. Moved out of `spec/plan.md` on
@@ -96,4 +99,123 @@ From Jason's first-test notes (`spec/history/2026-09-24-work-order.md`).
   chosen.
 - *Settled (Jason):* in Displace (and Replace), **the first slide is just
   shortened** to end at the in point. There's no tail to place anywhere.
+
+## Nudging, timecode and exact In and Out (Jason, 2026-10-03)
+
+**Status:** Designed 2026-10-03, not built (B-05, B-06, B-11; B-02 is
+measured and fixed in the same batch). Jason's reply, recorded as given.
+
+**B-05.** The range is as long as needed, so it can place slides that
+would run past the current end of the timeline.
+
+### B-06: keyboard movement
+
+| Keys | Default | Configurable |
+|---|---|---|
+| ← → | the adjustable step (1 s) | yes |
+| ⌥ ← → | exactly 1 frame | no |
+| ⇧ ← → | 5 s | yes |
+| ⇧⌥⌘ ← → | 15 s | yes |
+| ⌘ ← → | jump to the next marker | n/a |
+| ⌘⌥ ← → | jump to the next beat, marked or not | n/a |
+
+The playhead becomes a selectable object, and this one ladder drives the
+playhead, range ends and markers. A one-frame step is always on one of
+two keys, so no setting can remove frame-accurate stepping.
+
+**Settings ▸ Timeline ▸ Nudge:**
+- A value and unit (seconds or frames) for the adjustable step, the ⇧
+  step and the ⇧⌥⌘ step.
+- **Fine-step key**, a two-way choice, default ⌥. *⌥ (default):* ← →
+  moves the adjustable step, ⌥ ← → exactly one frame. *Plain arrow:* ← →
+  exactly one frame, ⌥ ← → the adjustable step. ⇧ and ⇧⌥⌘ are unaffected.
+  The one-frame step is never configurable.
+- **Marker merge tolerance**, in frames, default 5, minimum 1 ("Marker
+  collisions"). Jason tunes the default while testing: one named constant.
+- **Reset "don't show again" alerts**: re-enables the first-occurrence alert.
+
+**Targeting and feedback.** Arrows move the selected object: a range end,
+a marker, or the playhead; with nothing selected, the playhead. Clicking
+the playhead selects it, with a visible highlight; clicking empty ruler
+space deselects. Arrows act only when the timeline has focus (in the
+popover's fields they edit text). **Nudge readout:** while a handle or the
+playhead is selected and moving, the new timecode and the delta (+1:00,
+−0:03), light and fast, no thumbnails.
+
+**⌘ and ⌘⌥ jumps.** ⌘ on the playhead or a range end moves it to the next
+marker in the arrow's direction. ⌘ on a selected marker moves the
+*selection* to the next marker (the marker stays), so: nudge one, hop,
+nudge the next. ⌘⌥ goes to the next detected beat in that direction, even
+where no marker is; for a selected marker it skips beats already holding
+a same-type marker. No beats detected: ⌘⌥ does nothing and flashes "No
+beats detected." From between targets, the next one that way; stop at the
+first or last, no wrapping.
+
+**Constraints.** The range is at least one frame long; nudging an end into
+the other clamps and never swaps. All edits clamp to 0 and the show's
+duration. A locked range can't be nudged. A held arrow is one undo step.
+
+**Marker collisions.** Two markers of the same type can't share a time;
+different types may. One tolerance, in frames (default 5, minimum 1; at 1
+only the same frame collides), governs both:
+- *Placing* a marker within the tolerance of a same-type one: the old one
+  collapses into the new, at the newest placement. The same frame always
+  merges. One undo step restores both.
+- *Dragging or nudging* one within the tolerance of another: on release,
+  the system beep, the marker flashes red and animates back to where it
+  was (sound may be muted, so the flash matters). A held arrow beeps once
+  per hold.
+- The first time: an alert explaining it, with "Don't show this again"
+  (resettable in Settings).
+
+### B-11: exact In and Out
+
+- **Opening:** double-click the range (either end, or the bar between), or
+  **Edit Range…** in its right-click menu. Not on a locked range. The
+  double-click's first click selects the end and mustn't make the playhead
+  jump in a way that feels broken.
+- **Fields:** In, Out and Length in `m:ss:ff` (a colon before the frames,
+  as timecode; a dot reads as decimal seconds). Also parsed: `83`,
+  `1:23`, or a bare frame count. Editing In keeps Out (Length changes);
+  editing Out keeps In; editing Length keeps In and moves Out.
+- **Validation:** bad or out-of-range input turns the field red and blocks
+  Return; never a silent clamp. Return applies all of it as one undo
+  step; Esc cancels.
+- **Frame preview:** the actual frames at In and Out, live as you type
+  (debounced), through the export renderer. Each overlaid with IN or OUT,
+  the `m:ss:ff` timecode and the absolute frame number, over a soft scrim,
+  tabular figures. The length once, between or beneath them. If it's too
+  slow, fall back to large timecode readouts and tell Jason.
+
+**Timecode as the model.** In and Out are frame-aligned: they snap to the
+frame grid on drag, nudge and typed entry. Stored as seconds, frames
+derived for display, so changing the rate later doesn't corrupt a range.
+The ruler, the popover and the readouts show the same value. The frame
+rate is the show's export frame rate (24, 30 or 60); the playhead's
+hard-wired 30 fps becomes per show.
+
+### Open (asked 2026-10-03)
+
+1. **B-05 against "clamp to the show's duration".** Proposed: the range's
+   ends are exempt (they may run past the end, per B-05); the playhead and
+   markers clamp to the duration.
+2. **A show has no export frame rate yet.** The export sheet starts at 30
+   every time and keeps nothing. Proposed: a per-show **Frame rate** (24,
+   30, 60; default 30) in the show's defaults bar, saved with the show,
+   which the export sheet then starts from.
+3. **The two marker types are show markers and beat markers.** Beat
+   markers belong to an audio clip and move with it. Proposed: "same type"
+   means show-marker against show-marker and beat-marker against
+   beat-marker, across clips.
+4. **"Detected beats" for ⌘⌥** come from the per-file analysis cache, in
+   song time. Proposed: every audio clip's beats, in show time, inside its
+   trimmed part.
+
+### Build steps
+
+N1 timecode (frame-aligned seconds ↔ `m:ss:ff`, the loose parser) and the
+per-show frame rate · N2 the nudge settings and the key ladder · N3 the
+playhead as a selectable object, range ends selectable, the readout ·
+N4 ⌘ and ⌘⌥ jumps · N5 marker collisions · N6 B-05, the range past the
+end · N7 the Edit Range popover with its frame previews · N8 B-02's drag.
 
