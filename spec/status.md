@@ -82,9 +82,10 @@ Every schema upgrade is additive and tested by opening a library of the
 version before. Before an upgrade the database is copied to
 `Library.sqlite.v<N>.bak`.
 
-**Installed:** `~/Applications/RhythmIO.app` at `fa995ac` (the range batch, number-field stepping, Edit Range with its waveform),
+**Installed:** `~/Applications/RhythmIO.app` at `43d6674` (the RhythmBG batch: B-14, B-87, B-17),
 signed with Jason's team. Every reinstall (`install.sh`) quits the real
-RhythmBG and doesn't restart it: start it again from RhythmBG ▸ Desktop Show….
+RhythmBG; it comes back only through "Launch RhythmBG when RhythmIO
+launches" (on, 2026-10-03), otherwise from RhythmBG ▸ Desktop Show….
 
 **The real library** is a fresh, empty `~/Pictures/RhythmIO Library.noindex`
 (2026-10-02). The ShowTools-era ones are untouched and keep their names:
