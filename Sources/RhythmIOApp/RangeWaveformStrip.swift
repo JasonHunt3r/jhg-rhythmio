@@ -11,12 +11,15 @@ import RhythmIOCore
 /// The strip's window reaches a little past the range so there's room to
 /// drag outward, and holds still during a drag, so the scale doesn't shift
 /// under the pointer.
-struct RangeWaveformStrip: View {
+struct RangeWaveformStrip<Accessory: View>: View {
     let show: Show
     let rangeIn: Double?
     let rangeOut: Double?
     let setIn: (Double) -> Void
     let setOut: (Double) -> Void
+    /// Shares the row under the strip with the Show button (Edit Range's
+    /// Length, Jason 2026-10-03).
+    @ViewBuilder var accessory: Accessory
     @Environment(AppModel.self) private var model
 
     @AppStorage(RangeDisplay.beatsKey) private var showBeats = true
@@ -30,10 +33,6 @@ struct RangeWaveformStrip: View {
     /// During a drag: which end, and the window as it was when it began.
     @State private var drag: (isIn: Bool, window: ClosedRange<Double>)?
 
-    static let height: CGFloat = 64
-    /// Lighter than the audio row's blue, which is drawn on a light clip:
-    /// on this strip's dark ground that one barely showed.
-    private static let wave = Color(red: 0.45, green: 0.72, blue: 1.0)
 
     private var grid: FrameGrid { show.frameGrid }
 
@@ -69,7 +68,7 @@ struct RangeWaveformStrip: View {
                     .contentShape(Rectangle())
                     .gesture(handleDrag(width: g.size.width, songs: songs))
             }
-            .frame(height: Self.height)
+            .frame(height: RangeDisplay.height)
             // Solid: the popover's material let the picture behind it show
             // through and muddy the waveform (seen 2026-10-03).
             .background(RoundedRectangle(cornerRadius: 5).fill(Color(white: 0.11)))
@@ -83,6 +82,7 @@ struct RangeWaveformStrip: View {
             // At the right: from the left it opened half off a screen whose
             // edge the popover was already against (seen 2026-10-03).
             HStack {
+                accessory
                 Spacer()
                 Button { displayShown = true } label: {
                     Label("Show", systemImage: "waveform.badge.magnifyingglass")
@@ -90,8 +90,8 @@ struct RangeWaveformStrip: View {
                 .buttonStyle(.borderless)
                 .popover(isPresented: $displayShown, arrowEdge: .bottom) { displayPopover }
                 .help("What the waveform shows")
+                .font(.caption)
             }
-            .font(.caption)
         }
     }
 
@@ -108,7 +108,7 @@ struct RangeWaveformStrip: View {
                 let c = s.clip
                 let a = max(x(c.start), 0), b = min(x(c.end), size.width)
                 ctx.fill(Path(CGRect(x: a, y: 1, width: b - a, height: size.height - 2)),
-                         with: .color(Self.wave.opacity(0.12)))
+                         with: .color(RangeDisplay.wave.opacity(0.12)))
                 // Sections: alternating bands along the bottom.
                 if showSections, let r = s.rhythm {
                     for (i, sec) in r.sections.enumerated() {
@@ -130,7 +130,7 @@ struct RangeWaveformStrip: View {
                         path.addRect(CGRect(x: px, y: mid - h, width: 1.4, height: h * 2))
                         px += 2
                     }
-                    ctx.fill(path, with: .color(Self.wave.opacity(0.85)))
+                    ctx.fill(path, with: .color(RangeDisplay.wave.opacity(0.85)))
                 }
                 // Beats and bars, with the tempo correction chosen.
                 if let r = s.rhythm {
@@ -273,6 +273,11 @@ struct RangeWaveformStrip: View {
 
 /// The display popover's switches, kept between uses.
 enum RangeDisplay {
+    static let height: CGFloat = 64
+    /// Lighter than the audio row's blue, which is drawn on a light clip:
+    /// on the strip's dark ground that one barely showed.
+    static let wave = Color(red: 0.45, green: 0.72, blue: 1.0)
+
     static let beatsKey = "editRangeShowBeats"
     static let barsKey = "editRangeShowBars"
     static let sectionsKey = "editRangeShowSections"

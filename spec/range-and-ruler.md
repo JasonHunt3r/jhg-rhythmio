@@ -206,7 +206,9 @@ snapping to what's showing; one strip, each clip where it sits. **Built
 2026-10-03** (`RangeWaveformStrip`): the strip shows the range and 15 %
 either side (½ s at least), holding still during a drag; outside the
 range dimmed; the switches remembered (`RangeDisplay`); nothing saved
-until Apply.
+until Apply. Then rearranged (Jason, same day): In and Out under their
+frames, each as wide as its frame; Length and the Show options under the
+waveform.
 
 ### Settled with Jason (2026-10-03, all four as proposed)
 

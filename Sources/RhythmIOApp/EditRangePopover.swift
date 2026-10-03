@@ -54,17 +54,18 @@ struct EditRangePopover: View {
                 preview("IN", inFrame, at: inOK ? inValue : nil)
                 preview("OUT", outFrame, at: outOK ? outValue : nil)
             }
-            // The audio in and around the range (Jason, 2026-10-03), with
-            // In and Out to drag.
-            RangeWaveformStrip(show: show, rangeIn: inOK ? inValue : nil, rangeOut: outOK ? outValue : nil,
-                               setIn: dragIn, setOut: dragOut)
-                .frame(width: Self.frameSize.width * 2 + 10)
-            // The fields in a row (Jason, 2026-10-03).
-            HStack(spacing: 14) {
+            // In and Out under their frames, as wide (Jason, 2026-10-03).
+            HStack(spacing: 10) {
                 field("In", $inText, ok: inOK, field: .rangeIn)
                 field("Out", $outText, ok: outOK, field: .rangeOut)
-                field("Length", $lengthText, ok: lengthOK, field: .length)
             }
+            // The audio in and around the range, with In and Out to drag;
+            // Length and the display options under it.
+            RangeWaveformStrip(show: show, rangeIn: inOK ? inValue : nil, rangeOut: outOK ? outValue : nil,
+                               setIn: dragIn, setOut: dragOut) {
+                field("Length", $lengthText, ok: lengthOK, field: .length, width: 150)
+            }
+            .frame(width: Self.frameSize.width * 2 + 10)
             Text("m:ss:ff at \(show.defaults.frameRate.name) · also 83, 1:23 or 2490f")
                 .font(.caption)
                 .foregroundStyle(.secondary)
@@ -90,19 +91,23 @@ struct EditRangePopover: View {
 
     // MARK: The fields
 
-    private func field(_ title: String, _ text: Binding<String>, ok: Bool, field: Field) -> some View {
+    /// A labelled timecode field, `width` wide in all (a frame's width
+    /// by default).
+    private func field(_ title: String, _ text: Binding<String>, ok: Bool, field: Field,
+                       width: CGFloat = Self.frameSize.width) -> some View {
         HStack(spacing: 6) {
             Text(title).foregroundStyle(.secondary)
             TextField("", text: text)
                 .font(.body.monospacedDigit())
                 .multilineTextAlignment(.trailing)
-                .frame(width: 86)
+                .frame(maxWidth: .infinity)
                 .focused($focus, equals: field)
                 .foregroundStyle(ok ? Color.primary : Color.red)
                 .overlay(RoundedRectangle(cornerRadius: 5).strokeBorder(ok ? Color.clear : Color.red, lineWidth: 1.5))
                 .onSubmit(apply)
                 .numberStepping(announce: true) { text, direction, size in stepTimecode(text, direction, size, field: field) }
         }
+        .frame(width: width)
     }
 
     /// In dragged on the waveform: Out stays, Length follows, and In stops
