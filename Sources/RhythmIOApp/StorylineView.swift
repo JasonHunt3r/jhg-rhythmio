@@ -1,6 +1,7 @@
 import SwiftUI
 import RhythmIOCore
 import RhythmIOPlayback
+import PopoverKit
 
 /// The show as a Final Cut-style storyline: one block per slide, as wide as
 /// the slide is long, sitting end to end.
@@ -193,8 +194,8 @@ struct StorylineView: View {
     }
     @State private var transitionEdit: TransitionEdit?
     @State private var hoveredJoin: Int64?
-    /// The slide whose info popover is open (double-click; Jason, 2026-10-03).
-    @State private var infoSlide: Int64?
+    /// The slide under the pointer, for Slide Info's hover card.
+    @State private var hoveredSlide: Int64?
     /// Something is being dragged over the images row: it lights up.
     @State private var imagesDropTargeted = false
     /// Files being dragged over the storyline: where the pointer is, for the
@@ -1044,14 +1045,25 @@ struct StorylineView: View {
             .contentShape(Rectangle())
             .onTapGesture { click(p.id) }
             .gesture(moveGesture(p))
-            .popover(isPresented: Binding(get: { infoSlide == p.id },
-                                          set: { if !$0, infoSlide == p.id { infoSlide = nil } }),
-                     arrowEdge: .top) {
-                SlideInfo(slide: p.slide, length: length(p.slide))
+            // Slide Info (⌥Space): the selected slide's card, and a second,
+            // click-through card for the slide under the pointer, to compare.
+            .onHover { hoveredSlide = $0 ? p.id : (hoveredSlide == p.id ? nil : hoveredSlide) }
+            .pinnedPopover(isPresented: session.slideInfoOpen && infoSlideID == p.id) {
+                SlideInfo(slide: p.slide, length: length(p.slide), pinned: true)
+            }
+            .pinnedPopover(isPresented: session.slideInfoOpen && hoveredSlide == p.id && infoSlideID != p.id,
+                           passesClicksThrough: true, animates: false) {
+                SlideInfo(slide: p.slide, length: length(p.slide), pinned: false)
             }
             .contextMenu {
                 let ids = selection.contains(p.id) ? selection : [p.id]
                 Button("Open in Slide Editor") { openSlideEditor(p.id) }
+                Button("Slide Info") {
+                    if !selection.contains(p.id) { selection = [p.id]; anchor = p.id; selectionBase = [] }
+                    session.slideCursor = p.id
+                    session.slideInfoOpen = true
+                }
+                .keyboardShortcut(.space, modifiers: .option)
                 Button("Duplicate") { SlideActions.duplicate(ids, mutate: mutate) }
                 if ids.count == 1 { Button("Replace Image…") { replacingImage = p.id } }
                 Button("Remove from Show") { SlideActions.remove(ids, selection: $selection, mutate: mutate) }
@@ -1082,6 +1094,13 @@ struct StorylineView: View {
     /// selected slide", wasn't the same thing once a ⌘-click had moved it
     /// elsewhere). The preview jumps to the slide and pauses, as a
     /// thumbnail click does in the livery gallery.
+    /// The slide Slide Info shows: the selection's cursor (the last one
+    /// clicked or arrowed to), else its first in show order.
+    private var infoSlideID: Int64? {
+        if let c = session.slideCursor, selection.contains(c) { return c }
+        return timeline.slides.first { selection.contains($0.slide.id) }?.slide.id
+    }
+
     private func click(_ id: Int64) {
         let mods = NSEvent.modifierFlags
         let items = timeline.slides.map(\.slide.id)
@@ -1103,11 +1122,7 @@ struct StorylineView: View {
         engine.showSlide(id: id)
         // Checked on the event rather than with a double-tap gesture, which
         // would hold every single click back while it waits for a second.
-        // Double-click: the slide's info, staying until Esc or a click
-        // elsewhere; ⌥-double-click: the Slide Editor (Jason, 2026-10-03).
-        if (NSApp.currentEvent?.clickCount ?? 1) >= 2 {
-            if mods.contains(.option) { openSlideEditor(id) } else { infoSlide = id }
-        }
+        if (NSApp.currentEvent?.clickCount ?? 1) >= 2 { openSlideEditor(id) }
     }
 
     private func moveGesture(_ p: Placed) -> some Gesture {
@@ -1770,17 +1785,21 @@ struct VideoStrip: View {
     }
 }
 
-/// A slide's info, in the popover a double-click opens. It used to open
-/// after the pointer rested on a block for a second, and closed when it
-/// left; a click landing while it was up could be spent closing it (B-83).
-/// What it holds is still to be settled with Jason.
+/// A slide's info, on Slide Info's cards (⌥Space; `spec/popoverkit.md`).
+/// It used to open after the pointer rested on a block for a second and
+/// closed when it left, a SwiftUI popover that could spend a click closing
+/// (B-83). What it holds is still to be settled with Jason (B-88).
 struct SlideInfo: View {
     let slide: ResolvedSlide
     let length: Double
+    /// The selected slide's card, told apart from the hover card by its
+    /// title in the selection colour.
+    let pinned: Bool
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text("\(slide.index + 1). \(slide.item.fileName)").font(.headline)
+                .foregroundStyle(pinned ? Color.accentColor : .primary)
             Grid(alignment: .leading, horizontalSpacing: 10, verticalSpacing: 3) {
                 GridRow { Text("Starts").foregroundStyle(.secondary); Text(formatDuration(slide.start)) }
                 GridRow { Text("Length").foregroundStyle(.secondary); Text(formatSeconds(length)) }

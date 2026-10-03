@@ -28,6 +28,11 @@ what, and the few structural rules that go with each. Rules live in
   (`spec/listkit.md`). `cd ListKit && swift test`; `swift run
   ListHarness`. A local package dependency in both `Package.swift` and
   `project.yml`, like PaneKit; the Catalog (`MainView`) is its first user.
+- `PopoverKit/` (top level): our own popovers, **for any Mac app**, its
+  own Swift package depending on nothing (`spec/popoverkit.md`). `cd
+  PopoverKit && swift test`; `swift run PopoverHarness`. A local package
+  dependency in both `Package.swift` and `project.yml`; Slide Info in the
+  timeline (`StorylineView`) is its first user.
 - `PaneKit/` (top level): our own pane system, **for any Mac app**, as
   its own Swift package, depending on nothing in RhythmIO
   (`spec/panekit.md`). `cd PaneKit && swift test` runs its tests;

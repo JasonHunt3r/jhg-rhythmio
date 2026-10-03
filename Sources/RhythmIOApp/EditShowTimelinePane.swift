@@ -641,6 +641,8 @@ struct EditShowTimelinePane: View {
                    !KeyboardArea.shared.timelineHasArrows(in: event.window) { return false }
                 switch (event.keyCode, event.charactersIgnoringModifiers?.lowercased(), event.plainModifiers) {
                 case (49, _, []): engine.togglePlay()                  // space
+                case (49, _, [.option]): session.slideInfoOpen.toggle()   // ⌥Space, Slide Info
+                case (53, _, []) where session.slideInfoOpen: session.slideInfoOpen = false   // Esc
                 case (_, "j", []): engine.shuttle(-1)
                 case (_, "k", []): engine.shuttle(0)
                 case (_, "l", []): engine.shuttle(1)

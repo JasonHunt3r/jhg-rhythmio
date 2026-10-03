@@ -220,7 +220,7 @@ slide A so that the transition joins them seamlessly.
   it plays, including Pan and Zoom and rotation
 - **"Soft at this zoom" flag** (built 2026-09-21: an orange triangle in the
   order list and on the storyline block, a line in the inspector, and the
-  exact figure in the block's info popover (double-click; it was hover info until 2026-10-03); flagged above 1.25× the file's
+  exact figure in the block's Slide Info card (⌥Space; it was hover info until 2026-10-03); flagged above 1.25× the file's
   pixels on the main screen, at the slide's closest moment). When the framing shows the image with fewer
   pixels than the output, the slide gets a warning. This is where the
   upscaling hook later attaches (see the plugin seam)

@@ -114,11 +114,6 @@ candidates, real testing picks one:
   - a Library tile: Quick Look, or Get Info (B6). Quick Look is the
     natural one, now that Space is play/pause (§2). **Built: Quick Look**
     (B5), on the second click and on ⌘Y;
-  - **a slide in the timeline: its info popover; ⌥-double-click, the
-    Slide Editor** (Jason, 2026-10-03). The popover had opened on a
-    second's hover and vanished when the pointer left, like a tooltip; now
-    it stays, like Edit Range's, until Esc or a click elsewhere. Its
-    contents are B-88. Edit Slides' list keeps what follows;
   - **a slide, in either mode: the Slide Editor.** Settled 2026-09-24
     (PaneKit step 4's first piece, `spec/windows.md`, `spec/panekit.md`):
     the Slide Editor won double-click over the inspector, since it matches
@@ -130,7 +125,7 @@ candidates, real testing picks one:
   - the Library item in the Library pane: the library panel.
 
 **Built 2026-09-24:** double-click a slide, in Edit Slides' list or the
-storyline (⌥-double-click there since 2026-10-03), opens the Slide Editor (`SlideEditorWindow.swift`) — the image
+storyline, opens the Slide Editor (`SlideEditorWindow.swift`) — the image
 with its Transform/Rotation handles, and the full inspector beside it, in
 one window that replaces itself when a different slide is opened. Also on
 "Open in Slide Editor" in both places' context menus, and (2026-09-24)
@@ -148,6 +143,7 @@ built no further than that).
 | **Esc** | Step back one level: **close the Slide Editor** (Jason), a drawer or a popover; then clear the selection | In a text field, cancel the edit. In the player, leave full screen | Built partly. Little use for it yet (Jason, 2026-09-24): more cases will turn up with use, and go in §8 |
 | **Return** | Do the default: OK in a dialog, commit a text field | On a selected item: rename it (Finder) | Built in dialogs; rename on Return **Settled** (Jason, 2026-09-24; B6, D4), built in the Library grid (B6; checked by Jason 2026-09-28) |
 | **Space** | **Play and pause, pretty much always** (Jason, 2026-09-24). Wanting to stop playback and having to juggle windows first would be confusing and frustrating | Never while typing in a text field. **Not Quick Look**, which departs from Finder on purpose: Quick Look is ⌘Y (Finder's other key for it) and double-clicking a tile. **In Edit Slides, Space loops the selected slides**, in show order, cut to cut (nothing selected: the show) — `spec/slides-as-mini-movies.md` | **Settled.** Built in Edit Show, the player and (2026-09-26) Edit Slides |
+| **⌥Space** | **Slide Info** in the timeline: the selected slide's card, following the selection; while open, hovering another slide shows a second card to compare (`spec/popoverkit.md`). ⌥Space again or Esc closes | Space alone is play/pause; ⌥Space is free in macOS (checked on Jason's Mac) | **Settled and built** (Jason, 2026-10-03) |
 | **← → ↑ ↓** | Move the selection; with ⇧, extend it | **Edit Show: the arrows go to the area last clicked, or the active area** (Jason, 2026-09-28, reversing 2026-09-24): "It was a mistake to reserve the arrow keys for the timeline in show view… probably the default behavior is what we really want after all." He was trying to move through the browser list and the timeline took the keys. *Superseded 2026-09-28: the timeline's claim on the arrows everywhere in Edit Show.* **The timeline, once it has them (settled, Jason, 2026-09-24):** ← → move through the items in the current row (slides, or audio clips); ↑ ↓ move between rows; **in the ruler**, ← → nudge the playhead. The player: previous and next slide. The viewer with an image selected: nudge it. **A grid with the viewer drawer open and several selected:** ← → move the outline (the stack's top card) within the selection, wrapping, and the selection stays (Jason, 2026-09-26, Aperture's multi-up). **Edit Slides:** the slide list keeps ↑ ↓ once clicked; the timeline's arrows work there too, since it's live in both modes | Built in lists, the player, the viewer, the grid and the timeline. **The 2026-09-28 reversal is built** (2026-10-02, `KeyboardArea`): the arrows go to the area last clicked in each window, the timeline before any click; a selection whose area doesn't have them draws grey, the Mac's way (Jason, 2026-10-02). A held arrow repeats |
 | **Home / End** | The first or last item, or the show's start or end | — | Built in the player |
 | **↑ ↓ in a number field, and a two-finger swipe over it** | **Step the number while it's being edited** (Jason, 2026-10-03): the field's own unit, ⇧ bigger, ⌥ smaller; the swipe left/right by default. Saved once when editing ends, so a scrub is one undo step | Edit Range's timecode steps by the Nudge ladder; a field not being edited lets the swipe scroll the page | Built 2026-10-03 (`NumberStepping.swift`; Settings ▸ Editing ▸ Number Fields) |

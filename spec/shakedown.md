@@ -76,7 +76,7 @@ Jason's shakedown that day (his raw notes:
 - [ ] **The Rhythm tool** — the panel's look (the space round the form; a staff space is 5.5 pt), Listen by ear on real music, Space stopping Listen. · Last checked by Jason: 2026-09-28 (partly) · Claude: can't · `spec/rhythm.md`. Found: double tempo, B-09; what's left, B-31
 - [x] **Dragging a song in** from Finder or Music. · Last checked by Jason: 2026-09-28 · Claude: can't · `spec/plan.md`, Phase 3
 - [ ] **Listening** — music sync, fades, crossfades; Bluetooth headphones' delay (the output latency is subtracted, untested); a video slide's sound (V6): a clip with its middle dropped, a video against a song (they mix, no ducking), whether the level changes smoothly. · Last checked by Jason: — · Claude: can't · `spec/video-audio.md`, "V6 is Jason's"
-- [ ] **Slide info on double-click** — double-click a timeline slide: its info popover, staying until Esc or a click elsewhere, nothing on hover any more; ⌥-double-click opens the Slide Editor; in the popped-out Timeline window too. · Last checked by Jason: — · Claude: builds only · `spec/conventions.md` §1
+- [ ] **Slide Info, ⌥Space** — ⌥Space shows the selected slide's card (the Edit Range look), following the selection by click and arrows; while open, hovering another slide shows a second card that clicks pass through; ⌥Space or Esc closes; nothing on hover while closed; right-click ▸ Slide Info; double-click still the Slide Editor; in the popped-out Timeline window too; scrolling the timeline with cards open. · Last checked by Jason: — · Claude: PopoverKit's behaviours measured in a probe and its tests; the app only built · `spec/popoverkit.md`
 
 ## Menus
 

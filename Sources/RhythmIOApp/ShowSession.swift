@@ -90,6 +90,10 @@ final class ShowSession {
     var slideAnchor: Int64?
     var slideAnchorBase: Set<Int64> = []
     var slideCursor: Int64?
+    /// Slide Info is open: the selected slide's card, which follows the
+    /// selection, and a hover card for any other slide (⌥Space; Jason,
+    /// 2026-10-03; `spec/popoverkit.md`).
+    var slideInfoOpen = false
 
     /// Go Back's own history (W8, item 7; plan, "Go Back, not undo"): the
     /// playhead stays out of ⌘Z, so a ruler click/drag or an arrow-key

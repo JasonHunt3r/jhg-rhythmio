@@ -25,6 +25,8 @@ packages:
     path: PaneKit
   ListKit:
     path: ListKit
+  PopoverKit:
+    path: PopoverKit
 settings:
   base:
     # Signed as Jason's own Apple Development identity (a free Personal
@@ -68,6 +70,8 @@ targets:
         product: PaneKit
       - package: ListKit
         product: ListKit
+      - package: PopoverKit
+        product: PopoverKit
       - target: RhythmBGControls
         embed: true
       - target: RhythmBG

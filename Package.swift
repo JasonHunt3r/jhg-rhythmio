@@ -14,6 +14,7 @@ let package = Package(
     dependencies: [
         .package(name: "PaneKit", path: "PaneKit"),
         .package(name: "ListKit", path: "ListKit"),
+        .package(name: "PopoverKit", path: "PopoverKit"),
     ],
     targets: [
         .target(name: "RhythmIOCore", linkerSettings: [.linkedLibrary("sqlite3")]),
@@ -23,7 +24,7 @@ let package = Package(
         // bundle is built by Xcode; see project.yml), so SwiftPM must be told
         // it isn't a resource.
         .executableTarget(name: "RhythmIOApp",
-                          dependencies: ["RhythmIOCore", "RhythmIOPlayback", "RhythmBGCore", "PaneKit", "ListKit"],
+                          dependencies: ["RhythmIOCore", "RhythmIOPlayback", "RhythmBGCore", "PaneKit", "ListKit", "PopoverKit"],
                           exclude: ["Info.plist"]),
         .executableTarget(name: "mio", dependencies: ["RhythmIOCore"]),
         .testTarget(name: "RhythmIOCoreTests", dependencies: ["RhythmIOCore"]),
