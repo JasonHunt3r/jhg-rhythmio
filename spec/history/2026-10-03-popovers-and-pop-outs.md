@@ -51,3 +51,12 @@ commits, f02b4ea…ec887db. The environment doesn't cross PaneKit's
 hosting views, so nested layouts pass the outer pane's context on.
 "Library Pane", not "Library", in the menus: the library panel is
 another thing. Jason tried it installed: "looks good and works properly".
+
+**B-08 checked, evening.** Jason turned "Open RhythmBG at login" off in
+Settings (which also quit RhythmBG: unregistering a running login item
+stops it), then RhythmBG ▸ Desktop Show…: one copy (pid 48650), its log
+showing one launch and the window's URL a second later — the wait the
+2026-10-02 fix added. Before the fix, two started in the same second.
+launchd and `sfltool dumpbtm` kept listing `com.jhg.rhythmbg` as enabled
+while it was unregistered; the app's own `SMAppService` status is what
+the switch reads, and it was right.

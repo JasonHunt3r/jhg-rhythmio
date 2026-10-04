@@ -10,7 +10,7 @@ could keep its id and settings later.*
 Synchronize (**done 2026-09-24**), naming screens, a map view, and the
 window opening on your screen (**done 2026-09-25**, checked with axtool
 against a scratch settings file — see below). **Open work:** see
-`spec/backlog.md` (B-08, B-15, B-16, B-63, B-64, B-78); per-screen stop (B-14) and Play on Desktop (B-17) **built 2026-10-03**; hands-on checks in
+`spec/backlog.md` (B-15, B-16, B-63, B-64, B-78); per-screen stop (B-14) and Play on Desktop (B-17) **built 2026-10-03**; the second copy on first launch (B-08) **fixed, checked 2026-10-03**; hands-on checks in
 `spec/shakedown.md`.
 
 Phase 5 of RhythmIO (renamed 2026-09-22; it was "Live desktop"). This file

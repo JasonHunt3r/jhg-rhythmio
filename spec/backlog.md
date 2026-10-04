@@ -25,7 +25,6 @@ where it came from.
 
 Claude can do these.
 
-- **B-08** · P2 · RhythmBG — A second copy on first launch. **Fix built 2026-10-02, not yet seen working:** Desktop Show… no longer opens RhythmBG when registering it just started it (registering a login item starts it at once; opening it too in the same second made two). It waits for that copy instead, then asks it for its window. Checking it needs RhythmBG unregistered first (RhythmIO ▸ Settings ▸ RhythmBG ▸ Open RhythmBG at login, off), then Desktop Show…, then one copy running. `RhythmBGHelper.openDesktop`, `spec/rhythmbg.md`. (Shakedown 2026-09-28.)
 - **B-09** · P2 · Rhythm — Tempo detection reads double: Fly Me to the Moon as 145 BPM, where it's about 72. Needs an octave (half-time) check. `spec/rhythm.md`. (Shakedown 2026-09-28.)
 - **B-12** · P2 · Library — An Info drawer on the right of the Library view, where the inspector sits elsewhere: one click on the Info button opens the drawer, a double-click opens the Info window that exists. Jason first asked 2026-09-24 ("Design notes", below). (Shakedown 2026-09-28.)
 - **B-13** · P2 · Settings — Set Up Triggers: one control where the Responsiveness slider and the practice drawer sit together, instead of two items. `spec/window-behavior.md`, "A reusable modal box"; `spec/panekit.md`, "The clutch". (Shakedown 2026-09-28.)
