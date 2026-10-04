@@ -1059,18 +1059,14 @@ struct StorylineView: View {
                 SlideInfo(slide: p.slide, length: length(p.slide), pinned: false)
             }
             .contextMenu {
-                let ids = selection.contains(p.id) ? selection : [p.id]
-                Button("Open in Slide Editor") { openSlideEditor(p.id) }
-                Button("Slide Info") {
-                    if !selection.contains(p.id) { selection = [p.id]; anchor = p.id; selectionBase = [] }
-                    session.slideCursor = p.id
-                    session.slideInfoOpen = true
-                }
-                .keyboardShortcut(.space, modifiers: .option)
-                Button("Duplicate") { SlideActions.duplicate(ids, mutate: mutate) }
-                if ids.count == 1 { Button("Replace Image…") { replacingImage = p.id } }
-                Button("Remove from Show") { SlideActions.remove(ids, selection: $selection, mutate: mutate) }
-                PaneWindowMenuItem()
+                SlideMenu(ids: selection.contains(p.id) ? selection : [p.id], show: show, mutate: mutate,
+                          selection: $selection, openSlideEditor: openSlideEditor,
+                          replaceImage: { replacingImage = $0 },
+                          timeline: .init(slideInfo: {
+                              if !selection.contains(p.id) { selection = [p.id]; anchor = p.id; selectionBase = [] }
+                              session.slideCursor = p.id
+                              session.slideInfoOpen = true
+                          }, selectAllAfter: { selectAllAfter(p.id) }))
             }
             // A video slide's own sound (spec/video-audio.md). Silent until
             // it's turned up, so the line starts along the bottom.
@@ -1098,6 +1094,17 @@ struct StorylineView: View {
     /// selected slide", wasn't the same thing once a ⌘-click had moved it
     /// elsewhere). The preview jumps to the slide and pauses, as a
     /// thumbnail click does in the livery gallery.
+    /// Select All After (Final Cut's; `spec/conventions.md` §3): this slide
+    /// and every one after it (Jason, 2026-10-03).
+    private func selectAllAfter(_ id: Int64) {
+        let ids = timeline.slides.map(\.slide.id)
+        guard let i = ids.firstIndex(of: id) else { return }
+        selection = Set(ids[i...])
+        anchor = id
+        selectionBase = []
+        session.slideCursor = id
+    }
+
     /// The slide Slide Info shows: the selection's cursor (the last one
     /// clicked or arrowed to), else its first in show order.
     private var infoSlideID: Int64? {
