@@ -82,7 +82,7 @@ Every schema upgrade is additive and tested by opening a library of the
 version before. Before an upgrade the database is copied to
 `Library.sqlite.v<N>.bak`.
 
-**Installed:** `~/Applications/RhythmIO.app` at `ec887db` (PopoverKit and Slide Info, Show in Own Window on every right-click, three new pop-outs),
+**Installed:** `~/Applications/RhythmIO.app` at `80a9132` (PopoverKit and Slide Info, Show in Own Window everywhere, the menus batch),
 signed with Jason's team. Every reinstall (`install.sh`) quits the real
 RhythmBG; it comes back only through "Launch RhythmBG when RhythmIO
 launches" (on, 2026-10-03), otherwise from RhythmBG ▸ Desktop Show….
