@@ -61,6 +61,10 @@ enum ListEmptySpace {
         "main": ("Edit Slides › Slide list", "Add from Collection…, Import…, Paste, Select All"),
     ]
 
+    /// A real menu for a list's empty space, by pane id, set by the view
+    /// that owns the list while it's on screen. It replaces the note.
+    static var menus: [String: () -> [NSMenuItem]] = [:]
+
     static func install() {
         monitor = NSEvent.addLocalMonitorForEvents(matching: [.rightMouseDown, .leftMouseDown]) { event in
             MainActor.assumeIsolated { handle(event) } ? nil : event
@@ -81,16 +85,21 @@ enum ListEmptySpace {
         while let v = view, !(v is NSTableView) { view = v.superview }
         guard let table = view as? NSTableView,
               table.row(at: table.convert(event.locationInWindow, from: nil)) == -1 else { return false }
-        let named = pane(of: table).flatMap { places[$0] }
+        let paneID = pane(of: table)
+        let named = paneID.flatMap { places[$0] }
         let menu = NSMenu()
         menu.autoenablesItems = false
-        func line(_ title: String) {
-            let item = NSMenuItem(title: title, action: nil, keyEquivalent: "")
-            item.isEnabled = false
-            menu.addItem(item)
+        if let items = paneID.flatMap({ menus[$0] })?() {
+            items.forEach(menu.addItem)
+        } else {
+            func line(_ title: String) {
+                let item = NSMenuItem(title: title, action: nil, keyEquivalent: "")
+                item.isEnabled = false
+                menu.addItem(item)
+            }
+            line("No menu yet — \(named?.place ?? "a list") › empty space")
+            if let planned = named?.planned { line("Agreed, not built: \(planned)") }
         }
-        line("No menu yet — \(named?.place ?? "a list") › empty space")
-        if let planned = named?.planned { line("Agreed, not built: \(planned)") }
         if let pane = PaneWindowContext.of(table) {
             menu.addItem(.separator())
             menu.addItem(pane.menuItem())
@@ -107,5 +116,24 @@ enum ListEmptySpace {
             v = cur.superview
         }
         return nil
+    }
+}
+
+/// An `NSMenuItem` that runs a closure (a list's empty-space menu).
+@MainActor
+final class ActionMenuItem: NSObject {
+    private let run: () -> Void
+    private init(_ run: @escaping () -> Void) { self.run = run }
+    @objc private func go() { run() }
+
+    static func make(_ title: String, enabled: Bool = true, key: String = "",
+                     modifiers: NSEvent.ModifierFlags = [], _ run: @escaping () -> Void) -> NSMenuItem {
+        let target = ActionMenuItem(run)
+        let item = NSMenuItem(title: title, action: #selector(go), keyEquivalent: key)
+        item.keyEquivalentModifierMask = modifiers
+        item.target = target
+        item.representedObject = target   // the item keeps its target alive
+        item.isEnabled = enabled
+        return item
     }
 }

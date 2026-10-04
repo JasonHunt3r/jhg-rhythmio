@@ -323,6 +323,11 @@ struct EditSlidesView: View {
                 }
             }
         }
+        // Its empty space below the slides (`spec/conventions.md` §3,
+        // settled 2026-09-24), shown by `ListEmptySpace`: SwiftUI's own
+        // list can't answer a right-click there.
+        .onAppear { ListEmptySpace.menus["main"] = emptySpaceMenu }
+        .onDisappear { ListEmptySpace.menus["main"] = nil }
         .sheet(isPresented: $addingFromCollection) {
             MultiItemPicker(title: "Add from Collection", items: collectionItems) { ids in
                 model.append(Array(ids), to: show.id, undo: undoManager)
@@ -358,6 +363,23 @@ struct EditSlidesView: View {
 
     private func openSlideEditor(_ id: Int64) {
         SlideEditorWindow.show(slideID: id, show: show, model: model, mutate: mutate, undoManager: undoManager)
+    }
+
+    /// Add from Collection…, Import…, Paste, Select All. Read at the click,
+    /// so it acts on the show as it is then.
+    private func emptySpaceMenu() -> [NSMenuItem] {
+        let current = model.show(show.id) ?? show
+        return [
+            ActionMenuItem.make("Add from Collection…", enabled: !collectionItems.isEmpty) { addingFromCollection = true },
+            ActionMenuItem.make("Import…") { runImportIntoShowPanel(model, showID: current.id, undo: undoManager) },
+            .separator(),
+            ActionMenuItem.make("Paste", enabled: SlideClipboard.canPaste) {
+                SlideClipboard.paste(after: current.slides.last?.id, mutate: mutate)
+            },
+            ActionMenuItem.make("Select All", enabled: !current.slides.isEmpty, key: "a", modifiers: .command) {
+                selection = Set(current.slides.map(\.id))
+            },
+        ]
     }
 
     /// A drop on a row of the list (item 8, work order; G2's own fix —

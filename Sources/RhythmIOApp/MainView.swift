@@ -1926,6 +1926,12 @@ struct LibraryGridView: View {
         // a right-click on empty grid space something to answer with.
         .contextMenu {
             Button("Import…") { runImportPanel(model) }
+            Button("Select All") {
+                selection = Set(visible.map(\.id))
+                selectionBase = selection
+            }
+            .keyboardShortcut("a")
+            .disabled(visible.isEmpty)
             Button("New Collection…") { startCreatingCollection(with: []) }
             if collectionID != nil {
                 Button("Add from Library…") { addingFromLibrary = true }
@@ -2159,10 +2165,10 @@ struct LibraryGridView: View {
             .onEnded { _ in dragStarted = false })
         .contextMenu {
             let ids = selection.contains(item.id) ? orderedSelection : [item.id]
-            Button("New Show from \(ids.count == 1 ? "Item" : "\(ids.count) Items")") {
-                model.newShow(itemIDs: ids, in: collectionID)
-            }
-            addToShowMenu(ids: ids)
+            // Settled order (`spec/conventions.md` §3, "Library tile"):
+            // Play waits on playing without a show (B-39).
+            Button("Quick Look") { quickLook(startingAt: ids.first ?? item.id) }
+                .keyboardShortcut("y")
             if Fingerprints.fingerprintable(item.kind) {
                 Button("Show Similar") {
                     grouping = false
@@ -2170,6 +2176,11 @@ struct LibraryGridView: View {
                     selection = [item.id]
                 }
             }
+            Divider()
+            Button("New Show from \(ids.count == 1 ? "Item" : "\(ids.count) Items")") {
+                model.newShow(itemIDs: ids, in: collectionID)
+            }
+            addToShowMenu(ids: ids)
             Divider()
             Button("New Collection from \(ids.count == 1 ? "Item" : "\(ids.count) Items")…") {
                 startCreatingCollection(with: ids)
@@ -2184,6 +2195,8 @@ struct LibraryGridView: View {
                 Button("Remove from Group") { removeFromGroup(ids, gid) }
                     .help("Take them out of this group. They stay in the collection.")
             }
+            Divider()
+            Button("Copy") { TileClipboard.copy(ids, model: model) }
             Divider()
             // No Show in Finder here (settled, spec/conventions.md §3): the
             // library holds its own copies, and where the originals went is

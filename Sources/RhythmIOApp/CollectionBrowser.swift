@@ -55,6 +55,7 @@ struct CollectionBrowser: View {
     @Environment(\.undoManager) private var undoManager
     /// ⌘Delete's question: files to delete from the library.
     @State private var confirmDelete: [Int64]?
+    @State private var addingFromLibrary = false
     /// Whether the list has the keyboard (`ListNavigation`'s report).
     @State private var listFocused = false
     @State private var search = ""
@@ -378,8 +379,12 @@ struct CollectionBrowser: View {
                 }
             }
         }
+        // Settled 2026-09-24 (`spec/conventions.md` §3, "Browser: empty space").
         .contextMenu {
-            NoMenuYetItems(place: "Edit Show › Browser › empty space", planned: "Import…, Add from Library…")
+            Button("Import…") { runImportPanel(model) }
+            Button("Add from Library…") { addingFromLibrary = true }
+                .disabled(collection == nil)
+            PaneWindowMenuItem()
         }
         .listNavigation(selection: $picked, order: usedEntries.map(\.pick) + unusedFiles.map { .file($0.id) },
                         primaryAction: { picks in
@@ -418,6 +423,12 @@ struct CollectionBrowser: View {
             }
         } message: { ids in
             Text(deleteMessage(ids))
+        }
+        .sheet(isPresented: $addingFromLibrary) {
+            let inCollection = Set(collection?.itemIDs ?? [])
+            MultiItemPicker(title: "Add from Library", items: model.items.filter { !inCollection.contains($0.id) }) { ids in
+                if let cid = collection?.id { model.addToCollection(Array(ids), cid) }
+            }
         }
         .onKeyPress(keys: ["e", "w", "q"]) { press in
             guard press.modifiers.isEmpty, !picked.isEmpty,
