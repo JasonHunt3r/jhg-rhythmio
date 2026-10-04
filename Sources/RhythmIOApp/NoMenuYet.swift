@@ -57,8 +57,8 @@ enum ListEmptySpace {
     /// (`spec/conventions.md` §3). Nearest pane wins.
     private static let places: [String: (place: String, planned: String?)] = [
         "library": ("Library pane", nil),
-        "list": ("Edit Show › Browser", "Import…, Add from Library…"),
-        "main": ("Edit Slides › Slide list", "Add from Collection…, Import…, Paste, Select All"),
+        "list": ("Edit Show › Browser", nil),
+        "main": ("Edit Slides › Slide list", nil),
     ]
 
     /// A real menu for a list's empty space, by pane id, set by the view

@@ -60,3 +60,19 @@ showing one launch and the window's URL a second later — the wait the
 launchd and `sfltool dumpbtm` kept listing `com.jhg.rhythmbg` as enabled
 while it was unregistered; the app's own `SMAppService` status is what
 the switch reads, and it was right.
+
+**The menus batch, evening (B-18, B-19, B-20; M1–M8).** Jason chose it
+as the first part of getting the app in shape before he builds shows
+(B-88 parked until then). Nearly all of it was settled 2026-09-24 and
+only needed building; four details were asked first. Fade lengths came
+back as **user-defined settings** (Settings ▸ Timeline ▸ Fades), with my
+suggestions as their defaults. Eight commits, 6376eb6…64e6e95:
+M1 one slide menu for both places; M2 cuts and transitions; M3 lane
+images and audio clips, with fades and Duplicate (rules in core, 6
+tests); M4 markers, empty ruler, row handles, empty audio row; M5 tiles,
+grid, Browser and Edit Slides empty space (the last built in AppKit for
+`ListEmptySpace`); M6 the Inspector's four new section headers and Reset
+to Default on each control; M7 the Edit menu taken over, handing text
+fields their own Cut/Copy/Paste; M8 the viewer's Select ▸, from what's
+under the pointer. Nothing was clicked by me: Jason was at the Mac. The
+Edit menu's effect on text fields is the one thing to check first.

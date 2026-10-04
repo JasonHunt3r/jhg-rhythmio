@@ -70,7 +70,7 @@ when RhythmIO launches" is on. Registering started a second copy (B-08, fixed an
 ## Where it stands
 
 **Everything planned is built**, and more has come from Jason's use of it.
-**385 tests** (368 core + 17 RhythmBG); PaneKit has its own 58, ListKit its
+**391 tests** (374 core + 17 RhythmBG); PaneKit has its own 58, ListKit its
 own 24. **Library schema 14.**
 
 Every phase is built (`plan.md`; each area's spec is in CLAUDE.md's
@@ -100,6 +100,7 @@ launches" (on, 2026-10-03), otherwise from RhythmBG ▸ Desktop Show….
 1. **The range batch is built** (B-02, B-05, B-06, B-11; N1–N8, `range-and-ruler.md`): its shakedown rows wait for Jason.
 2. **RhythmBG: B-14, B-87, B-17** passed Jason's shakedown 2026-10-03, and B-08 is fixed (one copy, checked); B-16 waits on B-39.
 3. **Slide Info on ⌥Space, on PopoverKit**, and **Show in Own Window on every right-click** with the Library pane, Browser and Edit Slides' Inspector popping out (built and passed Jason's shakedown 2026-10-03). B-88, what Slide Info holds, is parked until Jason has built some shows.
+4. **The menus batch** (B-18, B-19, B-20, M1–M8, 2026-10-03): every settled right-click item and the Edit menu's Copy, Paste and Duplicate; its two shakedown rows wait for Jason.
 
 Built and waiting on Jason's shakedown rows: B-01, B-03 and the held-arrow
 fixes; the inspector batch (B-04, B-07: a file not in the show shows its
@@ -118,7 +119,7 @@ resets every app's login items, so they are left alone.
 ## Quick start
 
 ```sh
-swift test                                  # 368 core + 17 RhythmBG tests
+swift test                                  # 374 core + 17 RhythmBG tests
 (cd PaneKit && swift test)                  # 56 PaneKit tests
 (cd ListKit && swift test)                  # 24 ListKit tests
 ./make-app.sh                               # → build/RhythmIO.app (signed, team P82S39V2KJ)

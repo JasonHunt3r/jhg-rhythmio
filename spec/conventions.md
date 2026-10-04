@@ -164,6 +164,18 @@ Inspector, Browser, Library Pane), or "Put … Back in Main Window" once
 it's out. Each such pane also has a background menu holding only that
 item, so empty space answers (`spec/panekit.md`, "Pane ⇄ panel").
 
+**The settled menus are built** (the menus batch, 2026-10-03; B-18, B-19,
+B-20): every row of the table below marked Settled is on its menu, except
+a tile's and a collection's Play (they wait on Quick Show, B-39), Add
+Audio Row (stacked rows, B-22) and the transport (no menu, settled).
+The decisions made while building, Jason 2026-10-03: Select All After is
+this slide and every one after it; a lane image's Duplicate goes right
+after it, or the next free space; Duration ▸ Custom… is a small popover;
+Fade ▸ turns an end on at Settings ▸ Timeline ▸ Fades (0.5 s images, 1 s
+audio to start) and keeps an existing fade's length. Apply to All Cuts
+sets every join. Edit Slides' and the timeline's slide menus are one
+(`SlideMenu`).
+
 **A place with no menu yet shows a note, not nothing** (Jason,
 2026-09-26): right-clicked, it opens a greyed menu, "No menu yet —
 *place* › *area*", in `spec/anatomy.md`'s names, and "Agreed, not built:
@@ -173,8 +185,9 @@ its PaneKit pane. **Search the code for `noMenuYet` and `ListEmptySpace`
 to list every gap**; a designed menu replaces its note. Covered so far:
 the Library pane (Collections heading, empty space), the browser (header,
 empty space, no collection), the inspector (empty, each section's card,
-the Effects header), Edit Slides' slide list (empty space). Not yet: the
-timeline, the transport, the filter bar and sort strip, the defaults bar.
+the Effects header). Edit Slides' empty space and the browser's have
+their real menus since 2026-10-03. Not yet: the filter bar and sort
+strip, the defaults bar.
 
 **A starting order,** proposed for every menu. Groups are separated by a
 divider, and empty groups are skipped:
@@ -266,11 +279,13 @@ collection, unless the setting says always. (Built.)
 | Delete | as the Delete key | as the Delete key | text |
 | Select All ⌘A | every tile in view (A1; built). **Top priority** (Jason: hand-clicking 4,000 test images) | every slide (A1; built 2026-09-26) | text |
 
-Undo, Redo, Delete, Duplicate of slides and ⌘A are Built. Copy and Paste
-of slides are wanted (settled 2026-09-24) and work from the slide's
-right-click in Edit Slides (`SlideClipboard`), but not yet from the Edit
-menu (checked 2026-09-28). Copying tiles, Paste Settings ⇧⌘V and
-Duplicate of a lane image aren't built; the rest is Proposed.
+Undo, Redo, Delete, Duplicate of slides and ⌘A are Built. **Built
+2026-10-03 (B-20):** Copy and Paste of slides from the Edit menu, Copy of
+tiles (their files, for Finder or Mail), and ⌘D on a selected lane
+image. The Edit menu's Cut/Copy/Paste/Delete/Select All are RhythmIO's
+own items now, each handing its action to a text field that has the
+keyboard, so text editing is as before. Paste Settings ⇧⌘V is still
+Proposed.
 
 **Copying tiles to Finder or Mail is small:** the files' URLs go on the
 pasteboard, and Finder pastes copies. Photos is different: **native
