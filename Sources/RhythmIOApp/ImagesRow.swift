@@ -314,19 +314,21 @@ struct ImagesRow: View {
     }
 }
 
-/// Pick an image from the library, for "Place Image Here…". Video isn't
-/// offered: the lane doesn't play it yet.
+/// Pick an image from the library, for "Place Image Here…" (video isn't
+/// offered: the lane doesn't play it yet), or an audio file for the audio
+/// row's "Add Audio…" (`audio`).
 struct LibraryPicker: View {
+    var audio = false
     let choose: (MediaItem?) -> Void
     @Environment(AppModel.self) private var model
 
     var body: some View {
         VStack(spacing: 0) {
-            Text("Place Image").font(.headline).padding(12)
+            Text(audio ? "Add Audio" : "Place Image").font(.headline).padding(12)
             Divider()
             ScrollView {
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 110), spacing: 10)], spacing: 12) {
-                    ForEach(model.items.filter { $0.kind.isPicture && $0.kind != .video }) { item in
+                    ForEach(model.items.filter { audio ? $0.kind == .audio : $0.kind.isPicture && $0.kind != .video }) { item in
                         Button { choose(item) } label: {
                             VStack(spacing: 4) {
                                 ThumbnailView(item: item, url: model.url(for: item))

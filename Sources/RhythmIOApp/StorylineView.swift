@@ -199,6 +199,8 @@ struct StorylineView: View {
     /// and what's typed (Jason, 2026-10-03: a small popover).
     @State private var customDurationFor: Int64?
     @State private var customDurationText = ""
+    /// Where the pointer is over the ruler, for its right-click menu.
+    @State private var rulerHoverX: CGFloat = 0
     /// The slide under the pointer, for Slide Info's hover card.
     @State private var hoveredSlide: Int64?
     /// Something is being dragged over the images row: it lights up.
@@ -494,6 +496,8 @@ struct StorylineView: View {
                         .onGeometryChange(for: CGFloat.self, of: \.size.height) { measuredRuler = $0; reportNaturalHeight() }
                         .contentShape(Rectangle())
                         .gesture(scrubGesture)
+                        .onContinuousHover { if case .active(let p) = $0 { rulerHoverX = p.x } }
+                        .contextMenu { rulerMenu }
                         .overlay(alignment: .topLeading) { rangeOnRuler }
                         // Edit Range points at what was double-clicked. One
                         // popover on the ruler, at an exact spot in its own
@@ -724,6 +728,38 @@ struct StorylineView: View {
               + "⌥-double-click shows or hides both ends' lines; right-click for each line, the lock and more.")
     }
 
+    /// Empty ruler space (`spec/conventions.md` §3, settled 2026-09-24): M,
+    /// I, O and ⌥X, at the pointer instead of the playhead. Like the keys,
+    /// they work on a locked range: a menu item is deliberate.
+    @ViewBuilder private var rulerMenu: some View {
+        let t = show.frameGrid.snap(max(Double(rulerHoverX - Self.inset) / pps, 0))
+        Button("Add Marker Here") {
+            let current = model.show(show.id) ?? show
+            let (placed, merged) = current.placingMarker(at: t, tolerance: NudgeSettings.saved.mergeTolerance,
+                                                         grid: show.frameGrid)
+            mutate("Add Marker") { $0 = placed }
+            if merged { MarkerCollisionNotice.showSoon(merged: true) }
+        }
+        Divider()
+        Button("Set Range In Here") {
+            mutate("Set Range In") { s in
+                s.editor.rangeIn = t
+                if let o = s.editor.rangeOut, o <= t { s.editor.rangeOut = nil }
+                s.editor.rangeOn = true
+            }
+        }
+        Button("Set Range Out Here") {
+            mutate("Set Range Out") { s in
+                s.editor.rangeOut = t
+                if let i = s.editor.rangeIn, i >= t { s.editor.rangeIn = nil }
+                s.editor.rangeOn = true
+            }
+        }
+        Button("Clear Range") { mutate("Clear Range") { $0.editor.rangeIn = nil; $0.editor.rangeOut = nil } }
+            .disabled(editor.rangeIn == nil && editor.rangeOut == nil)
+        PaneWindowMenuItem()
+    }
+
     /// Shared by either end and the shaded span itself.
     @ViewBuilder private var rangeMenu: some View {
         Button("Edit Range…") { barClickX = nil; openEditRange(.bar) }
@@ -844,13 +880,24 @@ struct StorylineView: View {
                 .gesture(markerDragGesture(m.id))
                 .help((song == nil ? "Marker" : "Beat marker (moves with its audio clip)")
                       + " at \(formatClock(t)). Drag to move; Delete removes it; double-click for its line.")
-                // Just the obvious one for now (audit C3); Show/Hide Line
-                // waits for the right-click conversation (spec/conventions.md §3).
+                // Settled 2026-09-24 (`spec/conventions.md` §3, "a marker").
                 .contextMenu {
+                    Toggle("Show Line", isOn: Binding(get: { editor.markerLines && m.showsLine },
+                                                      set: { _ in toggleMarkerLine(m) }))
+                    Divider()
                     Button("Remove Marker") {
                         selectedMarkers = [m.id]
                         mutate("Remove Marker") { $0.removeMarkers([m.id]) }
                         selectedMarkers = []
+                    }
+                    if let song {
+                        Button("Remove All Beat Markers") {
+                            mutate("Remove All Beat Markers") { s in
+                                guard let i = s.music.firstIndex(where: { $0.id == song }) else { return }
+                                s.music[i].markers = []
+                            }
+                            selectedMarkers = []
+                        }
                     }
                     PaneWindowMenuItem()
                 }
@@ -891,6 +938,18 @@ struct StorylineView: View {
         beatSheet = BeatSheet.Request(range: r, song: clip?.id)
     }
 
+    /// A marker's own line, on or off: what double-clicking it does.
+    private func toggleMarkerLine(_ m: Marker) {
+        let showing = editor.markerLines && m.showsLine
+        // With every marker's line off, this turns them back on to show it.
+        if !editor.markerLines { engine.updateEditor { $0.markerLines = true } }
+        if m.showsLine == showing {
+            mutate(showing ? "Hide Marker Line" : "Show Marker Line") { s in
+                s.updateMarker(m.id) { $0.showsLine = !showing }
+            }
+        }
+    }
+
     private func clickMarker(_ m: Marker) {
         focused = true
         if (NSApp.currentEvent?.clickCount ?? 1) >= 2 {
@@ -898,14 +957,7 @@ struct StorylineView: View {
                 engine.updateEditor { $0.markerLines.toggle() }
                 return
             }
-            let showing = editor.markerLines && m.showsLine
-            // With every marker's line off, this turns them back on to show it.
-            if !editor.markerLines { engine.updateEditor { $0.markerLines = true } }
-            if m.showsLine == showing {
-                mutate(showing ? "Hide Marker Line" : "Show Marker Line") { s in
-                    s.updateMarker(m.id) { $0.showsLine = !showing }
-                }
-            }
+            toggleMarkerLine(m)
             return
         }
         let mods = NSEvent.modifierFlags
@@ -986,6 +1038,8 @@ struct StorylineView: View {
                           action: row.kind == .music ? ("Detect Beats…", { openBeatSheet(for: nil) })
                               : row.kind == .slides ? ("Rhythm…", { openRhythm() }) : nil,
                           toggle: { toggleDrawer(row.id) },
+                          move: { moveRowOrder(row.id, by: $0) },
+                          canMove: (up: displayRows.first?.id != row.id, down: displayRows.last?.id != row.id),
                           drag: rowDragGesture(row))
                     .offset(y: rowTop(row.kind))
             }
@@ -1003,6 +1057,16 @@ struct StorylineView: View {
         .offset(y: Self.rowsOrigin)
         .animation(.snappy(duration: 0.18), value: displayRows.map(\.id))
         .animation(.snappy(duration: 0.15), value: openDrawers)
+    }
+
+    /// Move Row Up / Down, from a row handle's menu: one place, one undo.
+    private func moveRowOrder(_ id: UUID, by delta: Int) {
+        var rows = show.rows
+        guard let i = rows.firstIndex(where: { $0.id == id }) else { return }
+        let to = i + delta
+        guard rows.indices.contains(to) else { return }
+        rows.swapAt(i, to)
+        mutate("Move Row") { $0.rows = rows }
     }
 
     private func toggleDrawer(_ id: UUID) {
@@ -2094,6 +2158,9 @@ struct RowHandle<G: Gesture>: View {
     /// Beats…").
     let action: (title: String, run: () -> Void)?
     let toggle: () -> Void
+    /// Move Row Up (-1) / Down (+1), from its menu.
+    let move: (Int) -> Void
+    let canMove: (up: Bool, down: Bool)
     let drag: G
 
     var body: some View {
@@ -2113,6 +2180,18 @@ struct RowHandle<G: Gesture>: View {
             .gesture(drag)
             .onHover { if $0 { NSCursor.openHand.set() } else { NSCursor.arrow.set() } }
             .help("\(row.kind.title) row. Drag to move it; click to open its drawer; ⌥-click opens or closes them all.")
+            // Settled 2026-09-24 (`spec/conventions.md` §3, "a row handle").
+            .contextMenu {
+                Button(open ? "Close Drawer" : "Open Drawer", action: toggle)
+                Divider()
+                Button("Move Row Up") { move(-1) }.disabled(!canMove.up)
+                Button("Move Row Down") { move(1) }.disabled(!canMove.down)
+                if let action {
+                    Divider()
+                    Button(action.title, action: action.run)
+                }
+                PaneWindowMenuItem()
+            }
             if open {
                 drawer
                     .transition(.move(edge: .leading).combined(with: .opacity))

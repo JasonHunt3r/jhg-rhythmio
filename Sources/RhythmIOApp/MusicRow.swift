@@ -44,6 +44,10 @@ struct MusicRow: View {
         let songLength: Double
     }
     @State private var edit: SongEdit?
+    /// Add Audio…, at the time the row was right-clicked.
+    private struct AudioRequest: Identifiable { let id = UUID(); let time: Double }
+    @State private var addingAudioAt: AudioRequest?
+    @State private var hoverX: CGFloat = 0
 
     /// The songs as drawn: a drag in progress already applied.
     private var clips: [AudioClip] {
@@ -82,6 +86,24 @@ struct MusicRow: View {
         .contentShape(Rectangle())
         // A clip's own tap wins over this one.
         .onTapGesture { didClickEmpty() }
+        .onContinuousHover { if case .active(let p) = $0 { hoverX = p.x } }
+        // Settled 2026-09-24 (`spec/conventions.md` §3, "empty audio-row
+        // space"); Add Audio Row waits for stacked rows (B-22).
+        .contextMenu {
+            let t = max(0, Double(hoverX - inset) / pps)
+            Button("Add Audio…") { addingAudioAt = AudioRequest(time: t) }
+            PaneWindowMenuItem()
+        }
+        .sheet(item: $addingAudioAt) { request in
+            LibraryPicker(audio: true) { item in
+                addingAudioAt = nil
+                // Like a drop: a file from outside the show's collection
+                // joins it, after asking.
+                if let item, model.bringIntoCollection([item.id], forShow: show.id) {
+                    MusicRow.place([item.id], at: request.time, model: model, mutate: mutate)
+                }
+            }
+        }
         .onDrop(of: ItemDrag.accepted, isTargeted: $dropTargeted) { providers, location in
             let t = max(0, Double(location.x - inset) / pps)
             Task {
