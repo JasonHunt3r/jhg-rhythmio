@@ -29,6 +29,7 @@ struct MusicRow: View {
     /// A click on the row's empty space: the timeline deselects everything.
     let didClickEmpty: () -> Void
     @Environment(AppModel.self) private var model
+    @Environment(\.undoManager) private var undoManager
     @State private var dropTargeted = false
 
     static let shortest = 0.5
@@ -127,8 +128,21 @@ struct MusicRow: View {
                           })
             }
             .onHover { if $0 { NSCursor.openHand.set() } else { NSCursor.arrow.set() } }
+            // Settled 2026-09-24 (`spec/conventions.md` §3, "Audio clip").
             .contextMenu {
                 Button("Detect Beats…") { detectBeats(clip) }
+                Button("Set Range to Clip") { setRange(clip.start...clip.end) }
+                Divider()
+                FadeMenu(fadeIn: clip.fadeIn, fadeOut: clip.fadeOut) { ends in
+                    mutate("Change Fade") { s in
+                        guard let i = s.music.firstIndex(where: { $0.id == clip.id }) else { return }
+                        let c = s.music[i]
+                        (s.music[i].fadeIn, s.music[i].fadeOut) =
+                            ends.apply(fadeIn: c.fadeIn, fadeOut: c.fadeOut, length: FadeDefaults.audio, clipLength: c.length)
+                    }
+                }
+                Divider()
+                Button("Show in Library") { showInLibrary(clip.itemID, model: model, undoManager: undoManager) }
                 Divider()
                 Button("Remove Audio Clip") {
                     mutate("Remove Audio Clip") { $0.music.removeAll { $0.id == clip.id } }

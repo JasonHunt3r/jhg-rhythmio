@@ -722,6 +722,29 @@ private struct TimelineSettingsTab: View {
                     }
                 }
             }
+            Section("Fades") {
+                fadeRow("Lane images", $fadeImages)
+                fadeRow("Audio clips", $fadeAudio)
+                Text("How long a fade is when Fade ▸ In, Out or Both turns it on. A fade already there keeps its own length; drag a fade on the clip to change it.")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+            }
+        }
+    }
+
+    @AppStorage(FadeDefaults.imagesKey) private var fadeImages = FadeDefaults.imagesStart
+    @AppStorage(FadeDefaults.audioKey) private var fadeAudio = FadeDefaults.audioStart
+
+    private func fadeRow(_ label: String, _ value: Binding<Double>) -> some View {
+        LabeledContent(label) {
+            HStack(spacing: 6) {
+                TextField("", value: Binding(get: { value.wrappedValue }, set: { value.wrappedValue = max($0, 0.05) }),
+                          format: .number)
+                    .labelsHidden()
+                    .multilineTextAlignment(.trailing)
+                    .frame(width: 64)
+                Text("s").foregroundStyle(.secondary)
+            }
         }
     }
 

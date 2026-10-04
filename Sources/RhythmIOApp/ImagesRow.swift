@@ -32,6 +32,7 @@ struct ImagesRow: View {
     /// A click on the row's empty space: the timeline deselects everything.
     let didClickEmpty: () -> Void
     @Environment(AppModel.self) private var model
+    @Environment(\.undoManager) private var undoManager
 
     /// A new image's length.
     static let newLength = 5.0
@@ -206,8 +207,22 @@ struct ImagesRow: View {
         // Just the obvious one for now (audit C1); the fuller menu
         // (Duplicate, Show in Finder, Open Inspector) waits for the
         // right-click conversation (spec/conventions.md §3).
+        // Settled 2026-09-24 (`spec/conventions.md` §3, "Lane image").
         .contextMenu {
+            Button("Duplicate") { duplicate(o.clip) }
             Button("Replace Image…") { replacingImage = id }
+            Divider()
+            FadeMenu(fadeIn: o.clip.fadeIn, fadeOut: o.clip.fadeOut) { ends in
+                mutate("Change Fade") { s in
+                    guard let i = s.overlays.firstIndex(where: { $0.id == id }) else { return }
+                    let c = s.overlays[i]
+                    (s.overlays[i].fadeIn, s.overlays[i].fadeOut) =
+                        ends.apply(fadeIn: c.fadeIn, fadeOut: c.fadeOut, length: FadeDefaults.images, clipLength: c.length)
+                }
+            }
+            Divider()
+            Button("Show in Library") { showInLibrary(o.clip.itemID, model: model, undoManager: undoManager) }
+            Divider()
             Button("Remove Image") {
                 select(id)
                 mutate("Remove Image") { $0.overlays.removeAll { $0.id == id } }
@@ -217,6 +232,17 @@ struct ImagesRow: View {
         }
     }
 
+
+    /// Duplicate: a copy right after it, or in the next free space after
+    /// that (Jason, 2026-10-03); a beep if there's none.
+    private func duplicate(_ clip: OverlayClip) {
+        guard let copy = OverlayPlacement.duplicate(clip, in: show.overlays, duration: Self.open) else {
+            return NSSound.beep()
+        }
+        mutate("Duplicate Image") { $0.overlays.append(copy) }
+        selectedOverlay = copy.id
+        didSelect()
+    }
 
     private func edgeZone(_ o: ResolvedOverlay, part: ClipEdit.Part) -> some View {
         Color.clear
