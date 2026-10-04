@@ -195,6 +195,10 @@ struct StorylineView: View {
     }
     @State private var transitionEdit: TransitionEdit?
     @State private var hoveredJoin: Int64?
+    /// Transition ▸ Duration ▸ Custom…'s popover: the transition it's for,
+    /// and what's typed (Jason, 2026-10-03: a small popover).
+    @State private var customDurationFor: Int64?
+    @State private var customDurationText = ""
     /// The slide under the pointer, for Slide Info's hover card.
     @State private var hoveredSlide: Int64?
     /// Something is being dragged over the images row: it lights up.
@@ -1498,10 +1502,32 @@ struct StorylineView: View {
         .help("\(r.transitionIn.style.title) · \(formatSeconds(duration))"
               + (own ? "" : " (show default)") + ". Drag an edge to change when it starts or ends; drag the middle to slide it.")
         .offset(x: left, y: laneTop + 2)
-        // Just the obvious one for now (audit C2); the fuller menu (its
-        // style as a submenu, Use Show Default) waits for the right-click
-        // conversation (spec/conventions.md §3).
+        // Settled 2026-09-24 (`spec/conventions.md` §3, "Transition").
         .contextMenu {
+            Menu("Style") {
+                ForEach(TransitionStyle.allCases.filter { $0 != .cut }, id: \.self) { style in
+                    Button(style.title) { setTransition(id) { $0.style = style } }
+                }
+            }
+            Menu("Duration") {
+                ForEach([0.5, 1.0, 2.0], id: \.self) { secs in
+                    Button(formatSeconds(secs)) { setDuration(r, secs) }
+                }
+                Divider()
+                Button("Custom…") {
+                    customDurationText = String(format: "%g", r.transitionIn.duration)
+                    customDurationFor = id
+                }
+            }
+            Button("Use Show Default") {
+                mutate("Use Show Default") { s in
+                    guard let i = s.slides.firstIndex(where: { $0.id == id }) else { return }
+                    s.slides[i].settings.transition = nil
+                }
+            }
+            .disabled(!own || show.defaults.transition.style == .cut)
+            Button("Apply to All Cuts") { applyToAllCuts(r.transitionIn) }
+            Divider()
             Button("Remove Transition") {
                 selectTransition(id, at: joinTime)
                 mutate("Remove Transition") { s in
@@ -1512,6 +1538,65 @@ struct StorylineView: View {
             }
             PaneWindowMenuItem()
         }
+        .popover(isPresented: Binding(get: { customDurationFor == id },
+                                      set: { if !$0, customDurationFor == id { customDurationFor = nil } }),
+                 arrowEdge: .top) {
+            customDurationField(r)
+        }
+    }
+
+    /// Changes one transition, starting from what it shows now (its own, or
+    /// the show's default it was following).
+    private func setTransition(_ id: Int64, _ change: @escaping (inout RhythmIOCore.Transition) -> Void) {
+        mutate("Change Transition") { s in
+            guard let i = s.slides.firstIndex(where: { $0.id == id }) else { return }
+            var t = s.slides[i].settings.transition ?? s.defaults.transition
+            change(&t)
+            s.slides[i].settings.transition = t
+        }
+    }
+
+    /// A new length, no longer than either slide allows; the join stays at
+    /// the same fraction of it.
+    private func setDuration(_ r: ResolvedSlide, _ secs: Double) {
+        let prev = r.index > 0 ? timeline.slides[r.index - 1] : nil
+        let limit = min(r.length, prev?.length ?? r.length)
+        let d = min(max(secs, 0.1), limit)
+        let old = r.transitionIn
+        setTransition(r.slide.id) { t in
+            t.lead = old.duration > 0 ? old.lead / old.duration * d : d / 2
+            t.duration = d
+        }
+    }
+
+    /// Every join between slides gets this transition, as one undo step
+    /// (`spec/conventions.md` §3: the cuts are the joins, with or without a
+    /// transition now). The first slide has no join before it.
+    private func applyToAllCuts(_ t: RhythmIOCore.Transition) {
+        mutate("Apply to All Cuts") { s in
+            for i in s.slides.indices.dropFirst() { s.slides[i].settings.transition = t }
+        }
+    }
+
+    /// Custom…'s field: seconds, Return applies, Esc cancels.
+    private func customDurationField(_ r: ResolvedSlide) -> some View {
+        HStack(spacing: 6) {
+            Text("Duration")
+            TextField("Seconds", text: $customDurationText)
+                .frame(width: 60)
+                .multilineTextAlignment(.trailing)
+                .onSubmit {
+                    if let secs = Double(customDurationText.trimmingCharacters(in: .whitespaces)), secs > 0 {
+                        setDuration(r, secs)
+                        customDurationFor = nil
+                    } else {
+                        NSSound.beep()
+                    }
+                }
+                .onExitCommand { customDurationFor = nil }
+            Text("s").foregroundStyle(.secondary)
+        }
+        .padding(12)
     }
 
     private func transitionEdgeZone(_ r: ResolvedSlide, part: TransitionEdit.Part) -> some View {
@@ -1585,16 +1670,35 @@ struct StorylineView: View {
         .frame(width: 22, height: Self.laneRowHeight - 2)
         .contentShape(Rectangle())
         .onHover { hoveredJoin = $0 ? id : (hoveredJoin == id ? nil : hoveredJoin) }
-        .onTapGesture {
-            mutate("Add Transition") { s in
-                guard let i = s.slides.firstIndex(where: { $0.id == id }) else { return }
-                s.slides[i].settings.transition = s.defaults.transition.style == .cut ? .newShowDefault : nil
-            }
-            selectedTransition = id
-            focused = true
-        }
+        .onTapGesture { addDefaultTransition(id) }
         .help("Cut. Click + to add a transition here.")
+        // Settled 2026-09-24 (`spec/conventions.md` §3, "a cut with no
+        // transition").
+        .contextMenu {
+            Menu("Add Transition") {
+                ForEach(TransitionStyle.allCases.filter { $0 != .cut }, id: \.self) { style in
+                    Button(style.title) {
+                        let base = show.defaults.transition.style == .cut ? RhythmIOCore.Transition.newShowDefault
+                                                                           : show.defaults.transition
+                        setTransition(id) { t in t = base; t.style = style }
+                        selectedTransition = id
+                    }
+                }
+            }
+            Button("Add Show Default Transition") { addDefaultTransition(id) }
+            PaneWindowMenuItem()
+        }
         .offset(x: joinX - 11, y: laneTop + 1)
+    }
+
+    /// What the "+" does.
+    private func addDefaultTransition(_ id: Int64) {
+        mutate("Add Transition") { s in
+            guard let i = s.slides.firstIndex(where: { $0.id == id }) else { return }
+            s.slides[i].settings.transition = s.defaults.transition.style == .cut ? .newShowDefault : nil
+        }
+        selectedTransition = id
+        focused = true
     }
 
     /// A click on the timeline's empty space: nothing stays selected, so
