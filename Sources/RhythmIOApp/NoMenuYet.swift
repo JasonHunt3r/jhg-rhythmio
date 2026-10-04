@@ -1,5 +1,6 @@
 import AppKit
 import SwiftUI
+import PaneKit
 
 /// A place that should answer a right-click but has no menu designed yet
 /// (Jason, 2026-09-26): instead of nothing, a one-line greyed menu naming
@@ -28,6 +29,7 @@ struct NoMenuYetItems: View {
     var body: some View {
         Button("No menu yet — \(place)") {}.disabled(true)
         if let planned { Button("Agreed, not built: \(planned)") {}.disabled(true) }
+        PaneWindowMenuItem()
     }
 }
 

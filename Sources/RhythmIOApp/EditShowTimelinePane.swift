@@ -1,4 +1,5 @@
 import SwiftUI
+import PaneKit
 import RhythmIOCore
 import RhythmIOPlayback
 import ListKit
@@ -110,6 +111,10 @@ struct EditShowTimelinePane: View {
                 }
                 .background(WindowNumberReader(windowNumber: $windowNumber))
                 .background { if active { shortcuts(engine) } }
+                // Anywhere without a menu of its own: the ruler's and rows'
+                // empty space, the row handles, the transport (Jason,
+                // 2026-10-03).
+                .contextMenu { PaneWindowMenuItem() }
                 // Edit Slides' Play loops the selection (nil, the whole
                 // show, with nothing selected or in Edit Show).
                 // Recomputed from this view's own timeline, so a trim or a

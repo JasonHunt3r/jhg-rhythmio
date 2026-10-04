@@ -1,4 +1,5 @@
 import SwiftUI
+import PaneKit
 import UniformTypeIdentifiers
 import RhythmIOCore
 import RhythmIOPlayback
@@ -85,6 +86,7 @@ struct ImagesRow: View {
             let t = time(at: hoverX)
             Button("Place Image Here…") { placing = PlaceRequest(time: t) }
                 .disabled(OverlayPlacement.freeSpan(at: t, in: show.overlays, duration: Self.open) == nil)
+            PaneWindowMenuItem()
         }
         .onDrop(of: ItemDrag.accepted, isTargeted: $dropTargeted) { providers, location in
             let t = time(at: location.x)
@@ -211,6 +213,7 @@ struct ImagesRow: View {
                 mutate("Remove Image") { $0.overlays.removeAll { $0.id == id } }
                 selectedOverlay = nil
             }
+            PaneWindowMenuItem()
         }
     }
 

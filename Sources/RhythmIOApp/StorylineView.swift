@@ -1,4 +1,5 @@
 import SwiftUI
+import PaneKit
 import RhythmIOCore
 import RhythmIOPlayback
 import PopoverKit
@@ -739,6 +740,7 @@ struct StorylineView: View {
                 fillRangeSheet = FillRangeSheet.Request(range: lo...hi)
             }
         }
+        PaneWindowMenuItem()
     }
 
     /// An end's own line: what double-clicking the end used to do. With the
@@ -846,6 +848,7 @@ struct StorylineView: View {
                         mutate("Remove Marker") { $0.removeMarkers([m.id]) }
                         selectedMarkers = []
                     }
+                    PaneWindowMenuItem()
                 }
         }
         // What the Rhythm tool would place on this show, faint, until it's applied.
@@ -1067,6 +1070,7 @@ struct StorylineView: View {
                 Button("Duplicate") { SlideActions.duplicate(ids, mutate: mutate) }
                 if ids.count == 1 { Button("Replace Image…") { replacingImage = p.id } }
                 Button("Remove from Show") { SlideActions.remove(ids, selection: $selection, mutate: mutate) }
+                PaneWindowMenuItem()
             }
             // A video slide's own sound (spec/video-audio.md). Silent until
             // it's turned up, so the line starts along the bottom.
@@ -1499,6 +1503,7 @@ struct StorylineView: View {
                 }
                 selectedTransition = nil
             }
+            PaneWindowMenuItem()
         }
     }
 

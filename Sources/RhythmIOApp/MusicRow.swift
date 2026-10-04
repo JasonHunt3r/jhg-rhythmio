@@ -1,4 +1,5 @@
 import SwiftUI
+import PaneKit
 import RhythmIOCore
 import RhythmIOPlayback
 
@@ -133,6 +134,7 @@ struct MusicRow: View {
                     mutate("Remove Audio Clip") { $0.music.removeAll { $0.id == clip.id } }
                     if selectedSong == clip.id { selectedSong = nil }
                 }
+                PaneWindowMenuItem()
             }
             .help("\(item.fileName) · \(formatSeconds(clip.length))")
             .offset(x: inset + CGFloat(clip.start * pps))

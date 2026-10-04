@@ -1,4 +1,5 @@
 import SwiftUI
+import PaneKit
 import RhythmIOCore
 import RhythmIOPlayback
 
@@ -75,6 +76,9 @@ struct SlideInspector: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .overlay { if selected.isEmpty && !showsFiles { emptyMessage } }
+        // Anywhere without a menu of its own (Jason, 2026-10-03).
+        .contentShape(Rectangle())
+        .contextMenu { PaneWindowMenuItem() }
     }
 
     private var showsFiles: Bool { selected.isEmpty && !files.isEmpty }
@@ -129,6 +133,7 @@ struct SlideInspector: View {
                 Button("Show in Library") { showInLibrary(itemID, model: model, undoManager: undoManager) }
                 if selected.count == 1 { Button("Replace Image…") { replacingImage = true } }
             }
+            PaneWindowMenuItem()
         }
         .sheet(isPresented: $replacingImage) {
             if let slide = selected.first {
@@ -353,6 +358,7 @@ struct SlideInspector: View {
             edit("Paste Section Settings") { $0.audio = v.isEmpty ? nil : v }
         }
         .disabled(!SectionClipboard.canPaste(key: "sound"))
+        PaneWindowMenuItem()
     }
 
     private func pointRow(_ point: LevelPoint, curve: LevelCurve, length: Double) -> some View {
@@ -654,6 +660,7 @@ struct SlideInspector: View {
             }
         }
         .disabled(!SectionClipboard.canPaste(key: "transform"))
+        PaneWindowMenuItem()
     }
 
     /// Rotation's own section: a checkbox, then Angles or Speed, acceleration,
