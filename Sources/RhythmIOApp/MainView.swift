@@ -1821,6 +1821,7 @@ struct LibraryGridView: View {
                                          name: $newGroupedCollectionName, model: model,
                                          startGroup: startCreatingGroup(with:collectionID:)))
         .focusedSceneValue(\.librarySelectionCount, selection.count)
+        .focusedSceneValue(\.requestLibraryCopy, { TileClipboard.copy(orderedSelection, model: model) })
         .focusedSceneValue(\.requestLibraryRename, {
             guard !orderedSelection.isEmpty else { return }
             renameIDs = orderedSelection

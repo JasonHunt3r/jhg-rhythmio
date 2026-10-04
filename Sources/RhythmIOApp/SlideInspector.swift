@@ -1030,6 +1030,14 @@ extension FocusedValues {
 // `ShowView`, which holds `selection` for both modes alike.
 
 struct ActiveSlideSelectionKey: FocusedValueKey { typealias Value = Set<Int64> }
+/// The Edit menu's Copy, Paste and Duplicate for a show (B-20): copy the
+/// selected slides, paste after them, and whether a lane image is selected
+/// (Duplicate then duplicates it). The Library grid's Copy is
+/// `requestLibraryCopy`.
+struct CopySlidesKey: FocusedValueKey { typealias Value = () -> Void }
+struct PasteSlidesKey: FocusedValueKey { typealias Value = () -> Void }
+struct OverlaySelectedKey: FocusedValueKey { typealias Value = Bool }
+struct LibraryCopyKey: FocusedValueKey { typealias Value = () -> Void }
 struct DuplicateSlidesKey: FocusedValueKey { typealias Value = () -> Void }
 struct SlideGetInfoKey: FocusedValueKey { typealias Value = () -> Void }
 
@@ -1045,6 +1053,22 @@ extension FocusedValues {
     var requestSlideGetInfo: (() -> Void)? {
         get { self[SlideGetInfoKey.self] }
         set { self[SlideGetInfoKey.self] = newValue }
+    }
+    var requestCopySlides: (() -> Void)? {
+        get { self[CopySlidesKey.self] }
+        set { self[CopySlidesKey.self] = newValue }
+    }
+    var requestPasteSlides: (() -> Void)? {
+        get { self[PasteSlidesKey.self] }
+        set { self[PasteSlidesKey.self] = newValue }
+    }
+    var overlaySelected: Bool? {
+        get { self[OverlaySelectedKey.self] }
+        set { self[OverlaySelectedKey.self] = newValue }
+    }
+    var requestLibraryCopy: (() -> Void)? {
+        get { self[LibraryCopyKey.self] }
+        set { self[LibraryCopyKey.self] = newValue }
     }
 }
 

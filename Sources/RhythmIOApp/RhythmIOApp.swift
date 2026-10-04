@@ -149,6 +149,10 @@ struct AppCommands: Commands {
     @FocusedValue(\.activeSlideSelection) private var activeSlideSelection
     @FocusedValue(\.requestDuplicateSlides) private var requestDuplicateSlides
     @FocusedValue(\.requestSlideGetInfo) private var requestSlideGetInfo
+    @FocusedValue(\.requestCopySlides) private var requestCopySlides
+    @FocusedValue(\.requestPasteSlides) private var requestPasteSlides
+    @FocusedValue(\.overlaySelected) private var overlaySelected
+    @FocusedValue(\.requestLibraryCopy) private var requestLibraryCopy
     // Not `@FocusedValue` any more (found 2026-09-25, `spec/panekit.md`,
     // "The order," step 5): that's scoped to SwiftUI's own Scene graph,
     // so it never reached these menus while the Timeline pane's
@@ -255,13 +259,36 @@ struct AppCommands: Commands {
                 .disabled(model.isOnMaster)
         }
 
-        // A2: Duplicate, for the slides selected in whichever mode has the
-        // window (not lane images yet — no Duplicate action exists for one).
-        CommandGroup(after: .pasteboard) {
+        // The Edit menu's own items (`spec/conventions.md` §5, B-20). A text
+        // field with the keyboard keeps its own Cut, Copy and Paste: each
+        // item hands the action down the responder chain, as the standard
+        // ones do. Otherwise Copy takes the show's selected slides, or the
+        // Library grid's files (for Finder or Mail), and Paste puts copied
+        // slides after the selection.
+        CommandGroup(replacing: .pasteboard) {
+            Button("Cut") { sendToResponder(#selector(NSText.cut(_:))) }
+                .keyboardShortcut("x")
+            Button("Copy") {
+                if editingText { sendToResponder(#selector(NSText.copy(_:))) }
+                else if !(activeSlideSelection ?? []).isEmpty, let requestCopySlides { requestCopySlides() }
+                else if (librarySelectionCount ?? 0) > 0, let requestLibraryCopy { requestLibraryCopy() }
+                else { sendToResponder(#selector(NSText.copy(_:))) }
+            }
+            .keyboardShortcut("c")
+            Button("Paste") {
+                if !editingText, SlideClipboard.canPaste, let requestPasteSlides { requestPasteSlides() }
+                else { sendToResponder(#selector(NSText.paste(_:))) }
+            }
+            .keyboardShortcut("v")
+            Button("Delete") { sendToResponder(#selector(NSText.delete(_:))) }
+            Button("Select All") { sendToResponder(#selector(NSResponder.selectAll(_:))) }
+                .keyboardShortcut("a")
             Divider()
+            // A2: the slides selected in whichever mode has the window, or
+            // a selected lane image.
             Button("Duplicate") { requestDuplicateSlides?() }
                 .keyboardShortcut("d")
-                .disabled((activeSlideSelection ?? []).isEmpty)
+                .disabled((activeSlideSelection ?? []).isEmpty && overlaySelected != true)
         }
 
         // F2: the inspector toggle and the Edit Slides/Edit Show switch,
@@ -468,6 +495,13 @@ struct AppCommands: Commands {
     }
 
     /// The Rhythm tool (plan, Phase 3 step 7), on the show in the window.
+    /// A text field (its field editor) has the keyboard.
+    private var editingText: Bool { NSApp.keyWindow?.firstResponder is NSText }
+
+    private func sendToResponder(_ action: Selector) {
+        NSApp.sendAction(action, to: nil, from: nil)
+    }
+
     @MainActor private func openRhythm() {
         guard let id = activeShowID else { return }
         RhythmTool.shared.open(showID: id, model: model, undoManager: NSApp.mainWindow?.undoManager)

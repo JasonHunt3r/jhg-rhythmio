@@ -233,14 +233,9 @@ struct ImagesRow: View {
     }
 
 
-    /// Duplicate: a copy right after it, or in the next free space after
-    /// that (Jason, 2026-10-03); a beep if there's none.
     private func duplicate(_ clip: OverlayClip) {
-        guard let copy = OverlayPlacement.duplicate(clip, in: show.overlays, duration: Self.open) else {
-            return NSSound.beep()
-        }
-        mutate("Duplicate Image") { $0.overlays.append(copy) }
-        selectedOverlay = copy.id
+        guard let id = OverlayActions.duplicate(clip, in: show, mutate: mutate) else { return }
+        selectedOverlay = id
         didSelect()
     }
 
@@ -351,5 +346,21 @@ struct LibraryPicker: View {
             .padding(12)
         }
         .frame(width: 560, height: 460)
+    }
+}
+
+/// Duplicate on a lane image, from its menu or ⌘D (A2): a copy right after
+/// it, or in the next free space after that (Jason, 2026-10-03); a beep if
+/// there's none. Returns the copy's id.
+@MainActor
+enum OverlayActions {
+    @discardableResult
+    static func duplicate(_ clip: OverlayClip, in show: Show, mutate: ShowMutator) -> UUID? {
+        guard let copy = OverlayPlacement.duplicate(clip, in: show.overlays, duration: ImagesRow.open) else {
+            NSSound.beep()
+            return nil
+        }
+        mutate("Duplicate Image") { $0.overlays.append(copy) }
+        return copy.id
     }
 }

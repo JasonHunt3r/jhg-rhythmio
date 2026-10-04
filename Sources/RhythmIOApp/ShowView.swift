@@ -84,7 +84,20 @@ struct ShowView: View {
         }
         .focusedSceneValue(\.activeShowID, showID)
         .focusedSceneValue(\.activeSlideSelection, session.selection)
-        .focusedSceneValue(\.requestDuplicateSlides, { SlideActions.duplicate(session.selection, mutate: mutate) })
+        // ⌘D: a selected lane image, else the slides (A2, B-20).
+        .focusedSceneValue(\.requestDuplicateSlides, {
+            if let o = session.selectedOverlay, let clip = show.overlays.first(where: { $0.id == o }) {
+                if let copy = OverlayActions.duplicate(clip, in: show, mutate: mutate) { session.selectedOverlay = copy }
+            } else {
+                SlideActions.duplicate(session.selection, mutate: mutate)
+            }
+        })
+        .focusedSceneValue(\.overlaySelected, session.selectedOverlay != nil)
+        .focusedSceneValue(\.requestCopySlides, { SlideClipboard.copy(session.selection, from: show) })
+        .focusedSceneValue(\.requestPasteSlides, {
+            SlideClipboard.paste(after: show.slides.lastIndex { session.selection.contains($0.id) }.map { show.slides[$0].id },
+                                 mutate: mutate)
+        })
         .focusedSceneValue(\.requestSlideGetInfo, requestSlideGetInfo)
         .onAppear {
             if let id = model.devSelection { session.selection = [id]; model.devSelection = nil }
