@@ -329,6 +329,9 @@ struct AppCommands: Commands {
             // (`spec/panekit.md`, "The order," step 5's follow-up,
             // 2026-09-25). Pops out as an ordinary window, so it can go
             // behind — unlike the Inspector's panel, which floats.
+            Toggle("Library Pane in Its Own Window", isOn: Binding(
+                get: { model.mainPanes.isPoppedOut("library") },
+                set: { _ in model.mainPanes.togglePopOut("library") }))
             Toggle("Browser in Its Own Window", isOn: Binding(
                 get: { model.editShowColumns.isPoppedOut("list") },
                 set: { _ in model.editShowColumns.togglePopOut("list") }))

@@ -635,6 +635,14 @@ app gets it.
   the space, exactly as when it closes to its edge. **Its slot is kept**,
   so putting it back returns it where it was, at its old size.
 - **Ways out and back:**
+  - **every right-click menu inside the pane** ends with a divider and
+    "Show *Pane* in Own Window", or "Put *Pane* Back in Main Window" once
+    it's out (Jason, 2026-10-03: every menu, not only the pane's
+    background). `PaneLayoutView` tells a poppable pane's content which
+    pane it is (`\.paneWindow`, passed through nested layouts), and
+    `PaneWindowMenuItem()` reads it; a menu built in AppKit uses
+    `PaneWindowContext.of(view)?.menuItem()`. Outside such a pane it's
+    nothing, so it can go in shared menus;
   - a menu command (View ▸ Show Inspector in Window, say);
   - a button on the edge handle;
   - **putting it back:** the window's own button, the menu command, or

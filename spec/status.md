@@ -70,7 +70,7 @@ when RhythmIO launches" is on. Registering started a second copy (B-08).
 ## Where it stands
 
 **Everything planned is built**, and more has come from Jason's use of it.
-**385 tests** (368 core + 17 RhythmBG); PaneKit has its own 56, ListKit its
+**385 tests** (368 core + 17 RhythmBG); PaneKit has its own 58, ListKit its
 own 24. **Library schema 14.**
 
 Every phase is built (`plan.md`; each area's spec is in CLAUDE.md's
@@ -99,7 +99,7 @@ launches" (on, 2026-10-03), otherwise from RhythmBG ▸ Desktop Show….
 
 1. **The range batch is built** (B-02, B-05, B-06, B-11; N1–N8, `range-and-ruler.md`): its shakedown rows wait for Jason.
 2. **RhythmBG: B-14, B-87, B-17** passed Jason's shakedown 2026-10-03; B-08 waits for his check; B-16 waits on B-39.
-3. **Slide Info on ⌥Space, on PopoverKit** (built 2026-10-03, shakedown waits); what it holds is B-88, to discuss. B-83 was the automation tool; B-84 fixed.
+3. **Slide Info on ⌥Space, on PopoverKit**, and **Show in Own Window on every right-click** with the Library pane, Browser and Edit Slides' Inspector popping out (all built 2026-10-03, shakedowns wait). B-88, what Slide Info holds, is to discuss.
 
 Built and waiting on Jason's shakedown rows: B-01, B-03 and the held-arrow
 fixes; the inspector batch (B-04, B-07: a file not in the show shows its

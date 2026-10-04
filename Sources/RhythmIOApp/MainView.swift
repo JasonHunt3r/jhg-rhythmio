@@ -324,6 +324,7 @@ struct MainView: View {
             // no way to switch libraries. Same action as File ▸
             // Open Library….
             Button("Change Library…") { runOpenLibraryPanel(model) }
+            PaneWindowMenuItem()
         }
     }
 
@@ -630,6 +631,7 @@ extension MainView {
                 Divider()
                 Button("Rename") { startRenaming(.collection(c.id)) }
                 Button("Delete Collection…") { deleteCollectionAsking(c) }
+                PaneWindowMenuItem()
             }
             // Dropping files on a collection puts them in it (imported first
             // if they come from Finder or Photos): no question, that's the
@@ -674,6 +676,7 @@ extension MainView {
                 Divider()
                 Button("Rename") { startRenaming(.group(g.id)) }
                 Button("Delete Group…") { deleteGroupAsking(g) }
+                PaneWindowMenuItem()
             }
             // Draggable, so it can be dropped on another group to nest it
             // (plan, "groups hold groups, like folders") or on a collection
@@ -755,6 +758,7 @@ extension MainView {
                 Divider()
                 Button("Rename") { startRenaming(.show(show.id)) }
                 Button("Delete Show…") { confirmDelete = show }
+                PaneWindowMenuItem()
             }
             // Dropping files on a show appends them to it (asking first about
             // any not in its collection).

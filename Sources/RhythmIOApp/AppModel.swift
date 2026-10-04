@@ -69,7 +69,11 @@ final class AppModel {
                // the narrowest real row ("Untitled Collection").
                .split("main", .horizontal, sized: .first, size: DefaultLayout.sidebarWidth,
                       range: 140...360, title: "Library",
-                      .pane("library", title: "Library", minSize: 140),
+                      // A panel, floating: shows and collections are
+                      // dragged out of it, files dropped on it (Jason,
+                      // 2026-10-03). "Library Pane", not "Library": the
+                      // library panel is another thing.
+                      .leaf(Pane("library", title: "Library Pane", minSize: 140, popOut: .panel)),
                       // Extends to the true top of the window, under the
                       // title bar — the filter bar and the title bar act as
                       // one continuous translucent surface over the grid's

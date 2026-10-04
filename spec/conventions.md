@@ -158,6 +158,12 @@ little global (Jason, 2026-09-24), so it gets its own conversation, area
 by area. The plan for it is at the end of this file. What follows is
 Claude's starting draft for that conversation, not a decision.
 
+**Every menu inside a pane that can pop out ends with its window item**
+(Jason, 2026-10-03): a divider, then "Show Timeline in Own Window" (or
+Inspector, Browser, Library Pane), or "Put … Back in Main Window" once
+it's out. Each such pane also has a background menu holding only that
+item, so empty space answers (`spec/panekit.md`, "Pane ⇄ panel").
+
 **A place with no menu yet shows a note, not nothing** (Jason,
 2026-09-26): right-clicked, it opens a greyed menu, "No menu yet —
 *place* › *area*", in `spec/anatomy.md`'s names, and "Agreed, not built:

@@ -6,8 +6,8 @@ and the timeline pane (full width, and popping out as the Timeline
 window). The build order was Jason's first answer (2026-09-24): the Slide
 Editor, then the library panel, then one detachable area (the
 Inspector), then the timeline pane last. **Open work:** see
-`spec/backlog.md` (B-01 a popped-out pane losing its content, B-10 ways
-to pop out the inspector, B-65 the areas not yet able to leave, B-66
+`spec/backlog.md` (B-01 a popped-out pane losing its content, B-65 a
+single row in a window of its own, B-66
 scrolling a partly covered window, B-48 double-click).
 
 This file is the pop-out idea and its pieces. **The timeline pane** is
@@ -75,6 +75,14 @@ double-click, is `spec/backlog.md` B-48):
    | **Inspector** | panel (floats) | Settings stay in reach over whatever is being worked on. It keeps its place over time |
    | **Timeline window** | ordinary window | It must be able to go *behind* the main viewer, especially once a show has extra rows |
    | **Slide Editor** | bold and in front, transient | Like a big popover: you work in it, and when you're done it goes away |
+   | **Library pane** | panel (floats) | Built 2026-10-03. Shows and collections are dragged out of it, files dropped on it. Called "Library Pane" in its menus, since the library panel is another thing |
+   | **Browser** | panel (floats) | Built 2026-10-03. Its files are dragged out of it |
+   | **Edit Slides' Inspector** | panel (floats) | Built 2026-10-03, like Edit Show's |
+
+   **The rule** (Jason, 2026-10-03): what you drag things out of floats
+   ("a float over situation where the idea is to make it convenient to
+   drag items from it"); a work area like the Timeline must be able to go
+   behind the main window.
 
    The rest are found by trial and error.
 4. **Launch restores everything:** which windows are open or detached,
