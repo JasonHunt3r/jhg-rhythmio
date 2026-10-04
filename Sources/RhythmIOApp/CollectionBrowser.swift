@@ -171,7 +171,9 @@ struct CollectionBrowser: View {
         PaneLayoutView(controller: viewer, content: [
             "viewer": AnyView(SelectionViewer(
                 items: ordered(picked).compactMap { model.itemsByID[$0] },
-                primary: lastPicked.flatMap(itemID), mode: $viewerMode, model: model)),
+                primary: lastPicked.flatMap(itemID), mode: $viewerMode, model: model)
+                .contentShape(Rectangle())
+                .contextMenu { PaneWindowMenuItem() }),
             "grid": AnyView(Group {
                 if collection == nil {
                     VStack(spacing: 0) {
@@ -532,6 +534,7 @@ struct CollectionBrowser: View {
         Button(chosen.count == 1 ? "Move to Trash…" : "Move \(chosen.count) Items to Trash…") {
             confirmDelete = chosen
         }
+        PaneWindowMenuItem()
     }
 
     /// One row: the file's own `row`, as a ListKit row — picked by the

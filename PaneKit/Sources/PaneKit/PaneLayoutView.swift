@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 
 /// PaneKit for SwiftUI: a `PaneContainerView` with a SwiftUI view in each
@@ -25,6 +26,7 @@ public struct PaneLayoutView: NSViewRepresentable {
         let views = content.map { id, view -> (String, NSView) in
             let h = NSHostingView(rootView: withWindowContext(id, view, outer: context.environment.paneWindow))
             h.sizingOptions = []
+            if let c = ownContext(id) { PaneWindowContext.register(h, c) }
             return (id, h)
         }
         return PaneContainerView(controller: controller, content: Dictionary(uniqueKeysWithValues: views))
@@ -43,11 +45,13 @@ public struct PaneLayoutView: NSViewRepresentable {
     /// panes pass on the one they're inside (`outer`), which the hosting
     /// views would otherwise drop: the environment doesn't cross AppKit.
     private func withWindowContext(_ id: String, _ view: AnyView, outer: PaneWindowContext?) -> AnyView {
-        if let pane = controller.root.pane(id), pane.popOut != .none {
-            return AnyView(view.environment(\.paneWindow, PaneWindowContext(controller: controller, paneID: id,
-                                                                             title: pane.title)))
-        }
+        if let c = ownContext(id) { return AnyView(view.environment(\.paneWindow, c)) }
         return outer.map { AnyView(view.environment(\.paneWindow, $0)) } ?? view
+    }
+
+    private func ownContext(_ id: String) -> PaneWindowContext? {
+        guard let pane = controller.root.pane(id), pane.popOut != .none else { return nil }
+        return PaneWindowContext(controller: controller, paneID: id, title: pane.title)
     }
 }
 
@@ -61,6 +65,40 @@ public struct PaneWindowContext {
 
     public var isPoppedOut: Bool { controller.isPoppedOut(paneID) }
     public func toggle() { controller.togglePopOut(paneID) }
+    public var menuTitle: String {
+        isPoppedOut ? "Put \(title) Back in Main Window" : "Show \(title) in Own Window"
+    }
+
+    /// The pane an AppKit view sits in, for a menu built in AppKit (a
+    /// list's empty space): the nearest pane-hosting view above it that
+    /// can pop out. Nested layouts are walked through.
+    public static func of(_ view: NSView) -> PaneWindowContext? {
+        var v: NSView? = view
+        while let current = v {
+            if let box = hosts.object(forKey: current) { return box.context }
+            v = current.superview
+        }
+        return nil
+    }
+
+    /// The same item as `PaneWindowMenuItem`, for an `NSMenu`.
+    public func menuItem() -> NSMenuItem {
+        let target = MenuTarget(self)
+        let item = NSMenuItem(title: menuTitle, action: #selector(MenuTarget.run), keyEquivalent: "")
+        item.target = target
+        item.representedObject = target   // the item keeps its target alive
+        return item
+    }
+
+    @MainActor private final class Box { let context: PaneWindowContext; init(_ c: PaneWindowContext) { context = c } }
+    private static let hosts = NSMapTable<NSView, Box>.weakToStrongObjects()
+    static func register(_ view: NSView, _ context: PaneWindowContext) { hosts.setObject(Box(context), forKey: view) }
+
+    @MainActor private final class MenuTarget: NSObject {
+        let context: PaneWindowContext
+        init(_ c: PaneWindowContext) { context = c }
+        @objc func run() { context.toggle() }
+    }
 }
 
 public extension EnvironmentValues {
@@ -79,9 +117,7 @@ public struct PaneWindowMenuItem: View {
     public var body: some View {
         if let pane {
             Divider()
-            Button(pane.isPoppedOut ? "Put \(pane.title) Back in Main Window" : "Show \(pane.title) in Own Window") {
-                pane.toggle()
-            }
+            Button(pane.menuTitle) { pane.toggle() }
         }
     }
 }

@@ -48,7 +48,9 @@ enum EditColumnsLayout {
                .split(browserSplit, .horizontal, sized: .second, size: listDefault, range: listMin...listMax,
                       title: "Browser",
                       .pane("preview", minSize: mainMin),
-                      .pane("list", title: "Browser", minSize: listMin)),
+                      // A panel, floating: its files are dragged out of it
+                      // (Jason, 2026-10-03).
+                      .leaf(Pane("list", title: "Browser", minSize: listMin, popOut: .panel))),
                .leaf(Pane("inspector", title: "Inspector", minSize: inspectorRange.lowerBound, popOut: .panel)))
     }
 

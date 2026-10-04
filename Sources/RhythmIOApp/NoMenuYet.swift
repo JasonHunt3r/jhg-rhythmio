@@ -91,6 +91,10 @@ enum ListEmptySpace {
         }
         line("No menu yet — \(named?.place ?? "a list") › empty space")
         if let planned = named?.planned { line("Agreed, not built: \(planned)") }
+        if let pane = PaneWindowContext.of(table) {
+            menu.addItem(.separator())
+            menu.addItem(pane.menuItem())
+        }
         NSMenu.popUpContextMenu(menu, with: event, for: table)
         return true
     }
