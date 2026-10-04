@@ -262,8 +262,8 @@ struct SlideInspector: View {
     }
 
     /// A section's fields, in the rounded card a Form's `.grouped` style
-    /// used to give them for free. Right-clicked, it names itself
-    /// (`noMenuYet`): the settled per-control Reset to Default isn't built.
+    /// used to give them for free. Its controls have Reset to Default; the
+    /// space between them names itself (`noMenuYet`).
     private func card<Content: View>(_ section: String, @ViewBuilder _ content: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             content()
@@ -271,7 +271,7 @@ struct SlideInspector: View {
         .padding(12)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(RoundedRectangle(cornerRadius: 8).fill(Color(nsColor: .controlBackgroundColor)))
-        .noMenuYet("Show › Inspector › \(section) section", planned: "a single control: Reset to Default")
+        .noMenuYet("Show › Inspector › \(section) section")
         .padding(.horizontal, 16)
     }
 
@@ -330,6 +330,7 @@ struct SlideInspector: View {
                                          range: 0...1, display: 100, unit: "%") { v in
                                 setFlatVolume(v, length: resolved.length)
                             }
+                            .resetToDefault { edit("Reset to Default") { $0.audio = nil } }
                             Text(curve.isEmpty
                                  ? "Silent. Turn it up here, or drag the line along the slide."
                                  : "⌥-click the line along the slide to shape it.")
@@ -440,12 +441,16 @@ struct SlideInspector: View {
                 Text("Custom").tag(LengthMode.seconds)
                 if hasClip || mode == .clip { Text("Clip length").tag(LengthMode.clip) }
             }
+            .resetToDefault { edit("Reset to Default") { $0.length = nil } }
             if case .seconds(let v) = s.length {
                 LabeledContent("Seconds") {
                     SecondsField(value: v) { new in edit("Change Length") { $0.length = .seconds(new) } }
                 }
+                .resetToDefault { edit("Reset to Default") { $0.length = nil } }
             }
             }
+        } header: {
+            header("Length").contextMenu { sectionMenu("length", \.length, first) }
         } footer: { mixedNote(mixed { $0.length }).padding(.horizontal, 16) }
     }
 
@@ -459,6 +464,7 @@ struct SlideInspector: View {
                 Text("Show default (\(show.defaults.transition.style.title))").tag(false)
                 Text("Custom").tag(true)
             }
+            .resetToDefault { edit("Reset to Default") { $0.transition = nil } }
             if let t {
                 // The label is fixed so it can't be squeezed. `TransitionPicker`
                 // is three controls wide, and in a card (a plain VStack, not a
@@ -471,8 +477,11 @@ struct SlideInspector: View {
                 } label: {
                     Text("Style").fixedSize()
                 }
+                .resetToDefault { edit("Reset to Default") { $0.transition = nil } }
             }
             }
+        } header: {
+            header("Transition").contextMenu { sectionMenu("transition", \.transition, first) }
         } footer: { mixedNote(mixed { $0.transition }).padding(.horizontal, 16) }
     }
 
@@ -504,6 +513,7 @@ struct SlideInspector: View {
                 Text("Auto").tag(KBMode.auto)
                 Text("Custom").tag(KBMode.custom)
             }
+            .resetToDefault { edit("Reset to Default") { $0.panAndZoom = nil } }
             if case .custom(let kb) = first.settings.panAndZoom, let item = model.itemsByID[first.itemID] {
                 PanAndZoomEditor(item: item, url: model.url(for: item),
                                fit: first.settings.fit ?? show.defaults.fit, kb: kb) { new in
@@ -514,12 +524,16 @@ struct SlideInspector: View {
                 } preview: { a in
                     previewPanAndZoom { $0.acceleration = a }
                 }
+                .resetToDefault { editPanAndZoom("Reset to Default") { $0.acceleration = 0 } }
                 Toggle("Freeze on transition", isOn: Binding(get: { kb.freezeOnTransition }, set: { on in
                     editPanAndZoom("Change Freeze on Transition") { $0.freezeOnTransition = on }
                 }))
+                .resetToDefault { editPanAndZoom("Reset to Default") { $0.freezeOnTransition = false } }
                 .help("Hold the start frame through the transition in and the end frame through the transition out")
             }
             }
+        } header: {
+            header("Pan and Zoom").contextMenu { sectionMenu("panAndZoom", \.panAndZoom, first) }
         } footer: { mixedNote(mixed { $0.panAndZoom }).padding(.horizontal, 16) }
     }
 
@@ -577,28 +591,33 @@ struct SlideInspector: View {
                 Text("Show default (\(show.defaults.fit.title))").tag(Fit?.none)
                 ForEach(Fit.allCases, id: \.self) { Text($0.title).tag(Fit?.some($0)) }
             }
+            .resetToDefault { edit("Reset to Default") { $0.fit = nil } }
             CommitSlider(title: "Position X", value: t.offsetX, range: -1...1, display: 100, unit: "%") { v in
                 editTransform("Move") { $0.offsetX = v }
             } preview: { v in
                 previewTransform { $0.offsetX = v }
             }
+            .resetToDefault { editTransform("Reset to Default") { $0.offsetX = 0 } }
             CommitSlider(title: "Position Y", value: t.offsetY, range: -1...1, display: 100, unit: "%") { v in
                 editTransform("Move") { $0.offsetY = v }
             } preview: { v in
                 previewTransform { $0.offsetY = v }
             }
+            .resetToDefault { editTransform("Reset to Default") { $0.offsetY = 0 } }
             CommitSlider(title: "Zoom", value: t.scale, range: 0.1...4, display: 100, unit: "%",
                          fieldRange: 0.01...20) { v in
                 editTransform("Zoom") { $0.scale = v }
             } preview: { v in
                 previewTransform { $0.scale = v }
             }
+            .resetToDefault { editTransform("Reset to Default") { $0.scale = 1 } }
             CommitSlider(title: "Rotation", value: t.rotation, range: -180...180, unit: "°",
                          fieldRange: -3600...3600) { v in
                 editTransform("Rotate") { $0.rotation = v }
             } preview: { v in
                 previewTransform { $0.rotation = v }
             }
+            .resetToDefault { editTransform("Reset to Default") { $0.rotation = 0 } }
             LabeledContent("Background") {
                 HStack(spacing: 8) {
                     if first.settings.background != nil {
@@ -610,6 +629,7 @@ struct SlideInspector: View {
                         edit("Change Background") { $0.background = c }
                     }
                     .labelsHidden()
+                    .resetToDefault { edit("Reset to Default") { $0.background = nil } }
                 }
             }
             HStack {
@@ -663,6 +683,26 @@ struct SlideInspector: View {
         PaneWindowMenuItem()
     }
 
+    /// A one-setting section's header menu (`spec/conventions.md` §3,
+    /// "Inspector: a section header", settled 2026-09-24): Reset Section to
+    /// Show Default, Copy/Paste Section Settings. `key` is its own
+    /// pasteboard slot, as Transform's and Sound's have.
+    private struct SectionCopy<T: Codable>: Codable { var value: T? }
+
+    @ViewBuilder private func sectionMenu<T: Codable>(_ key: String, _ path: WritableKeyPath<SlideSettings, T?>,
+                                                      _ first: Slide) -> some View {
+        Button("Reset Section to Show Default") { edit("Reset Section to Show Default") { $0[keyPath: path] = nil } }
+            .disabled(selected.allSatisfy { $0.settings[keyPath: path] == nil })
+        Divider()
+        Button("Copy Section Settings") { SectionClipboard.copy(SectionCopy(value: first.settings[keyPath: path]), key: key) }
+        Button("Paste Section Settings") {
+            guard let v = SectionClipboard.paste(SectionCopy<T>.self, key: key) else { return }
+            edit("Paste Section Settings") { $0[keyPath: path] = v.value }
+        }
+        .disabled(!SectionClipboard.canPaste(key: key))
+        PaneWindowMenuItem()
+    }
+
     /// Rotation's own section: a checkbox, then Angles or Speed, acceleration,
     /// the pivot pads, and freeze. Turning it off keeps its settings.
     private func rotationSection(_ first: Slide) -> some View {
@@ -687,6 +727,7 @@ struct SlideInspector: View {
             Toggle("Rotation", isOn: Binding(get: { on }, set: { v in
                 editRotation(v ? "Turn On Rotation" : "Turn Off Rotation") { $0.enabled = v }
             }))
+            .resetToDefault { edit("Reset to Default") { $0.rotation = nil } }
             if let r, r.enabled {
                 Picker("Mode", selection: Binding(get: { r.mode }, set: { m in
                     editRotation("Change Rotation Mode") { $0.mode = m }
@@ -695,6 +736,7 @@ struct SlideInspector: View {
                     Text("Speed").tag(Rotation.Mode.speed)
                 }
                 .pickerStyle(.segmented)
+                .resetToDefault { editRotation("Reset to Default") { $0.mode = .angles } }
 
                 CommitSlider(title: "Start angle", value: r.startAngle, range: -360...360, unit: "°",
                              fieldRange: -36000...36000) { v in
@@ -702,6 +744,7 @@ struct SlideInspector: View {
                 } preview: { v in
                     previewRotation { $0.startAngle = v }
                 }
+                .resetToDefault { editRotation("Reset to Default") { $0.startAngle = 0 } }
                 switch r.mode {
                 case .angles:
                     CommitSlider(title: "End angle", value: r.endAngle, range: -360...360, unit: "°",
@@ -710,6 +753,7 @@ struct SlideInspector: View {
                     } preview: { v in
                         previewRotation { $0.endAngle = v }
                     }
+                    .resetToDefault { editRotation("Reset to Default") { $0.endAngle = 0 } }
                 case .speed:
                     CommitSlider(title: "Speed", value: r.speed, range: -360...360, unit: "°/s",
                                  fieldRange: -3600...3600) { v in
@@ -717,6 +761,7 @@ struct SlideInspector: View {
                     } preview: { v in
                         previewRotation { $0.speed = v }
                     }
+                    .resetToDefault { editRotation("Reset to Default") { $0.speed = 0 } }
                 }
                 if let note = rotationNote(first, r) {
                     Text(note).font(.caption).foregroundStyle(.secondary)
@@ -727,6 +772,7 @@ struct SlideInspector: View {
                 } preview: { a in
                     previewRotation { $0.acceleration = a }
                 }
+                .resetToDefault { editRotation("Reset to Default") { $0.acceleration = 0 } }
 
                 if let item = model.itemsByID[first.itemID] {
                     let size = CGSize(width: item.pixelWidth, height: item.pixelHeight)
@@ -755,9 +801,12 @@ struct SlideInspector: View {
                 Toggle("Freeze on transition", isOn: Binding(get: { r.freezeOnTransition }, set: { v in
                     editRotation("Change Freeze on Transition") { $0.freezeOnTransition = v }
                 }))
+                .resetToDefault { editRotation("Reset to Default") { $0.freezeOnTransition = false } }
                 .help("Hold the start angle through the transition in and the end angle through the transition out")
             }
             }
+        } header: {
+            header("Rotation").contextMenu { sectionMenu("rotation", \.rotation, first) }
         } footer: { mixedNote(mixed { $0.rotation }).padding(.horizontal, 16) }
     }
 
@@ -1026,4 +1075,16 @@ struct EditShowCommandsValue {
     var goForward: () -> Void
     var canGoBack: Bool
     var canGoForward: Bool
+}
+
+extension View {
+    /// A single inspector control's right-click (`spec/conventions.md` §3,
+    /// settled 2026-09-24): Reset to Default, back to the show's value or
+    /// the setting's own starting one.
+    func resetToDefault(_ reset: @escaping () -> Void) -> some View {
+        contextMenu {
+            Button("Reset to Default", action: reset)
+            PaneWindowMenuItem()
+        }
+    }
 }
