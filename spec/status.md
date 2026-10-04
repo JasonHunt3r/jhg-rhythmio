@@ -99,7 +99,7 @@ launches" (on, 2026-10-03), otherwise from RhythmBG ▸ Desktop Show….
 
 1. **The range batch is built** (B-02, B-05, B-06, B-11; N1–N8, `range-and-ruler.md`): its shakedown rows wait for Jason.
 2. **RhythmBG: B-14, B-87, B-17** passed Jason's shakedown 2026-10-03, and B-08 is fixed (one copy, checked); B-16 waits on B-39.
-3. **Slide Info on ⌥Space, on PopoverKit**, and **Show in Own Window on every right-click** with the Library pane, Browser and Edit Slides' Inspector popping out (built and passed Jason's shakedown 2026-10-03). B-88, what Slide Info holds, is to discuss.
+3. **Slide Info on ⌥Space, on PopoverKit**, and **Show in Own Window on every right-click** with the Library pane, Browser and Edit Slides' Inspector popping out (built and passed Jason's shakedown 2026-10-03). B-88, what Slide Info holds, is parked until Jason has built some shows.
 
 Built and waiting on Jason's shakedown rows: B-01, B-03 and the held-arrow
 fixes; the inspector batch (B-04, B-07: a file not in the show shows its
