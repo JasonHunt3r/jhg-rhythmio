@@ -156,6 +156,8 @@ struct PreviewStage: View {
     @State private var hovering = false
     /// The slide whose image is selected in the picture, for its handles.
     @State private var imageSlideID: Int64?
+    /// The images under the pointer, top first, for Select ▸.
+    @State private var underPointer: [TransformOverlay.Subject] = []
     /// The work area's zoom: 1 fits the picture; below 1 leaves room round
     /// it to see and grab an image that hangs past the frame.
     @AppStorage("workZoom") private var workZoom: Double = 1
@@ -208,7 +210,8 @@ struct PreviewStage: View {
                 TransformOverlay(engine: engine, frame: Self.pictureRect(in: g.size, zoom: CGFloat(workZoom)),
                                  target: rotationAvailable ? editTarget : .transform,
                                  imageSlideID: $imageSlideID, selectedOverlay: $selectedOverlay,
-                                 selection: $selection, mutate: mutate)
+                                 selection: $selection, mutate: mutate,
+                                 onPointer: { underPointer = $0 })
             }
             // The buttons sit above the handles so they stay clickable.
             Color.clear
@@ -296,6 +299,7 @@ struct PreviewStage: View {
     /// Library, the quick-settings submenus, Reset Transform, Rotation
     /// Handles on/off, Slide Progress on/off.
     @ViewBuilder private func slideImageMenu(_ id: Int64) -> some View {
+        selectMenu
         Button("Open in Slide Editor") {
             SlideEditorWindow.show(slideID: id, show: show, model: model, mutate: mutate, undoManager: undoManager)
         }
@@ -320,7 +324,47 @@ struct PreviewStage: View {
     }
 
     /// "The pasteboard (the grey round the picture)," settled 2026-09-24.
+    /// Select ▸, everything under the pointer, top first (settled
+    /// 2026-09-24, `spec/conventions.md` §3: it does "select what's
+    /// behind", so ⌥-click stays free). Nothing under it, no submenu.
+    @ViewBuilder private var selectMenu: some View {
+        if !underPointer.isEmpty {
+            Menu("Select") {
+                ForEach(Array(underPointer.enumerated()), id: \.offset) { _, subject in
+                    Button(selectTitle(subject)) { selectSubject(subject) }
+                }
+            }
+            Divider()
+        }
+    }
+
+    private func selectTitle(_ subject: TransformOverlay.Subject) -> String {
+        switch subject {
+        case .slide(let id):
+            guard let i = show.slides.firstIndex(where: { $0.id == id }) else { return "Slide" }
+            return "Slide \(i + 1): \(model.itemsByID[show.slides[i].itemID]?.fileName ?? "")"
+        case .overlay(let id):
+            let name = show.overlays.first { $0.id == id }.flatMap { model.itemsByID[$0.itemID]?.fileName } ?? ""
+            return "Lane Image: \(name)"
+        }
+    }
+
+    /// As clicking it would: the slide's image, or the lane image.
+    private func selectSubject(_ subject: TransformOverlay.Subject) {
+        switch subject {
+        case .slide(let id):
+            selectedOverlay = nil
+            imageSlideID = id
+            selection = [id]
+        case .overlay(let id):
+            imageSlideID = nil
+            selection = []
+            selectedOverlay = id
+        }
+    }
+
     @ViewBuilder private var pasteboardMenu: some View {
+        selectMenu
         Menu("Work Zoom") {
             Button("Fit") { workZoom = 1 }
             Button("75%") { workZoom = 0.75 }

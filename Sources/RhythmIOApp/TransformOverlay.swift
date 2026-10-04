@@ -30,6 +30,10 @@ struct TransformOverlay: View {
     @Binding var selectedOverlay: UUID?
     @Binding var selection: Set<Int64>
     let mutate: ShowMutator
+    /// What's under the pointer, top first, for the viewer's Select ▸
+    /// (`spec/conventions.md` §3): told only when it changes.
+    var onPointer: (([Subject]) -> Void)? = nil
+    @State private var lastUnderPointer: [Subject] = []
 
     /// The Transform being edited, drawn by the engine before it's saved.
     @State private var live: Transform?
@@ -85,8 +89,12 @@ struct TransformOverlay: View {
         .gesture(dragGesture)
         .onContinuousHover { phase in
             switch phase {
-            case .active(let p): cursor(for: p).set()
-            case .ended: NSCursor.arrow.set()
+            case .active(let p):
+                cursor(for: p).set()
+                reportUnderPointer(subjects(at: p))
+            case .ended:
+                NSCursor.arrow.set()
+                reportUnderPointer([])
             }
         }
         .focusable()
@@ -175,6 +183,20 @@ struct TransformOverlay: View {
         else { return nil }
         return Geo(subject: .slide(layer.slide.slide.id), frame: frame, W: W, H: H, base: base, full: full,
                    transform: layer.slide.transform)
+    }
+
+    /// Every image under a point, top first: the lane's, then the slides
+    /// (the top one mid-transition first), as a click picks them.
+    private func subjects(at p: CGPoint) -> [Subject] {
+        ([overlayNow.flatMap(geo)].compactMap { $0 } + layersNow.reversed().compactMap(geo))
+            .filter { $0.contains(p) }
+            .map(\.subject)
+    }
+
+    private func reportUnderPointer(_ subjects: [Subject]) {
+        guard let onPointer, subjects != lastUnderPointer else { return }
+        lastUnderPointer = subjects
+        onPointer(subjects)
     }
 
     /// The lane's image showing now, placed like a slide with no motion.
