@@ -158,6 +158,8 @@ struct AppCommands: Commands {
     @AppStorage("frameStripShown") private var frameStripShown = true
     @AppStorage("inspectorShown") private var inspectorShown = true
     @AppStorage("editMode") private var mode: EditMode = .slides
+    /// The columns whose inspector the View menu pops out: this mode's.
+    private var inspectorColumns: PaneController { mode == .show ? model.editShowColumns : model.editSlidesColumns }
     @AppStorage("snapping") private var snapping = true
     @AppStorage("showRatings") private var showRatings = true
     // Read here so the Viewer submenu's checkmarks follow a change made by
@@ -315,13 +317,12 @@ struct AppCommands: Commands {
                 .keyboardShortcut("t", modifiers: [.command, .option])
                 .disabled(activeShowID == nil)
             // Step 4, third piece (`spec/windows.md`): the first detachable
-            // area. `editShowCommands` gates it to Edit Show, same as the
-            // zoom and Go Back/Forward items below — Edit Slides' own
-            // inspector doesn't pop out yet.
+            // area. Edit Slides' inspector pops out too since 2026-10-03;
+            // each mode has its own.
             Toggle("Inspector in Its Own Window", isOn: Binding(
-                get: { model.editShowColumns.isPoppedOut("inspector") },
-                set: { _ in model.editShowColumns.togglePopOut("inspector") }))
-                .disabled(editShowCommands == nil)
+                get: { inspectorColumns.isPoppedOut("inspector") },
+                set: { _ in inspectorColumns.togglePopOut("inspector") }))
+                .disabled(activeShowID == nil)
             // Step 4's last piece: the timeline pane (`spec/windows.md`,
             // "The timeline pane"). Lives in `model.mainPanes` now, full
             // width under the Library pane too, not `model.editShowColumns`

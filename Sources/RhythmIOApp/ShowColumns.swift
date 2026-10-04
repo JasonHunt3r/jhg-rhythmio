@@ -53,10 +53,12 @@ enum EditColumnsLayout {
     }
 
     /// Edit Slides' two columns: no list, so it's one split, not `.row`.
+    /// Its inspector pops out as a panel too, like Edit Show's (Jason,
+    /// 2026-10-03).
     static var twoColumns: PaneNode {
         .split("columns", .horizontal, sized: .second, size: inspectorDefault, range: inspectorRange,
                .pane("main", minSize: mainMin),
-               .pane("inspector", minSize: inspectorRange.lowerBound))
+               .pane("inspector", title: "Inspector", minSize: inspectorRange.lowerBound, popOut: .panel))
     }
 }
 
